@@ -16,12 +16,12 @@ import { Invoice } from '../../../../core/models/invoice.model';
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <app-stat-card
           [label]="'patient.revenue.totalRevenue' | translate"
-          [value]="totalRevenue | currency:'USD':'symbol':'1.2-2'"
+          [value]="(totalRevenue | currency:'USD':'symbol':'1.2-2') ?? '0.00'"
           [icon]="moneyIcon"
         />
         <app-stat-card
           [label]="'patient.revenue.avgOrderValue' | translate"
-          [value]="avgOrderValue | currency:'USD':'symbol':'1.2-2'"
+          [value]="(avgOrderValue | currency:'USD':'symbol':'1.2-2') ?? '0.00'"
           [icon]="chartIcon"
         />
         <app-stat-card
@@ -31,7 +31,7 @@ import { Invoice } from '../../../../core/models/invoice.model';
         />
         <app-stat-card
           [label]="'patient.revenue.lastOrderDate' | translate"
-          [value]="lastOrderDate | date:'shortDate'"
+          [value]="(lastOrderDate | date:'shortDate') ?? '-'"
           [icon]="calendarIcon"
         />
       </div>

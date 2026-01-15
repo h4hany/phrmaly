@@ -204,7 +204,7 @@ interface NavGroup {
                   style="color: var(--sidebar-text);"
                 >
                   <img [src]="getIcon('staff')" alt="" class="w-5 h-5" style="filter: brightness(0) invert(1);" />
-                  <span>Pharmacy Staff</span>
+                  <span>{{ 'nav.pharmacyStaff' | translate }}</span>
                 </a>
               </li>
 
@@ -425,7 +425,7 @@ export class MainLayoutComponent implements OnInit {
       settings: 'nav.settings',
       inventory: 'inventory.alerts',
       bundles: 'nav.bundles',
-      'pharmacy-staff': 'Pharmacy Staff',
+      'pharmacy-staff': 'nav.pharmacyStaff',
       'audit-logs': 'audit.title'
     };
     this.currentTitle = titleMap[route] || 'nav.dashboard';

@@ -22,7 +22,7 @@ interface LoyaltyTransaction {
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <app-stat-card
           [label]="'patient.loyalty.walletBalance' | translate"
-          [value]="walletBalance | currency:'USD':'symbol':'1.2-2'"
+          [value]="(walletBalance | currency:'USD':'symbol':'1.2-2') ?? '0.00'"
           [icon]="walletIcon"
         />
         <app-stat-card

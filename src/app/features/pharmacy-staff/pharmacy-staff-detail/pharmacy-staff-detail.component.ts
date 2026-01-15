@@ -6,6 +6,7 @@ import { PharmacyStaff } from '../../../core/models/pharmacy-staff.model';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { AlertComponent } from '../../../shared/components/alert/alert.component';
 import { TranslatePipe } from '../../../core/pipes/translate.pipe';
+import { TranslationService } from '../../../core/services/translation.service';
 import { UserRole } from '../../../core/models/user.model';
 
 @Component({
@@ -22,7 +23,7 @@ import { UserRole } from '../../../core/models/user.model';
         <div class="bg-[var(--card-bg)] rounded-[var(--radius-lg)] shadow-[var(--shadow-sm)] p-[var(--spacing-card)]">
           <!-- Header Actions -->
           <div class="flex items-center justify-between mb-6">
-            <h1 class="text-2xl font-bold text-[var(--text-primary)]">Staff Member Details</h1>
+            <h1 class="text-2xl font-bold text-[var(--text-primary)]">{{ 'staff.details' | translate }}</h1>
             <div class="flex gap-3">
               <app-button variant="outline" (onClick)="editStaff()">
                 <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -41,35 +42,35 @@ import { UserRole } from '../../../core/models/user.model';
 
           <!-- Personal Information -->
           <div class="mb-6 pb-6 border-b border-[var(--border-color)]">
-            <h2 class="text-lg font-semibold text-[var(--text-primary)] mb-4">Personal Information</h2>
+            <h2 class="text-lg font-semibold text-[var(--text-primary)] mb-4">{{ 'staff.personalInfo' | translate }}</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <div>
-                <label class="block text-sm font-medium text-[var(--card-text)] mb-1">Full Name</label>
+                <label class="block text-sm font-medium text-[var(--card-text)] mb-1">{{ 'staff.fullName' | translate }}</label>
                 <p class="text-[var(--text-primary)] font-medium">{{ staff.fullName }}</p>
               </div>
               <div>
-                <label class="block text-sm font-medium text-[var(--card-text)] mb-1">Email</label>
+                <label class="block text-sm font-medium text-[var(--card-text)] mb-1">{{ 'staff.email' | translate }}</label>
                 <p class="text-[var(--text-primary)]">{{ staff.email }}</p>
               </div>
               @if (staff.phone) {
                 <div>
-                  <label class="block text-sm font-medium text-[var(--card-text)] mb-1">Phone</label>
+                  <label class="block text-sm font-medium text-[var(--card-text)] mb-1">{{ 'staff.phone' | translate }}</label>
                   <p class="text-[var(--text-primary)]">{{ staff.phone }}</p>
                 </div>
               }
               @if (staff.username) {
                 <div>
-                  <label class="block text-sm font-medium text-[var(--card-text)] mb-1">Username</label>
+                  <label class="block text-sm font-medium text-[var(--card-text)] mb-1">{{ 'staff.username' | translate }}</label>
                   <p class="text-[var(--text-primary)]">{{ staff.username }}</p>
                 </div>
               }
               <div>
-                <label class="block text-sm font-medium text-[var(--card-text)] mb-1">Role</label>
+                <label class="block text-sm font-medium text-[var(--card-text)] mb-1">{{ 'staff.role' | translate }}</label>
                 <p class="text-[var(--text-primary)] capitalize">{{ getRoleLabel(staff.role) }}</p>
               </div>
               <div>
-                <label class="block text-sm font-medium text-[var(--card-text)] mb-1">Status</label>
-                <p class="text-[var(--text-primary)] capitalize">{{ staff.status }}</p>
+                <label class="block text-sm font-medium text-[var(--card-text)] mb-1">{{ 'staff.status' | translate }}</label>
+                <p class="text-[var(--text-primary)] capitalize">{{ (staff.status === 'active' ? 'staff.active' : 'staff.inactive') | translate }}</p>
               </div>
             </div>
           </div>
@@ -78,11 +79,11 @@ import { UserRole } from '../../../core/models/user.model';
           <div class="pt-6 border-t border-[var(--border-color)]">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               <div>
-                <label class="block text-sm font-medium text-[var(--card-text)] mb-1">Created At</label>
+                <label class="block text-sm font-medium text-[var(--card-text)] mb-1">{{ 'staff.createdAt' | translate }}</label>
                 <p class="text-[var(--text-primary)]">{{ staff.createdAt | date:'medium' }}</p>
               </div>
               <div>
-                <label class="block text-sm font-medium text-[var(--card-text)] mb-1">Last Updated</label>
+                <label class="block text-sm font-medium text-[var(--card-text)] mb-1">{{ 'staff.updatedAt' | translate }}</label>
                 <p class="text-[var(--text-primary)]">{{ staff.updatedAt | date:'medium' }}</p>
               </div>
             </div>
@@ -90,7 +91,7 @@ import { UserRole } from '../../../core/models/user.model';
         </div>
       } @else if (loading) {
         <div class="text-center py-12">
-          <p class="text-[var(--card-text)]">Loading staff member details...</p>
+          <p class="text-[var(--card-text)]">{{ 'staff.loadingDetails' | translate }}</p>
         </div>
       }
     </div>
@@ -101,6 +102,7 @@ export class PharmacyStaffDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private pharmacyStaffService = inject(PharmacyStaffService);
+  private translationService = inject(TranslationService);
 
   staff: PharmacyStaff | null = null;
   loading = true;
@@ -137,11 +139,12 @@ export class PharmacyStaffDetailComponent implements OnInit {
 
   getRoleLabel(role: UserRole): string {
     const roleMap: { [key: string]: string } = {
-      'account_owner': 'Account Owner',
-      'pharmacy_manager': 'Pharmacy Manager',
-      'pharmacy_staff': 'Pharmacy Staff'
+      'account_owner': 'staff.accountOwner',
+      'pharmacy_manager': 'staff.pharmacyManager',
+      'pharmacy_staff': 'staff.pharmacyStaff'
     };
-    return roleMap[role] || role;
+    const key = roleMap[role] || role;
+    return this.translationService.translate(key) || role;
   }
 
   editStaff(): void {

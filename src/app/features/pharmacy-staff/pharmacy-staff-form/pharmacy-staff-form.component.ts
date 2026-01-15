@@ -22,7 +22,7 @@ import { PharmacyContextService } from '../../../core/services/pharmacy-context.
     TranslatePipe
   ],
   template: `
-    <app-form-wrapper [title]="isEdit ? 'Edit Staff Member' : 'Add New Staff Member'">
+    <app-form-wrapper [title]="isEdit ? ('staff.edit' | translate) : ('staff.add' | translate)">
       @if (errorMessage) {
         <app-alert type="error" [title]="errorMessage" />
       }
@@ -86,9 +86,10 @@ import { PharmacyContextService } from '../../../core/services/pharmacy-context.
               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#166534] focus:border-[#166534]"
               [class.border-red-500]="staffForm.get('role')?.invalid && staffForm.get('role')?.touched"
             >
-              <option value="">Select Role</option>
-              <option value="pharmacy_manager">Pharmacy Manager</option>
-              <option value="pharmacy_staff">Pharmacy Staff</option>
+              <option value="">{{ 'form.selectStatus' | translate }}</option>
+              <option value="account_owner">{{ 'staff.accountOwner' | translate }}</option>
+              <option value="pharmacy_manager">{{ 'staff.pharmacyManager' | translate }}</option>
+              <option value="pharmacy_staff">{{ 'staff.pharmacyStaff' | translate }}</option>
             </select>
             @if (staffForm.get('role')?.invalid && staffForm.get('role')?.touched) {
               <p class="mt-1 text-sm text-red-600">Role is required</p>
@@ -130,7 +131,7 @@ import { PharmacyContextService } from '../../../core/services/pharmacy-context.
             [loading]="loading"
             [disabled]="staffForm.invalid"
           >
-            {{ isEdit ? 'Update' : 'Create' }} Staff Member
+            {{ isEdit ? ('staff.update' | translate) : ('staff.create' | translate) }}
           </app-button>
         </div>
       </form>
