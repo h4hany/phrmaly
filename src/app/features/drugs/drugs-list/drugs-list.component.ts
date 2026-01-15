@@ -2,17 +2,18 @@ import { Component, inject, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
-import { TableComponent, TableColumn } from '../../../shared/components/table/table.component';
 import { ModalComponent } from '../../../shared/components/modal/modal.component';
 import { AlertComponent } from '../../../shared/components/alert/alert.component';
 import { DrugsService } from '../../../core/services/drugs.service';
 import { PharmacyDrug } from '../../../core/models/drug.model';
 import { TranslatePipe } from '../../../core/pipes/translate.pipe';
+import { DrugCardComponent } from '../drug-card/drug-card.component';
+import type { DrugBadge } from '../drug-card/drug-card.component';
 
 @Component({
   selector: 'app-drugs-list',
   standalone: true,
-  imports: [CommonModule, ButtonComponent, TableComponent, ModalComponent, AlertComponent, TranslatePipe],
+  imports: [CommonModule, ButtonComponent, ModalComponent, AlertComponent, TranslatePipe, DrugCardComponent],
   template: `
     <div class="space-y-6">
       @if (errorMessage) {
@@ -65,36 +66,31 @@ import { TranslatePipe } from '../../../core/pipes/translate.pipe';
         </app-alert>
       }
 
-      <!-- Table -->
-      <app-table
-        [columns]="columns"
-        [data]="drugs"
-        [pagination]="pagination"
-        [emptyMessage]="'empty.noDrugs'"
-        [loading]="loading"
-        rowIdKey="id"
-      >
-        <ng-template #actionTemplate let-row>
-          <div class="flex items-center gap-2">
-            <button class="p-1 text-gray-600 hover:text-gray-900" [title]="'common.view' | translate" (click)="viewDrug(row.id)">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
-            </button>
-            <button class="p-1 text-gray-600 hover:text-gray-900" [title]="'common.edit' | translate" (click)="editDrug(row.id)">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-              </svg>
-            </button>
-            <button class="p-1 text-gray-600 hover:text-red-600" [title]="'common.delete' | translate" (click)="confirmDelete(row)">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-            </button>
-          </div>
-        </ng-template>
-      </app-table>
+      <!-- Cards Grid -->
+      @if (loading) {
+        <div class="flex items-center justify-center py-12">
+          <div class="text-gray-500">{{ 'common.loading' | translate }}</div>
+        </div>
+      } @else if (drugs.length === 0) {
+        <div class="flex flex-col items-center justify-center py-12 text-gray-500">
+          <svg class="w-16 h-16 mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+          </svg>
+          <p class="text-lg font-medium">{{ 'empty.noDrugs' | translate }}</p>
+        </div>
+      } @else {
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          @for (drug of drugs; track drug.id) {
+            <app-drug-card
+              [drug]="drug"
+              [badges]="getBadges(drug)"
+              (view)="viewDrug(drug.id)"
+              (edit)="editDrug(drug.id)"
+              (delete)="confirmDelete(drug)"
+            ></app-drug-card>
+          }
+        </div>
+      }
 
       <!-- Delete Modal -->
       <app-modal
@@ -154,7 +150,7 @@ export class DrugsListComponent implements OnInit {
   private router = inject(Router);
   private drugsService = inject(DrugsService);
 
-  drugs: any[] = [];
+  drugs: PharmacyDrug[] = [];
   searchQuery = '';
   errorMessage = '';
   loading = false;
@@ -168,16 +164,6 @@ export class DrugsListComponent implements OnInit {
   importSuccess = '';
   @ViewChild('deleteModal') deleteModal!: ModalComponent;
   @ViewChild('importModal') importModal!: ModalComponent;
-
-  columns: TableColumn[] = [
-    { key: 'internalBarcode', label: 'table.barcode', sortable: true },
-    { key: 'drugName', label: 'table.drugName', sortable: true },
-    { key: 'price', label: 'table.price', sortable: true },
-    { key: 'stockQuantity', label: 'table.stock', sortable: true },
-    { key: 'expiryDate', label: 'table.expiryDate', sortable: true },
-    { key: 'status', label: 'table.status', sortable: true },
-    { key: 'actions', label: 'table.action' }
-  ];
 
   pagination = {
     page: 1,
@@ -198,12 +184,7 @@ export class DrugsListComponent implements OnInit {
       pageSize: this.pagination.pageSize
     }).subscribe({
       next: (response) => {
-        this.drugs = response.data.map(drug => ({
-          ...drug,
-          drugName: drug.generalDrug?.name || 'N/A',
-          price: drug.price.toFixed(2),
-          expiryDate: drug.expiryDate ? this.formatDate(drug.expiryDate) : 'N/A'
-        }));
+        this.drugs = response.data;
         this.pagination = {
           page: response.page,
           pageSize: response.pageSize,
@@ -238,12 +219,7 @@ export class DrugsListComponent implements OnInit {
       this.loading = true;
       this.drugsService.searchPharmacyDrugs(this.searchQuery).subscribe({
         next: (results) => {
-          this.drugs = results.map(drug => ({
-            ...drug,
-            drugName: drug.generalDrug?.name || 'N/A',
-            price: drug.price.toFixed(2),
-            expiryDate: drug.expiryDate ? this.formatDate(drug.expiryDate) : 'N/A'
-          }));
+          this.drugs = results;
           this.pagination = {
             page: 1,
             pageSize: 10,
@@ -274,8 +250,8 @@ export class DrugsListComponent implements OnInit {
     this.router.navigate(['/drugs', id, 'edit']);
   }
 
-  confirmDelete(row: any): void {
-    this.selectedDrugId = row.id;
+  confirmDelete(drug: PharmacyDrug): void {
+    this.selectedDrugId = drug.id;
     this.deleteModal.open();
   }
 
@@ -346,6 +322,34 @@ export class DrugsListComponent implements OnInit {
         this.loadDrugs(); // Refresh the list
       }, 2000);
     }, 1500);
+  }
+
+  getBadges(drug: PharmacyDrug): DrugBadge[] {
+    const badges: DrugBadge[] = [];
+    
+    // Low stock badge
+    if (drug.stockQuantity <= drug.minimumStock) {
+      badges.push({
+        label: 'Low Stock',
+        variant: 'warning'
+      });
+    }
+    
+    // Expiring soon badge
+    if (drug.expiryDate) {
+      const expiryDate = new Date(drug.expiryDate);
+      const today = new Date();
+      const daysUntilExpiry = Math.ceil((expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      
+      if (daysUntilExpiry > 0 && daysUntilExpiry <= 30) {
+        badges.push({
+          label: 'Expiring Soon',
+          variant: 'danger'
+        });
+      }
+    }
+    
+    return badges;
   }
 
   private formatDate(date: Date): string {
