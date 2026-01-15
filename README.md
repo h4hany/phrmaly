@@ -55,6 +55,12 @@ A production-ready SaaS Pharmacy Management System built with Angular 19, featur
 4. **Open your browser**
    Navigate to `http://localhost:4200`
 
+5. **Deploy to github pages**
+   ```bash
+   ng build --configuration production --base-href "/phrmaly/"
+   npx angular-cli-ghpages --dir=dist/pharmly-frontend/browser
+   
+   ```
 ### Demo Credentials
 
 The application includes mock authentication with the following demo accounts:

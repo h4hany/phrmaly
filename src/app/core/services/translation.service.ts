@@ -34,13 +34,13 @@ export class TranslationService {
 
   private loadTranslations(): void {
     forkJoin({
-      en: this.http.get<Translations>('/i18n/en.json').pipe(
+      en: this.http.get<Translations>('i18n/en.json').pipe(
         catchError(error => {
           console.error('Error loading English translations:', error);
           return of({});
         })
       ),
-      ar: this.http.get<Translations>('/i18n/ar.json').pipe(
+      ar: this.http.get<Translations>('i18n/ar.json').pipe(
         catchError(error => {
           console.error('Error loading Arabic translations:', error);
           return of({});

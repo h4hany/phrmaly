@@ -6,7 +6,8 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "deploy-github": "ng build --configuration production --base-href \"/phrmaly/\" && npx angular-cli-ghpages --dir=dist/pharmly-frontend/browser"
   },
   "private": true,
   "dependencies": {
