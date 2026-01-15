@@ -60,6 +60,10 @@ export const routes: Routes = [
         loadChildren: () => import('./features/pharmacy-staff/pharmacy-staff.routes').then(m => m.routes)
       },
       {
+        path: 'audit-logs',
+        loadChildren: () => import('./features/audit-logs/audit-logs.routes').then(m => m.routes)
+      },
+      {
         path: '',
         redirectTo: 'dashboard',
         pathMatch: 'full'

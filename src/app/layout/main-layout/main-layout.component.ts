@@ -207,6 +207,19 @@ interface NavGroup {
                   <span>Pharmacy Staff</span>
                 </a>
               </li>
+
+              <li>
+                <a
+                  [routerLink]="'/audit-logs'"
+                  routerLinkActive="active"
+                  [routerLinkActiveOptions]="{exact: false}"
+                  class="flex items-center gap-3 px-4 py-3 rounded-[var(--radius-md)] transition-colors"
+                  style="color: var(--sidebar-text);"
+                >
+                  <img [src]="getIcon('chart')" alt="" class="w-5 h-5" style="filter: brightness(0) invert(1);" />
+                  <span>{{ 'nav.auditLogs' | translate }}</span>
+                </a>
+              </li>
             </ul>
           </nav>
 
@@ -412,7 +425,8 @@ export class MainLayoutComponent implements OnInit {
       settings: 'nav.settings',
       inventory: 'inventory.alerts',
       bundles: 'nav.bundles',
-      'pharmacy-staff': 'Pharmacy Staff'
+      'pharmacy-staff': 'Pharmacy Staff',
+      'audit-logs': 'audit.title'
     };
     this.currentTitle = titleMap[route] || 'nav.dashboard';
   }

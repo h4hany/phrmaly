@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, inject, ViewChild, ElementRef, signal, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -11,6 +11,8 @@ import { BarcodeScannerDirective } from '../../../shared/directives/barcode-scan
 import { FormWrapperComponent } from '../../../shared/components/form-wrapper/form-wrapper.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { AlertComponent } from '../../../shared/components/alert/alert.component';
+import { AutocompleteComponent, AutocompleteOption } from '../../../shared/components/autocomplete/autocomplete.component';
+import { TranslatePipe } from '../../../core/pipes/translate.pipe';
 
 @Component({
   selector: 'app-invoice-form',
@@ -22,7 +24,8 @@ import { AlertComponent } from '../../../shared/components/alert/alert.component
     FormWrapperComponent,
     ButtonComponent,
     AlertComponent,
-    BarcodeScannerDirective
+    BarcodeScannerDirective,
+    TranslatePipe
   ],
   template: `
     <app-form-wrapper [title]="isEdit ? 'Edit Sales Invoice' : 'Create New Sales Invoice'">
@@ -31,7 +34,7 @@ import { AlertComponent } from '../../../shared/components/alert/alert.component
       }
 
       <form [formGroup]="invoiceForm" (ngSubmit)="onSubmit()" class="space-y-6">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">
               Patient <span class="text-red-500">*</span>
@@ -45,6 +48,56 @@ import { AlertComponent } from '../../../shared/components/alert/alert.component
                 <option [value]="patient.id">{{ patient.fullName }}</option>
               }
             </select>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ 'invoice.doctor' | translate }}</label>
+            <div class="relative doctor-dropdown-container">
+              <input
+                type="text"
+                [(ngModel)]="doctorInput"
+                [ngModelOptions]="{standalone: true}"
+                (input)="onDoctorInput($event)"
+                (focus)="showDoctorDropdown = true"
+                [placeholder]="'form.selectOrType' | translate"
+                class="w-full px-4 py-2.5 border border-gray-300 rounded-[var(--radius-md)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]"
+              />
+              @if (showDoctorDropdown) {
+                <div class="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-[var(--radius-md)] py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto">
+                  @if (doctorInput.trim() && filteredDoctors.length > 0) {
+                    @for (doctor of filteredDoctors; track doctor.id || doctor.name) {
+                      <button
+                        type="button"
+                        (click)="selectDoctor(doctor)"
+                        class="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer text-gray-900"
+                      >
+                        {{ doctor.name }}
+                      </button>
+                    }
+                  }
+                  @if (doctorInput.trim() && filteredDoctors.length === 0) {
+                    <button
+                      type="button"
+                      (click)="addNewDoctor()"
+                      class="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer text-[var(--primary-color)] font-medium"
+                    >
+                      {{ 'invoice.addNewDoctor' | translate }}: {{ doctorInput }}
+                    </button>
+                  }
+                  @if (!doctorInput.trim()) {
+                    @for (doctor of doctors; track doctor.id) {
+                      <button
+                        type="button"
+                        (click)="selectDoctor(doctor)"
+                        class="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer text-gray-900"
+                      >
+                        {{ doctor.name }}
+                      </button>
+                    }
+                  }
+                </div>
+              }
+            </div>
           </div>
 
           <div>
@@ -243,6 +296,18 @@ export class InvoiceFormComponent implements OnInit {
   barcodeInput = '';
   showDrugSelector = false;
   selectedDrugId = '';
+  
+  // Doctor autocomplete
+  doctorInput = '';
+  showDoctorDropdown = false;
+  doctors: Array<{id: string, name: string}> = [
+    { id: 'DOC001', name: 'Dr. John Smith' },
+    { id: 'DOC002', name: 'Dr. Jane Doe' },
+    { id: 'DOC003', name: 'Dr. Michael Johnson' },
+    { id: 'DOC004', name: 'Dr. Sarah Williams' }
+  ];
+  filteredDoctors: Array<{id?: string, name: string}> = [];
+  selectedDoctor: {doctorName: string, doctorId?: string, isNewDoctor: boolean} | null = null;
 
   get itemsArray(): FormArray {
     return this.invoiceForm.get('items') as FormArray;
@@ -285,7 +350,8 @@ export class InvoiceFormComponent implements OnInit {
       items: this.fb.array([]),
       discount: [0],
       paymentStatus: ['pending'],
-      paymentMethod: ['']
+      paymentMethod: [''],
+      doctor: [null]
     });
 
     this.loadPatients();
@@ -443,5 +509,51 @@ export class InvoiceFormComponent implements OnInit {
 
   onCancel(): void {
     this.router.navigate(['/invoices']);
+  }
+
+  onDoctorInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.doctorInput = input.value;
+    this.showDoctorDropdown = true;
+    
+    if (this.doctorInput.trim()) {
+      const searchTerm = this.doctorInput.toLowerCase();
+      this.filteredDoctors = this.doctors.filter(doctor =>
+        doctor.name.toLowerCase().includes(searchTerm)
+      );
+    } else {
+      this.filteredDoctors = [...this.doctors];
+    }
+  }
+
+  selectDoctor(doctor: {id?: string, name: string}): void {
+    this.doctorInput = doctor.name;
+    this.selectedDoctor = {
+      doctorName: doctor.name,
+      doctorId: doctor.id,
+      isNewDoctor: false
+    };
+    this.showDoctorDropdown = false;
+    this.invoiceForm.patchValue({ doctor: this.selectedDoctor });
+  }
+
+  addNewDoctor(): void {
+    const doctorName = this.doctorInput.trim();
+    if (doctorName) {
+      this.selectedDoctor = {
+        doctorName: doctorName,
+        isNewDoctor: true
+      };
+      this.showDoctorDropdown = false;
+      this.invoiceForm.patchValue({ doctor: this.selectedDoctor });
+    }
+  }
+
+  @HostListener('document:click', ['$event'])
+  onClickOutside(event: Event): void {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.doctor-dropdown-container')) {
+      this.showDoctorDropdown = false;
+    }
   }
 }

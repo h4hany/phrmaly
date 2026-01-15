@@ -26,6 +26,18 @@ import { switchMap, of } from 'rxjs';
           <div class="flex items-center justify-between mb-6">
             <h1 class="text-2xl font-bold text-[var(--text-primary)]">{{ 'invoice.details' | translate }}</h1>
             <div class="flex gap-3">
+              <app-button variant="outline" [loading]="printing" (onClick)="printInvoice()">
+                <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                </svg>
+                {{ 'invoice.print' | translate }}
+              </app-button>
+              <app-button variant="outline" [loading]="exporting" (onClick)="exportPdf()">
+                <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                {{ 'invoice.exportPdf' | translate }}
+              </app-button>
               <app-button variant="outline" (onClick)="editInvoice()">
                 <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -153,6 +165,8 @@ export class InvoiceDetailComponent implements OnInit {
   invoice: Invoice | null = null;
   loading = true;
   errorMessage = '';
+  printing = false;
+  exporting = false;
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
@@ -220,5 +234,24 @@ export class InvoiceDetailComponent implements OnInit {
 
   hasItemsWithDiscount(): boolean {
     return this.invoice?.items.some(item => item.discount) ?? false;
+  }
+
+  printInvoice(): void {
+    this.printing = true;
+    setTimeout(() => {
+      window.print();
+      this.printing = false;
+    }, 300);
+  }
+
+  exportPdf(): void {
+    this.exporting = true;
+    // Mock export action
+    setTimeout(() => {
+      console.log('Exporting PDF...');
+      // In a real implementation, this would call a service to generate and download the PDF
+      alert('PDF export functionality will be implemented with backend integration');
+      this.exporting = false;
+    }, 1000);
   }
 }
