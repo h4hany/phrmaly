@@ -40,3 +40,4 @@ export class PatientMedicalTabComponent {
   @Input() patient!: Patient;
 }
 
+
