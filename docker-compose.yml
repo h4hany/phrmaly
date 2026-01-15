@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  pharmly-frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    container_name: pharmly-frontend
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+    networks:
+      - pharmly-network
+
+networks:
+  pharmly-network:
+    driver: bridge
+
+
+
+
+
+
