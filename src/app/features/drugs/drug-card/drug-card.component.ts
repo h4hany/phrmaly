@@ -28,7 +28,7 @@ export interface DrugBadge {
           [style.top]="'50%'"
           [style.transform]="'translateY(-50%)'"
         >
-          <img src="/icons/medicine.svg" alt="" class="w-40 h-40"
+          <img src="icons/medicine.svg" alt="" class="w-40 h-40"
                style="filter: brightness(0) invert(1); opacity: 0.15;"/>
         </div>
       </div>

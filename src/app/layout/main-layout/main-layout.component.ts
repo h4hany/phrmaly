@@ -45,15 +45,15 @@ interface NavGroup {
             <div class="absolute inset-0 pointer-events-none" style="opacity: 0.15;">
               <!-- Icon 1 - Top Left -->
               <div class="absolute" style="top: 15%; left: -5%;">
-                <img src="/icons/medicine.svg" alt="" class="w-24 h-24" style="filter: brightness(0) invert(1); opacity: 0.4;" />
+                <img src="icons/medicine.svg" alt="" class="w-24 h-24" style="filter: brightness(0) invert(1); opacity: 0.4;" />
               </div>
               <!-- Icon 2 - Middle Right -->
               <div class="absolute" style="top: 50%; right: -5%;">
-                <img src="/icons/medicine.svg" alt="" class="w-24 h-24" style="filter: brightness(0) invert(1); opacity: 0.4;" />
+                <img src="icons/medicine.svg" alt="" class="w-24 h-24" style="filter: brightness(0) invert(1); opacity: 0.4;" />
               </div>
               <!-- Icon 3 - Bottom Center -->
               <div class="absolute" style="bottom: 15%; left: 50%; transform: translateX(-50%);">
-                <img src="/icons/medicine.svg" alt="" class="w-24 h-24" style="filter: brightness(0) invert(1); opacity: 0.4;" />
+                <img src="icons/medicine.svg" alt="" class="w-24 h-24" style="filter: brightness(0) invert(1); opacity: 0.4;" />
               </div>
             </div>
             <ul class="space-y-2 relative z-10">
@@ -455,20 +455,20 @@ export class MainLayoutComponent implements OnInit {
 
   getIcon(type: string): string {
     const iconPaths: { [key: string]: string } = {
-      grid: '/icons/grid.svg',
-      box: '/icons/box.svg',
-      cart: '/icons/cart.svg',
-      chart: '/icons/chart.svg',
-      users: '/icons/users.svg',
-      card: '/icons/card.svg',
-      help: '/icons/help.svg',
-      settings: '/icons/settings.svg',
-      truck: '/icons/truck.svg',
-      bundle: '/icons/bundle.svg',
-      alert: '/icons/alert.svg',
-      staff: '/icons/staff.svg',
-      medicine: '/icons/medicine.svg',
-      pill: '/icons/pill.svg'
+      grid: 'icons/grid.svg',
+      box: 'icons/box.svg',
+      cart: 'icons/cart.svg',
+      chart: 'icons/chart.svg',
+      users: 'icons/users.svg',
+      card: 'icons/card.svg',
+      help: 'icons/help.svg',
+      settings: 'icons/settings.svg',
+      truck: 'icons/truck.svg',
+      bundle: 'icons/bundle.svg',
+      alert: 'icons/alert.svg',
+      staff: 'icons/staff.svg',
+      medicine: 'icons/medicine.svg',
+      pill: 'icons/pill.svg'
     };
     return iconPaths[type] || '';
   }
