@@ -14,13 +14,11 @@ export interface ProfileBadge {
   template: `
     <div
       class="profile-card group relative rounded-xl p-6 transition-all duration-200 cursor-pointer hover:-translate-y-0.5 flex flex-col"
-      [style.background]="'var(--sidebar-bg, #003032)'"
       [style.color]="'var(--sidebar-text, #E3F4F5)'"
-      [style.box-shadow]="'0 4px 20px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.05)'"
       [style.min-height]="'320px'"
     >
       <!-- Medicine Icon Pattern Background -->
-      <div class="medicine-pattern absolute inset-0 pointer-events-none overflow-hidden rounded-xl">
+      <div class="medicine-pattern absolute inset-0 pointer-events-none overflow-visible rounded-xl">
         <div
           class="absolute medicine-icon"
           [style.right]="isRTL ? 'auto' : '1rem'"
@@ -40,11 +38,26 @@ export interface ProfileBadge {
         [style.box-shadow]="'0 0 40px rgba(217, 242, 117, 0.3)'"
       ></div>
 
+      <!-- View Button (Positioned outside cutout) -->
+      <button
+        type="button"
+        class="view-button"
+        [class.rtl-position]="isRTL"
+        (click)="onViewClick($event)"
+        [title]="'View Details'"
+      >
+        <!-- LTR: Arrow pointing up-right -->
+        <svg class="w-5 h-5 arrow-icon-ltr" [class.rotate-180]="isRTL"
+             fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"
+             [style.color]="'var(--primary-text, #003032)'">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/>
+        </svg>
+      </button>
+
       <!-- Content Container -->
       <div class="relative z-10 flex-1 flex flex-col">
-        <!-- Top Section: Avatar and View Button -->
-        <div class="flex items-start justify-between mb-5">
-
+        <!-- Top Section: Avatar -->
+        <div class="flex items-start mb-5">
           <!-- Avatar -->
           <div class="relative flex-shrink-0">
             @if (avatar) {
@@ -65,26 +78,6 @@ export interface ProfileBadge {
               </div>
             }
           </div>
-
-          <!-- View Button (Always Visible in Top Right) -->
-          <button
-            type="button"
-            class="view-button p-2.5 rounded-full transition-all duration-200 shadow-lg z-20 flex-shrink-0"
-            [style.background-color]="'var(--primary-bg, #D9F275)'"
-            (click)="onViewClick($event)"
-            [title]="'View Details'"
-          >
-            <!-- LTR: Arrow pointing up-right -->
-            <svg class="w-5 h-5 arrow-icon-ltr" [class.rotate-180]="isRTL"
-                 fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"
-                 [style.color]="'var(--primary-text, #003032)'">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/>
-            </svg>
-            <!-- RTL: Arrow pointing left -->
-            <!--            <svg class="w-5 h-5 arrow-icon-rtl" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5" [style.color]="'var(&#45;&#45;primary-text, #003032)'">-->
-            <!--              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5l-7.5-7.5 7.5-7.5m-6 7.5h12.5" />-->
-            <!--            </svg>-->
-          </button>
         </div>
 
         <!-- Main Content -->
@@ -187,17 +180,107 @@ export interface ProfileBadge {
     </div>
   `,
   styles: [`
-
-
-
     .profile-card {
       position: relative;
-      overflow: hidden;
+      overflow: visible;
+      contain: layout;
+
+      /* Geometry variables for cutout */
+      --w: 50px;
+      --h: 50px;
+      --outline: 20px;
+      --radius: 20px;
+
+      /* Derived values */
+      --offset: calc(-1 * var(--outline));
+      --size: calc(var(--radius) + var(--outline));
+
+      /* 🔥 TOP-RIGHT CONCAVE NOTCH 🔥 */
+      background:
+        /* horizontal carve */
+        calc(100% - var(--offset)) var(--h)
+        radial-gradient(
+          circle at left bottom,
+          transparent var(--radius),
+          #F7F7F7 var(--radius)
+        ),
+        /* vertical carve */
+        calc(100% - var(--w)) var(--offset)
+        radial-gradient(
+          circle at left bottom,
+          transparent var(--radius),
+          #F7F7F7 var(--radius)
+        ),
+        /* Card background */
+        var(--sidebar-bg, #003032);
+
+      background-repeat: no-repeat;
+      background-size: var(--size) var(--size),
+                       var(--size) var(--size),
+                       cover;
+    }
+
+    /* RTL: Flip cutout to top-left */
+    [dir="rtl"] .profile-card,
+    :host-context([dir="rtl"]) .profile-card,
+    :host-context(html[dir="rtl"]) .profile-card {
+      background:
+        /* horizontal carve (top-left for RTL) */
+        var(--offset) var(--h)
+        radial-gradient(
+          circle at right bottom,
+          transparent var(--radius),
+          #F7F7F7 var(--radius)
+        ),
+        /* vertical carve */
+        var(--w) var(--offset)
+        radial-gradient(
+          circle at right bottom,
+          transparent var(--radius),
+          #F7F7F7 var(--radius)
+        ),
+        /* Card background */
+        var(--sidebar-bg, #003032);
+
+      background-repeat: no-repeat;
+      background-size: var(--size) var(--size),
+                       var(--size) var(--size),
+                       cover;
+    }
+
+    /* ROUND BUTTON SLOT - positioned outside cutout */
+    .view-button {
+      position: absolute;
+      top: 2px;
+      right: 0;
+      width: var(--w);
+      height: var(--h);
+      outline: var(--outline) solid #F7F7F7;
+      border-radius: 50%;
+      background: var(--primary-bg, #D9F275);
+      border-color: var(--primary-bg);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      transition: background 0.15s ease, transform 0.15s ease;
+      z-index: 20;
+      padding: 0;
+      border: none;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     }
 
     .view-button:hover {
-      transform: scale(1.1);
-      filter: brightness(1.1);
+      /*background: var(--primary-bg-hover, #c9e265);*/
+      transform: scale(1.05);
+    }
+
+    /* RTL: Position button on top-left */
+    .view-button.rtl-position,
+    [dir="rtl"] .view-button,
+    :host-context([dir="rtl"]) .view-button,
+    :host-context(html[dir="rtl"]) .view-button {
+      right: auto;
+      left: 0;
     }
 
     .profile-card::before {
@@ -241,14 +324,6 @@ export interface ProfileBadge {
       left: 0;
     }
 
-    /* RTL: Reverse view button position */
-    [dir="rtl"] .view-button {
-      order: -1;
-    }
-
-    [dir="rtl"] .profile-card .flex.items-start.justify-between {
-      flex-direction: row-reverse;
-    }
 
     /* Ensure LTR arrow is visible by default */
     .arrow-icon-ltr {
