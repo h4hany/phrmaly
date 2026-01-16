@@ -8,11 +8,29 @@ import { AlertComponent } from '../../../shared/components/alert/alert.component
 import { TranslatePipe } from '../../../core/pipes/translate.pipe';
 import { TranslationService } from '../../../core/services/translation.service';
 import { UserRole } from '../../../core/models/user.model';
+import { TabsComponent, TabComponent } from '../../../shared/components/tabs/tabs.component';
+import { StaffKPICardComponent } from '../../../shared/components/staff-kpi-card/staff-kpi-card.component';
+import { PerformanceScoreRingComponent } from '../../../shared/components/performance-score-ring/performance-score-ring.component';
+import { TimelineComponent, TimelineEvent } from '../../../shared/components/timeline/timeline.component';
+import { HRPerformanceService } from '../../../core/services/hr-performance.service';
+import { AttendanceService } from '../../../core/services/attendance.service';
+import { RiskBadgeComponent } from '../../../shared/components/risk-badge/risk-badge.component';
 
 @Component({
   selector: 'app-pharmacy-staff-detail',
   standalone: true,
-  imports: [CommonModule, ButtonComponent, AlertComponent, TranslatePipe],
+  imports: [
+    CommonModule, 
+    ButtonComponent, 
+    AlertComponent, 
+    TranslatePipe,
+    TabsComponent,
+    TabComponent,
+    StaffKPICardComponent,
+    PerformanceScoreRingComponent,
+    TimelineComponent,
+    RiskBadgeComponent
+  ],
   template: `
     <div class="space-y-[var(--spacing-gap)]">
       @if (errorMessage) {
@@ -89,6 +107,90 @@ import { UserRole } from '../../../core/models/user.model';
             </div>
           </div>
         </div>
+
+        <!-- HR Performance Dashboard -->
+        @if (staff) {
+          <app-tabs>
+            <app-tab [title]="'hr.performance.title' | translate" [active]="true">
+              <div class="space-y-6 p-6">
+                <!-- Performance KPIs -->
+                @if (performanceMetrics) {
+                  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <app-staff-kpi-card
+                      [label]="'hr.performance.salesRevenue'"
+                      [value]="performanceMetrics.sales.totalRevenue"
+                      [unit]="'USD'"
+                      [icon]="'chart'"
+                      [trend]="performanceMetrics.sales.growthPercentage"
+                    />
+                    <app-staff-kpi-card
+                      [label]="'hr.performance.totalInvoices'"
+                      [value]="performanceMetrics.sales.totalInvoices"
+                      [icon]="'receipt'"
+                    />
+                    <app-staff-kpi-card
+                      [label]="'hr.performance.attendance'"
+                      [value]="performanceMetrics.attendance.percentage"
+                      [unit]="'%'"
+                      [icon]="'calendar'"
+                    />
+                    <app-staff-kpi-card
+                      [label]="'hr.performance.errors'"
+                      [value]="performanceMetrics.errors.totalErrors"
+                      [icon]="'alert'"
+                    />
+                  </div>
+
+                  <!-- Performance Score & Risk -->
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-[var(--card-bg)] rounded-[var(--radius-lg)] shadow-[var(--shadow-sm)] p-6">
+                      <h3 class="text-lg font-semibold text-[var(--text-primary)] mb-4">{{ 'hr.performance.overallScore' | translate }}</h3>
+                      <div class="flex items-center justify-center">
+                        <app-performance-score-ring
+                          [score]="performanceMetrics.overallScore"
+                          [label]="'hr.performance.grade'"
+                        />
+                      </div>
+                      <div class="text-center mt-4">
+                        <p class="text-2xl font-bold text-[var(--text-primary)]">{{ performanceMetrics.performanceGrade }}</p>
+                      </div>
+                    </div>
+
+                    <div class="bg-[var(--card-bg)] rounded-[var(--radius-lg)] shadow-[var(--shadow-sm)] p-6">
+                      <h3 class="text-lg font-semibold text-[var(--text-primary)] mb-4">{{ 'hr.performance.riskAssessment' | translate }}</h3>
+                      <div class="flex items-center justify-center mb-4">
+                        <app-risk-badge
+                          [level]="performanceMetrics.riskLevel"
+                          [score]="performanceMetrics.riskScore"
+                        />
+                      </div>
+                      <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                          <span class="text-[var(--card-text)]">{{ 'hr.performance.suspiciousMovements' | translate }}</span>
+                          <span class="font-medium text-[var(--text-primary)]">{{ performanceMetrics.inventory.suspiciousMovements }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                          <span class="text-[var(--card-text)]">{{ 'hr.performance.totalMovements' | translate }}</span>
+                          <span class="font-medium text-[var(--text-primary)]">{{ performanceMetrics.inventory.movements }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Activity Timeline -->
+                  <div class="bg-[var(--card-bg)] rounded-[var(--radius-lg)] shadow-[var(--shadow-sm)] p-6">
+                    <h3 class="text-lg font-semibold text-[var(--text-primary)] mb-4">{{ 'hr.performance.activityTimeline' | translate }}</h3>
+                    <app-timeline [events]="timelineEvents" />
+                  </div>
+                } @else if (loadingPerformance) {
+                  <div class="text-center py-12">
+                    <p class="text-[var(--card-text)]">{{ 'common.loading' | translate }}</p>
+                  </div>
+                }
+              </div>
+            </app-tab>
+          </app-tabs>
+        }
       } @else if (loading) {
         <div class="text-center py-12">
           <p class="text-[var(--card-text)]">{{ 'staff.loadingDetails' | translate }}</p>
@@ -103,10 +205,14 @@ export class PharmacyStaffDetailComponent implements OnInit {
   private router = inject(Router);
   private pharmacyStaffService = inject(PharmacyStaffService);
   private translationService = inject(TranslationService);
+  private hrPerformanceService = inject(HRPerformanceService);
 
   staff: PharmacyStaff | null = null;
   loading = true;
   errorMessage = '';
+  loadingPerformance = false;
+  performanceMetrics: any = null;
+  timelineEvents: TimelineEvent[] = [];
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
@@ -127,12 +233,50 @@ export class PharmacyStaffDetailComponent implements OnInit {
         this.loading = false;
         if (!staff) {
           this.errorMessage = 'Staff member not found';
+        } else {
+          this.loadPerformanceData(id);
         }
       },
       error: (error) => {
         this.errorMessage = 'Failed to load staff member details';
         this.loading = false;
         console.error('Error loading staff:', error);
+      }
+    });
+  }
+
+  loadPerformanceData(staffId: string): void {
+    this.loadingPerformance = true;
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setMonth(startDate.getMonth() - 1);
+
+    this.hrPerformanceService.getPerformanceMetrics(staffId, startDate, endDate).subscribe({
+      next: (metrics) => {
+        this.performanceMetrics = metrics;
+        this.loadingPerformance = false;
+        this.loadActivityTimeline(staffId);
+      },
+      error: (error) => {
+        console.error('Error loading performance metrics:', error);
+        this.loadingPerformance = false;
+      }
+    });
+  }
+
+  loadActivityTimeline(staffId: string): void {
+    this.hrPerformanceService.getStaffActivities(staffId, 20).subscribe({
+      next: (activities) => {
+        this.timelineEvents = activities.map(activity => ({
+          id: activity.id,
+          title: activity.description,
+          timestamp: activity.timestamp,
+          type: activity.type === 'sale' ? 'success' : activity.type === 'audit' ? 'warning' : 'info',
+          metadata: activity.metadata
+        }));
+      },
+      error: (error) => {
+        console.error('Error loading activities:', error);
       }
     });
   }

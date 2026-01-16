@@ -66,6 +66,15 @@ export class AuthService {
       role: UserRole.PHARMACY_STAFF,
       fullName: 'Jane Staff',
       pharmacyId: 'ph1'
+    },
+    {
+      id: '4',
+      email: 'admin@pharmly.com',
+      username: 'admin',
+      password: 'password',
+      role: UserRole.SUPER_ADMIN,
+      fullName: 'Super Admin',
+      avatarUrl: 'https://ui-avatars.com/api/?name=Super+Admin'
     }
   ];
 

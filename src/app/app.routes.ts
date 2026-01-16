@@ -1,11 +1,26 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
+import { pharmacyGuard } from './core/guards/pharmacy.guard';
 
 export const routes: Routes = [
+  // Public routes (no authentication required)
+  {
+    path: '',
+    loadComponent: () => import('./features/public/homepage/homepage.component').then(m => m.HomepageComponent)
+  },
+  {
+    path: 'drug-index',
+    loadComponent: () => import('./features/public/drug-index/drug-index.component').then(m => m.DrugIndexComponent)
+  },
   {
     path: 'login',
     loadComponent: () => import('./features/auth/login/login.component').then(m => m.LoginComponent)
   },
+  {
+    path: 'admin-login',
+    loadComponent: () => import('./features/auth/admin-login/admin-login.component').then(m => m.AdminLoginComponent)
+  },
+  // Protected routes (authentication required) - All under MainLayoutComponent
   {
     path: '',
     canActivate: [authGuard],
@@ -13,97 +28,126 @@ export const routes: Routes = [
     children: [
       {
         path: 'dashboard',
+        canActivate: [pharmacyGuard],
         loadComponent: () => import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent)
       },
       {
         path: 'patients',
+        canActivate: [pharmacyGuard],
         loadChildren: () => import('./features/patients/patients.routes').then(m => m.routes)
       },
       {
         path: 'drugs',
+        canActivate: [pharmacyGuard],
         loadChildren: () => import('./features/drugs/drugs.routes').then(m => m.routes)
       },
       {
         path: 'purchases',
+        canActivate: [pharmacyGuard],
         loadChildren: () => import('./features/purchases/purchases.routes').then(m => m.routes)
       },
       {
         path: 'invoices',
+        canActivate: [pharmacyGuard],
         loadChildren: () => import('./features/invoices/invoices.routes').then(m => m.routes)
       },
       {
         path: 'suppliers',
+        canActivate: [pharmacyGuard],
         loadChildren: () => import('./features/suppliers/suppliers.routes').then(m => m.routes)
       },
       {
         path: 'payments',
+        canActivate: [pharmacyGuard],
         loadChildren: () => import('./features/payments/payments.routes').then(m => m.routes)
       },
       {
         path: 'reports',
+        canActivate: [pharmacyGuard],
         loadChildren: () => import('./features/reports/reports.routes').then(m => m.routes)
       },
       {
         path: 'settings',
+        canActivate: [pharmacyGuard],
         loadChildren: () => import('./features/settings/settings.routes').then(m => m.routes)
       },
       {
         path: 'bundles',
+        canActivate: [pharmacyGuard],
         loadChildren: () => import('./features/bundles/bundles.routes').then(m => m.routes)
       },
       {
         path: 'inventory',
+        canActivate: [pharmacyGuard],
         loadChildren: () => import('./features/inventory/inventory.routes').then(m => m.routes)
       },
       {
         path: 'inventory/movements',
+        canActivate: [pharmacyGuard],
         loadChildren: () => import('./features/inventory-movements/inventory-movements.routes').then(m => m.routes)
       },
       {
         path: 'inventory/transfers',
+        canActivate: [pharmacyGuard],
         loadChildren: () => import('./features/inventory-transfers/inventory-transfers.routes').then(m => m.routes)
       },
       {
         path: 'inventory/map',
+        canActivate: [pharmacyGuard],
         loadComponent: () => import('./features/inventory-map/inventory-map.component').then(m => m.InventoryMapComponent)
       },
       {
         path: 'growth/referrals',
+        canActivate: [pharmacyGuard],
         loadChildren: () => import('./features/referrals/referrals.routes').then(m => m.routes)
       },
       {
         path: 'system/automation',
+        canActivate: [pharmacyGuard],
         loadChildren: () => import('./features/automation/automation.routes').then(m => m.routes)
       },
       {
         path: 'system/migration',
+        canActivate: [pharmacyGuard],
         loadComponent: () => import('./features/migration/migration.component').then(m => m.MigrationComponent)
       },
       {
         path: 'system/permissions',
+        canActivate: [pharmacyGuard],
         loadComponent: () => import('./features/permissions/permissions.component').then(m => m.PermissionsComponent)
       },
       {
         path: 'system/features',
+        canActivate: [pharmacyGuard],
         loadComponent: () => import('./features/feature-flags/feature-flags.component').then(m => m.FeatureFlagsComponent)
       },
       {
         path: 'pharmacy-staff',
+        canActivate: [pharmacyGuard],
         loadChildren: () => import('./features/pharmacy-staff/pharmacy-staff.routes').then(m => m.routes)
       },
       {
         path: 'audit-logs',
+        canActivate: [pharmacyGuard],
         loadChildren: () => import('./features/audit-logs/audit-logs.routes').then(m => m.routes)
       },
       {
+        path: 'people',
+        canActivate: [pharmacyGuard],
+        loadChildren: () => import('./features/hr/hr.routes').then(m => m.routes)
+      },
+      {
+        path: 'system',
+        loadChildren: () => import('./features/system/system.routes').then(m => m.routes)
+      },
+      {
         path: '',
-        redirectTo: 'dashboard',
-        pathMatch: 'full'
+        loadComponent: () => import('./features/system/redirect/redirect.component').then(m => m.RedirectComponent)
       }
     ]
   },
   {
     path: '**',
-    redirectTo: 'dashboard'
+    redirectTo: ''
   }
 ];

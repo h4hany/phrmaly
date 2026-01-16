@@ -6,6 +6,7 @@ import { TimelineComponent, TimelineEvent } from '../../../shared/components/tim
 import { MovementEngineService } from '../../../core/engines/movement-engine.service';
 import { DrugMovement } from '../../../core/models/movement.model';
 import { TranslatePipe } from '../../../core/pipes/translate.pipe';
+import { TranslationService } from '../../../core/services/translation.service';
 
 @Component({
   selector: 'app-movements-detail',
@@ -101,6 +102,7 @@ import { TranslatePipe } from '../../../core/pipes/translate.pipe';
 export class MovementsDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private movementEngine = inject(MovementEngineService);
+  private translationService = inject(TranslationService);
   router = inject(Router);
 
   movement: DrugMovement | null = null;
@@ -123,13 +125,13 @@ export class MovementsDetailComponent implements OnInit {
           this.timelineEvents = [
             {
               id: '1',
-              title: 'Movement Recorded',
+              title: this.translationService.translate('movements.movementRecorded'),
               description: `${movement.movementType} - ${movement.quantity} units`,
               timestamp: movement.timestamp,
               type: movement.riskLevel === 'critical' || movement.riskLevel === 'high' ? 'danger' : 'info',
               metadata: {
-                Staff: movement.staffName || 'Unknown',
-                Risk: movement.riskLevel
+                [this.translationService.translate('movements.staff')]: movement.staffName || this.translationService.translate('movements.unknown'),
+                [this.translationService.translate('movements.risk')]: movement.riskLevel
               }
             }
           ];

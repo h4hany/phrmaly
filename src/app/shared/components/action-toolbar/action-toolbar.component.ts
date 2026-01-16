@@ -41,7 +41,7 @@ import { TranslatePipe } from '../../../core/pipes/translate.pipe';
             size="sm"
             (onClick)="onFilter.emit()"
           >
-            {{ 'common.filter' | translate }}
+            {{ 'common.filters' | translate }}
           </app-button>
         }
         

@@ -48,11 +48,16 @@ export class TranslationService {
       )
     }).subscribe({
       next: (translations) => {
-        this.translations.en = translations.en;
-        this.translations.ar = translations.ar;
+        this.translations.en = translations.en || {};
+        this.translations.ar = translations.ar || {};
         this.translationsLoaded.next(true);
         // Trigger change detection by emitting language change
-        this.currentLangSubject.next(this.currentLangSubject.value);
+        const currentLang = this.currentLangSubject.value;
+        this.currentLangSubject.next(currentLang);
+        console.log('Translations loaded successfully:', {
+          en: Object.keys(this.translations.en).length,
+          ar: Object.keys(this.translations.ar).length
+        });
       },
       error: (error) => {
         console.error('Error loading translations:', error);

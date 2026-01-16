@@ -14,6 +14,7 @@ import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
+import { PlatformContextService } from '../../../../core/services/platform-context.service';
 import { TranslationService } from '../../../../core/services/translation.service';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
 import { IconComponent } from '../../../../shared/components/icon/icon.component';
@@ -40,6 +41,7 @@ import { SIDEBAR_GROUPS, SidebarGroup, SidebarItem } from './sidebar.config';
 export class SidebarComponent implements OnInit {
   private router = inject(Router);
   private authService = inject(AuthService);
+  private platformContext = inject(PlatformContextService);
   private translationService = inject(TranslationService);
 
   // Navigation groups from config
@@ -48,9 +50,10 @@ export class SidebarComponent implements OnInit {
   // Collapsed state for each group
   collapsedGroups = signal<{ [key: string]: boolean }>({});
 
-  // Filtered groups based on permissions (future-ready)
+  // Filtered groups based on permissions
   visibleGroups = computed(() => {
-    return this.groups.filter(group => this.isGroupVisible(group));
+    const isPlatformMode = this.platformContext.isPlatformMode();
+    return this.groups.filter(group => this.isGroupVisible(group, isPlatformMode));
   });
 
   ngOnInit(): void {
@@ -73,19 +76,28 @@ export class SidebarComponent implements OnInit {
     return this.collapsedGroups()[groupKey] ?? false;
   }
 
-  isGroupVisible(group: SidebarGroup): boolean {
-    // Future: Check role-based visibility
-    // For now, all groups are visible
+  isGroupVisible(group: SidebarGroup, isPlatformMode: boolean): boolean {
+    // If platform mode, only show System Console group
+    if (isPlatformMode) {
+      return group.key === 'system-console';
+    }
+    
+    // If not platform mode, hide System Console group
+    if (group.key === 'system-console') {
+      return false;
+    }
+    
+    // Check role-based visibility for other groups
     if (group.roles && group.roles.length > 0) {
       const user = this.authService.getCurrentUser();
       return user ? group.roles.includes(user.role) : false;
     }
+    
     return true;
   }
 
   isItemVisible(item: SidebarItem): boolean {
-    // Future: Check role-based visibility
-    // For now, all items are visible
+    // Check role-based visibility
     if (item.roles && item.roles.length > 0) {
       const user = this.authService.getCurrentUser();
       return user ? item.roles.includes(user.role) : false;

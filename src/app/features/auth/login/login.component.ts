@@ -1,7 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { AlertComponent } from '../../../shared/components/alert/alert.component';
 
@@ -11,7 +11,8 @@ import { AlertComponent } from '../../../shared/components/alert/alert.component
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    AlertComponent
+    AlertComponent,
+    RouterLink
   ],
   template: `
     <div class="login-container">
@@ -140,11 +141,11 @@ import { AlertComponent } from '../../../shared/components/alert/alert.component
           </form>
 
           <div class="divider">
-            <span>New to Pharmly?</span>
+            <span>Admin Access?</span>
           </div>
 
           <div class="signup-link">
-            Don't have an account? <a href="#" (click)="$event.preventDefault()">Create Account</a>
+            <a [routerLink]="['/admin-login']">System Console Login</a>
           </div>
         </div>
       </div>

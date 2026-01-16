@@ -1,0 +1,219 @@
+<!-- Background Effects -->
+<div class="bg-effects">
+  <canvas #particleCanvas id="particleCanvas"></canvas>
+  <div class="bg-gradient"></div>
+  <div class="floating-shape shape-1"></div>
+  <div class="floating-shape shape-2"></div>
+</div>
+
+<!-- Navigation -->
+<nav class="navbar">
+  <a routerLink="/" class="nav-brand" (click)="navigateToHome()">
+    <div class="nav-logo">💊</div>
+    <span class="nav-brand-text">Pharmaly OS</span>
+  </a>
+  <div class="nav-actions">
+    <a routerLink="/" class="btn-nav" (click)="navigateToHome()">← Back to Home</a>
+    <a routerLink="/login" class="btn-nav" (click)="navigateToLogin()">Login</a>
+  </div>
+</nav>
+
+<!-- Main Container -->
+<div class="container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <span class="page-badge">🔍 Drug Database</span>
+    <h1 class="page-title">Drug Index</h1>
+    <p class="page-subtitle">Search our comprehensive pharmaceutical database - Find drug information, prices, and active ingredients</p>
+  </div>
+
+  <!-- Search Section -->
+  <div class="search-section">
+    <div class="search-container">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"></circle>
+        <path d="m21 21-4.35-4.35"></path>
+      </svg>
+      <input 
+        type="text" 
+        class="search-input" 
+        [(ngModel)]="searchTerm"
+        (ngModelChange)="onSearchChange()"
+        placeholder="Search by drug name, barcode, or manufacturer..."
+        autocomplete="off"
+      >
+    </div>
+
+    <div class="filters">
+      <div class="filter-group">
+        <label class="filter-label">Type</label>
+        <select class="filter-select" [(ngModel)]="typeFilter" (ngModelChange)="onFilterChange()">
+          <option value="all">All Types</option>
+          <option value="tablets">Tablets</option>
+          <option value="capsules">Capsules</option>
+          <option value="liquid">Liquid Suspension</option>
+          <option value="injection">Injection</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label class="filter-label">Manufacturer</label>
+        <select class="filter-select" [(ngModel)]="manufacturerFilter" (ngModelChange)="onFilterChange()">
+          <option value="all">All Manufacturers</option>
+          <option *ngFor="let manufacturer of manufacturers" [value]="manufacturer">{{ manufacturer }}</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label class="filter-label">Sort By</label>
+        <select class="filter-select" [(ngModel)]="sortFilter" (ngModelChange)="onSortChange()">
+          <option value="name-asc">Name (A-Z)</option>
+          <option value="name-desc">Name (Z-A)</option>
+          <option value="price-asc">Price (Low to High)</option>
+          <option value="price-desc">Price (High to Low)</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results Header -->
+  <div class="results-header">
+    <div class="results-count">
+      Showing <span>{{ filteredDrugs.length }}</span> drugs
+    </div>
+    <div class="view-toggle">
+      <button class="view-btn" [class.active]="viewMode === 'grid'" (click)="setViewMode('grid')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+          <rect x="3" y="3" width="7" height="7"></rect>
+          <rect x="14" y="3" width="7" height="7"></rect>
+          <rect x="14" y="14" width="7" height="7"></rect>
+          <rect x="3" y="14" width="7" height="7"></rect>
+        </svg>
+      </button>
+      <button class="view-btn" [class.active]="viewMode === 'list'" (click)="setViewMode('list')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="8" y1="6" x2="21" y2="6"></line>
+          <line x1="8" y1="12" x2="21" y2="12"></line>
+          <line x1="8" y1="18" x2="21" y2="18"></line>
+          <line x1="3" y1="6" x2="3.01" y2="6"></line>
+          <line x1="3" y1="12" x2="3.01" y2="12"></line>
+          <line x1="3" y1="18" x2="3.01" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  @if (loading) {
+    <div class="loading">
+      <div class="loading-spinner"></div>
+      <p>Loading drug database...</p>
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (!loading && filteredDrugs.length === 0) {
+    <div class="empty-state">
+      <div class="empty-icon">🔍</div>
+      <div class="empty-title">No Drugs Found</div>
+      <div class="empty-text">Try adjusting your search or filters</div>
+    </div>
+  }
+
+  <!-- Drugs Grid -->
+  @if (!loading && filteredDrugs.length > 0) {
+    <div class="drugs-grid" [class.list-view]="viewMode === 'list'">
+      @for (drug of filteredDrugs; track drug.id) {
+        <div class="drug-card" (click)="openModal(drug)">
+          <div class="drug-header">
+            <div style="font-size: 32px;">{{ getTypeIcon(drug.type) }}</div>
+            <span class="drug-type-badge">{{ drug.type || 'N/A' }}</span>
+          </div>
+          <div class="drug-name">{{ drug.name }}</div>
+          @if (drug.manufacturer) {
+            <div class="drug-manufacturer">🏭 {{ drug.manufacturer }}</div>
+          }
+          @if (drug.activeIngredient) {
+            <div class="drug-active-ingredient">🧬 {{ drug.activeIngredient }}</div>
+          }
+          <div class="drug-description">{{ drug.description || 'No description available' }}</div>
+          <div class="drug-info">
+            <div class="info-item">
+              <span class="info-label">Price Reference</span>
+              <span class="info-value price">${{ drug.priceReference?.toFixed(2) || 'N/A' }}</span>
+            </div>
+          </div>
+          @if (drug.barcode) {
+            <div class="drug-barcodes">
+              <span class="barcode-chip">{{ drug.barcode }}</span>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>
+
+<!-- Drug Detail Modal -->
+@if (selectedDrug) {
+  <div class="modal active" (click)="closeModal()" id="drugModal">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-close" (click)="closeModal()">×</div>
+      <div class="modal-header">
+        <h2 class="modal-drug-name">{{ selectedDrug.name }}</h2>
+        @if (selectedDrug.manufacturer) {
+          <div class="modal-drug-manufacturer">🏭 {{ selectedDrug.manufacturer }}</div>
+        }
+        <p class="modal-drug-description">{{ selectedDrug.description || 'No description available' }}</p>
+      </div>
+
+      <div class="modal-sections">
+        <!-- Drug Information Section -->
+        <div class="modal-section">
+          <h3 class="modal-section-title">💊 Drug Information</h3>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <span class="detail-label">Type</span>
+              <span class="detail-value">{{ selectedDrug.type || 'N/A' }}</span>
+            </div>
+            @if (selectedDrug.activeIngredient) {
+              <div class="detail-item">
+                <span class="detail-label">Active Ingredient</span>
+                <span class="detail-value">{{ selectedDrug.activeIngredient }}</span>
+              </div>
+            }
+            <div class="detail-item">
+              <span class="detail-label">Price Reference</span>
+              <span class="detail-value highlight">${{ selectedDrug.priceReference?.toFixed(2) || 'N/A' }}</span>
+            </div>
+            @if (selectedDrug.genericName) {
+              <div class="detail-item">
+                <span class="detail-label">Generic Name</span>
+                <span class="detail-value">{{ selectedDrug.genericName }}</span>
+              </div>
+            }
+            @if (selectedDrug.barcode) {
+              <div class="detail-item">
+                <span class="detail-label">Barcode</span>
+                <span class="detail-value">{{ selectedDrug.barcode }}</span>
+              </div>
+            }
+            @if (selectedDrug.atcCode) {
+              <div class="detail-item">
+                <span class="detail-label">ATC Code</span>
+                <span class="detail-value">{{ selectedDrug.atcCode }}</span>
+              </div>
+            }
+            @if (selectedDrug.therapeuticClass) {
+              <div class="detail-item">
+                <span class="detail-label">Therapeutic Class</span>
+                <span class="detail-value">{{ selectedDrug.therapeuticClass }}</span>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+

@@ -7,6 +7,7 @@
  * Business Domain Grouping:
  * - Overview: Dashboard
  * - Operations: Sales, Customers, Staff
+ * - People & HR: Staff Profiles, Attendance, Payroll, Performance, Training
  * - Inventory: Products, Bundles, Alerts, Transfers, Shelf Map
  * - Procurement: Suppliers, Orders
  * - Finance: Payments, Audit Logs, Drug Movements
@@ -63,6 +64,42 @@ export const SIDEBAR_GROUPS: SidebarGroup[] = [
     order: 2
   },
 
+  // People & HR Group
+  {
+    key: 'people',
+    label: 'nav.people',
+    icon: 'users',
+    items: [
+      {
+        path: '/pharmacy-staff',
+        label: 'nav.staffProfiles',
+        icon: 'id-badge'
+      },
+      {
+        path: '/people/attendance',
+        label: 'nav.attendance',
+        icon: 'clock'
+      },
+      {
+        path: '/people/payroll',
+        label: 'nav.payroll',
+        icon: 'credit-card'
+      },
+      {
+        path: '/people/performance',
+        label: 'nav.performance',
+        icon: 'chart'
+      },
+      {
+        path: '/people/training',
+        label: 'nav.training',
+        icon: 'graduation-cap'
+      }
+    ],
+    collapsedByDefault: true,
+    order: 3
+  },
+
   // Inventory Group
   {
     key: 'inventory',
@@ -96,7 +133,7 @@ export const SIDEBAR_GROUPS: SidebarGroup[] = [
       }
     ],
     collapsedByDefault: true,
-    order: 3
+    order: 4
   },
 
   // Procurement Group
@@ -117,7 +154,7 @@ export const SIDEBAR_GROUPS: SidebarGroup[] = [
       }
     ],
     collapsedByDefault: true,
-    order: 4
+    order: 5
   },
 
   // Finance Group
@@ -143,7 +180,7 @@ export const SIDEBAR_GROUPS: SidebarGroup[] = [
       }
     ],
     collapsedByDefault: true,
-    order: 5
+    order: 6
   },
 
   // Growth Group
@@ -159,10 +196,67 @@ export const SIDEBAR_GROUPS: SidebarGroup[] = [
       }
     ],
     collapsedByDefault: true,
-    order: 6
+    order: 7
   },
 
-  // System Group
+  // System Console Group (Platform Admin Only)
+  {
+    key: 'system-console',
+    label: 'nav.systemConsole',
+    icon: 'shield-check',
+    items: [
+      {
+        path: '/system/dashboard',
+        label: 'nav.platformDashboard',
+        icon: 'layout-grid'
+      },
+      {
+        path: '/system/accounts',
+        label: 'nav.accounts',
+        icon: 'users'
+      },
+      {
+        path: '/system/subscriptions',
+        label: 'nav.subscriptions',
+        icon: 'credit-card'
+      },
+      {
+        path: '/system/catalog',
+        label: 'nav.globalDrugs',
+        icon: 'pill-bottle'
+      },
+      {
+        path: '/system/support',
+        label: 'nav.supportTickets',
+        icon: 'help-circle'
+      },
+      {
+        path: '/system/feature-flags',
+        label: 'nav.platformFeatures',
+        icon: 'toggle-sliders'
+      },
+      {
+        path: '/system/risk',
+        label: 'nav.accountRisk',
+        icon: 'shield-check'
+      },
+      {
+        path: '/system/admins',
+        label: 'nav.adminUsers',
+        icon: 'id-badge'
+      },
+      {
+        path: '/system/analytics',
+        label: 'nav.platformAnalytics',
+        icon: 'chart'
+      }
+    ],
+    collapsedByDefault: true,
+    order: 7,
+    roles: ['super_admin', 'support_admin', 'sales_admin', 'finance_admin']
+  },
+
+  // System Group (Pharmacy-level)
   {
     key: 'system',
     label: 'nav.system',
@@ -195,7 +289,7 @@ export const SIDEBAR_GROUPS: SidebarGroup[] = [
       }
     ],
     collapsedByDefault: true,
-    order: 7
+    order: 8
   },
 
   // Support Group
@@ -211,7 +305,7 @@ export const SIDEBAR_GROUPS: SidebarGroup[] = [
       }
     ],
     collapsedByDefault: false,
-    order: 8
+    order: 9
   }
 ];
 

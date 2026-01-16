@@ -7,6 +7,7 @@ import { RiskBadgeComponent } from '../../../shared/components/risk-badge/risk-b
 import { MovementEngineService } from '../../../core/engines/movement-engine.service';
 import { StaffRiskScore } from '../../../core/models/movement.model';
 import { TranslatePipe } from '../../../core/pipes/translate.pipe';
+import { TranslationService } from '../../../core/services/translation.service';
 
 @Component({
   selector: 'app-movements-risk-dashboard',
@@ -62,6 +63,7 @@ import { TranslatePipe } from '../../../core/pipes/translate.pipe';
 })
 export class MovementsRiskDashboardComponent implements OnInit {
   private movementEngine = inject(MovementEngineService);
+  private translationService = inject(TranslationService);
 
   totalMovements = 0;
   suspiciousMovements = 0;
@@ -70,17 +72,30 @@ export class MovementsRiskDashboardComponent implements OnInit {
   staffRiskScores: StaffRiskScore[] = [];
 
   riskByTypeData: any = {
-    labels: ['Sale', 'Purchase', 'Adjustment', 'Theft'],
+    labels: [
+      this.translationService.translate('movements.type.sale'),
+      this.translationService.translate('movements.type.purchase'),
+      this.translationService.translate('movements.type.adjustment'),
+      this.translationService.translate('movements.type.theft')
+    ],
     datasets: [{
-      label: 'Risk Score',
+      label: this.translationService.translate('movements.chart.riskScore'),
       data: [15, 10, 75, 100]
     }]
   };
 
   dailyTrendData: any = {
-    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    labels: [
+      this.translationService.translate('common.days.mon'),
+      this.translationService.translate('common.days.tue'),
+      this.translationService.translate('common.days.wed'),
+      this.translationService.translate('common.days.thu'),
+      this.translationService.translate('common.days.fri'),
+      this.translationService.translate('common.days.sat'),
+      this.translationService.translate('common.days.sun')
+    ],
     datasets: [{
-      label: 'Daily Variance',
+      label: this.translationService.translate('movements.chart.dailyVariance'),
       data: [5, 12, 8, 15, 20, 10, 7]
     }]
   };

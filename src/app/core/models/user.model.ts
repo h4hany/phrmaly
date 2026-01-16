@@ -1,7 +1,12 @@
 export enum UserRole {
   ACCOUNT_OWNER = 'account_owner',
   PHARMACY_MANAGER = 'pharmacy_manager',
-  PHARMACY_STAFF = 'pharmacy_staff'
+  PHARMACY_STAFF = 'pharmacy_staff',
+  // Platform roles
+  SUPER_ADMIN = 'super_admin',
+  SUPPORT_ADMIN = 'support_admin',
+  SALES_ADMIN = 'sales_admin',
+  FINANCE_ADMIN = 'finance_admin'
 }
 
 export interface User {
