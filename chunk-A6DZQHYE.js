@@ -1,0 +1,1 @@
+import"./chunk-7CGTOI24.js";var t=[{path:"",loadComponent:()=>import("./chunk-MWHG7J5O.js").then(o=>o.MovementsListComponent)},{path:"risk",loadComponent:()=>import("./chunk-AX3T2WX3.js").then(o=>o.MovementsRiskDashboardComponent)},{path:":id",loadComponent:()=>import("./chunk-QTE2WOJP.js").then(o=>o.MovementsDetailComponent)}];export{t as routes};

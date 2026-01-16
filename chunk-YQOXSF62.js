@@ -1,0 +1,1 @@
+import"./chunk-7CGTOI24.js";var t=[{path:"",loadComponent:()=>import("./chunk-262HBPGT.js").then(o=>o.ReferralsListComponent)},{path:":id",loadComponent:()=>import("./chunk-IKKVGOO6.js").then(o=>o.ReferralDetailComponent)}];export{t as routes};
