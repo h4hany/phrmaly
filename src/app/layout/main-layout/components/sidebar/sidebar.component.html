@@ -1,0 +1,125 @@
+<aside class="w-64 h-full rounded-[var(--radius-lg)] flex flex-col relative overflow-hidden overflow-x-hidden" style="background-color: var(--sidebar-bg);">
+  <!-- Logo -->
+  <div class="p-6 border-b relative z-10" style="border-color: rgba(227, 244, 245, 0.1);">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background-color: var(--primary-bg);">
+        <span class="text-xl font-bold" style="color: var(--primary-text);">P</span>
+      </div>
+      <span class="text-xl font-bold" style="color: var(--sidebar-text);">Pharmly</span>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="flex-1 overflow-y-auto overflow-x-hidden p-4 relative z-10">
+    <!-- Medicine Icon Pattern Background -->
+    <div class="absolute inset-0 pointer-events-none" style="opacity: 0.15;">
+      <div class="absolute" [style.top.%]="15" [style.left.%]="-5">
+        <img src="icons/medicine.svg" alt="" class="w-24 h-24" style="filter: brightness(0) invert(1); opacity: 0.4;" />
+      </div>
+      <div class="absolute" [style.top.%]="50" [style.right.%]="-5">
+        <img src="icons/medicine.svg" alt="" class="w-24 h-24" style="filter: brightness(0) invert(1); opacity: 0.4;" />
+      </div>
+      <div class="absolute" [style.bottom.%]="15" [style.left.%]="50" style="transform: translateX(-50%);">
+        <img src="icons/medicine.svg" alt="" class="w-24 h-24" style="filter: brightness(0) invert(1); opacity: 0.4;" />
+      </div>
+    </div>
+
+    <ul class="space-y-2 relative z-10">
+      @for (group of visibleGroups(); track group.key) {
+        @if (shouldShowGroup(group)) {
+          @if (group.items.length === 1) {
+            <!-- Single item group (like Overview) - render as simple link -->
+            <li>
+              <a
+                [routerLink]="group.items[0].path"
+                [routerLinkActive]="'nav-item-active'"
+                [routerLinkActiveOptions]="{exact: group.items[0].exact ?? false}"
+                class="flex items-center gap-3 px-4 py-3 rounded-[var(--radius-md)] transition-colors"
+                style="color: var(--sidebar-text);"
+                [attr.aria-label]="group.items[0].label | translate"
+                tabindex="0"
+              >
+                <app-icon [name]="group.items[0].icon" size="20" [color]="'currentColor'" />
+                <span>{{ group.items[0].label | translate }}</span>
+              </a>
+            </li>
+          } @else {
+            <!-- Collapsible group -->
+            <li>
+              <button
+                type="button"
+                (click)="toggleGroup(group.key)"
+                class="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-[var(--radius-md)] transition-colors hover:opacity-80"
+                style="color: var(--sidebar-text);"
+                [attr.aria-expanded]="!isGroupCollapsed(group.key)"
+                [attr.aria-label]="group.label | translate"
+              >
+                <div class="flex items-center gap-3">
+                  <app-icon [name]="group.icon" size="20" [color]="'currentColor'" />
+                  <span>{{ group.label | translate }}</span>
+                </div>
+                <app-icon
+                  name="chevron-down"
+                  size="16"
+                  [color]="'currentColor'"
+                  [class.rotate-180]="!isGroupCollapsed(group.key)"
+                  class="transition-transform duration-200"
+                />
+              </button>
+              @if (!isGroupCollapsed(group.key)) {
+                <ul class="mt-2 ml-4 space-y-1 group-transition">
+                  @for (item of getVisibleItems(group); track item.path) {
+                    <li>
+                      <a
+                        [routerLink]="item.path"
+                        [routerLinkActive]="'nav-item-active'"
+                        [routerLinkActiveOptions]="{exact: item.exact ?? false}"
+                        class="flex items-center gap-3 px-4 py-3 rounded-[var(--radius-md)] transition-colors"
+                        style="color: var(--sidebar-text);"
+                        [attr.aria-label]="item.label | translate"
+                        tabindex="0"
+                      >
+                        <app-icon [name]="item.icon" size="20" [color]="'currentColor'" />
+                        <span>{{ item.label | translate }}</span>
+                      </a>
+                    </li>
+                  }
+                </ul>
+              }
+            </li>
+          }
+        }
+      }
+    </ul>
+  </nav>
+
+  <!-- Upgrade Section -->
+  <div class="p-4 border-t relative z-10" style="border-color: rgba(227, 244, 245, 0.1);">
+    <div class="rounded-[var(--radius-md)] p-4" style="background-color: rgba(227, 244, 245, 0.1);">
+      <div class="flex items-center gap-2 mb-2">
+        <app-icon name="lock" size="20" [color]="'var(--sidebar-text)'" />
+        <span class="font-semibold text-sm" style="color: var(--sidebar-text);">{{ 'upgrade.title' | translate }}</span>
+      </div>
+      <p class="text-xs mb-3" style="color: var(--sidebar-text); opacity: 0.8;">
+        {{ 'upgrade.description' | translate }}
+      </p>
+      <button class="w-full rounded-[var(--radius-md)] px-4 py-2 text-sm font-medium transition-opacity hover:opacity-90" style="background-color: var(--primary-bg); color: var(--primary-text);">
+        {{ 'upgrade.button' | translate }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Logout -->
+  <div class="p-4 border-t relative z-10" style="border-color: rgba(227, 244, 245, 0.1);">
+    <button
+      (click)="logout()"
+      class="w-full flex items-center gap-3 px-4 py-3 rounded-[var(--radius-md)] transition-colors hover:opacity-80"
+      style="color: var(--sidebar-text);"
+      [attr.aria-label]="'nav.logout' | translate"
+    >
+      <app-icon name="logout" size="20" [color]="'currentColor'" />
+      <span>{{ 'nav.logout' | translate }}</span>
+    </button>
+  </div>
+</aside>
+

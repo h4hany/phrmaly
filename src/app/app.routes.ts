@@ -56,6 +56,38 @@ export const routes: Routes = [
         loadChildren: () => import('./features/inventory/inventory.routes').then(m => m.routes)
       },
       {
+        path: 'inventory/movements',
+        loadChildren: () => import('./features/inventory-movements/inventory-movements.routes').then(m => m.routes)
+      },
+      {
+        path: 'inventory/transfers',
+        loadChildren: () => import('./features/inventory-transfers/inventory-transfers.routes').then(m => m.routes)
+      },
+      {
+        path: 'inventory/map',
+        loadComponent: () => import('./features/inventory-map/inventory-map.component').then(m => m.InventoryMapComponent)
+      },
+      {
+        path: 'growth/referrals',
+        loadChildren: () => import('./features/referrals/referrals.routes').then(m => m.routes)
+      },
+      {
+        path: 'system/automation',
+        loadChildren: () => import('./features/automation/automation.routes').then(m => m.routes)
+      },
+      {
+        path: 'system/migration',
+        loadComponent: () => import('./features/migration/migration.component').then(m => m.MigrationComponent)
+      },
+      {
+        path: 'system/permissions',
+        loadComponent: () => import('./features/permissions/permissions.component').then(m => m.PermissionsComponent)
+      },
+      {
+        path: 'system/features',
+        loadComponent: () => import('./features/feature-flags/feature-flags.component').then(m => m.FeatureFlagsComponent)
+      },
+      {
         path: 'pharmacy-staff',
         loadChildren: () => import('./features/pharmacy-staff/pharmacy-staff.routes').then(m => m.routes)
       },

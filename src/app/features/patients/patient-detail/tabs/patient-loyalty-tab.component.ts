@@ -1,7 +1,9 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnInit, inject } from '@angular/core';
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import { StatCardComponent } from '../../../../shared/components/stat-card/stat-card.component';
 import { TableComponent, TableColumn } from '../../../../shared/components/table/table.component';
+import { BadgeComponent } from '../../../../shared/components/badge/badge.component';
+import { PatientEngagementEngineService, RefillReminder } from '../../../../core/engines/patient-engagement-engine.service';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
 
 interface LoyaltyTransaction {
@@ -15,14 +17,59 @@ interface LoyaltyTransaction {
 @Component({
   selector: 'patient-loyalty-tab',
   standalone: true,
-  imports: [CommonModule, CurrencyPipe, StatCardComponent, TableComponent, TranslatePipe],
+  imports: [CommonModule, CurrencyPipe, StatCardComponent, TableComponent, BadgeComponent, TranslatePipe],
   template: `
     <div class="space-y-6">
+      <!-- Loyalty Wallet Card -->
+      <div class="bg-gradient-to-br from-blue-500 to-purple-600 rounded-[var(--radius-lg)] p-6 text-white">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold">{{ 'patient.loyalty.walletCard' | translate }}</h3>
+          <div class="text-2xl font-bold">{{ walletBalance | currency:'USD':'':'1.2-2' }}</div>
+        </div>
+        <div class="grid grid-cols-2 gap-4 text-sm">
+          <div>
+            <div class="opacity-80 mb-1">{{ 'patient.loyalty.loyaltyPoints' | translate }}</div>
+            <div class="text-xl font-semibold">{{ loyaltyPoints }} pts</div>
+          </div>
+          <div>
+            <div class="opacity-80 mb-1">{{ 'patient.loyalty.currentTier' | translate }}</div>
+            <div class="text-xl font-semibold">{{ currentTier }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Refill Reminders Panel -->
+      @if (refillReminders.length > 0) {
+        <div class="bg-[var(--card-bg)] rounded-[var(--radius-lg)] shadow-[var(--shadow-sm)] p-6">
+          <h3 class="text-lg font-semibold text-[var(--text-primary)] mb-4">{{ 'patient.refillReminders' | translate }}</h3>
+          <div class="space-y-3">
+            @for (reminder of refillReminders; track reminder.id) {
+              <div class="flex items-center justify-between p-3 border rounded-lg" [style.border-color]="getReminderBorderColor(reminder.status)">
+                <div class="flex-1">
+                  <div class="font-medium text-[var(--text-primary)]">{{ reminder.drugName }}</div>
+                  <div class="text-sm text-[var(--card-text)]">
+                    {{ 'patient.refillDue' | translate }}: {{ formatDate(reminder.nextRefillDate) }}
+                    @if (reminder.daysUntilRefill < 0) {
+                      <span class="text-red-600 ml-2">({{ Math.abs(reminder.daysUntilRefill) }} {{ 'common.days' | translate }} {{ 'patient.overdue' | translate }})</span>
+                    } @else {
+                      <span class="text-amber-600 ml-2">({{ reminder.daysUntilRefill }} {{ 'common.days' | translate }})</span>
+                    }
+                  </div>
+                </div>
+                <app-badge [variant]="getReminderVariant(reminder.status)">
+                  {{ reminder.status }}
+                </app-badge>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
       <!-- Wallet and Loyalty Stats -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <app-stat-card
           [label]="'patient.loyalty.walletBalance' | translate"
-          [value]="(walletBalance | currency:'USD':'symbol':'1.2-2') ?? '0.00'"
+          [value]="(walletBalance | currency:'USD':'':'1.2-2') ?? '0.00'"
           [icon]="walletIcon"
         />
         <app-stat-card
@@ -76,8 +123,9 @@ interface LoyaltyTransaction {
   `,
   styles: []
 })
-export class PatientLoyaltyTabComponent {
+export class PatientLoyaltyTabComponent implements OnInit {
   @Input() patientId!: string;
+  private engagementEngine = inject(PatientEngagementEngineService);
 
   // Mock data
   walletBalance = 150.50;
@@ -86,6 +134,37 @@ export class PatientLoyaltyTabComponent {
   nextTier = 'Gold';
   nextTierPoints = 500;
   pointsToNextTier = 255;
+  refillReminders: RefillReminder[] = [];
+
+  Math = Math; // Expose Math to template
+
+  ngOnInit(): void {
+    this.loadRefillReminders();
+  }
+
+  loadRefillReminders(): void {
+    this.engagementEngine.getRefillReminders(this.patientId).subscribe({
+      next: (reminders) => {
+        this.refillReminders = reminders;
+      }
+    });
+  }
+
+  getReminderBorderColor(status: string): string {
+    if (status === 'overdue') return '#ef4444';
+    if (status === 'due') return '#f59e0b';
+    return '#e5e7eb';
+  }
+
+  getReminderVariant(status: string): 'success' | 'warning' | 'danger' | 'info' | 'default' {
+    if (status === 'overdue') return 'danger';
+    if (status === 'due') return 'warning';
+    return 'info';
+  }
+
+  formatDate(date: Date): string {
+    return new Date(date).toLocaleDateString();
+  }
 
   // Icons
   walletIcon = '<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>';

@@ -12,6 +12,7 @@ import { PatientOrdersTabComponent } from './tabs/patient-orders-tab.component';
 import { PatientLoyaltyTabComponent } from './tabs/patient-loyalty-tab.component';
 import { PatientRevenueTabComponent } from './tabs/patient-revenue-tab.component';
 import { PatientMedicalTabComponent } from './tabs/patient-medical-tab.component';
+import { PatientTimelineTabComponent } from './tabs/patient-timeline-tab.component';
 
 @Component({
   selector: 'app-patient-detail',
@@ -27,7 +28,8 @@ import { PatientMedicalTabComponent } from './tabs/patient-medical-tab.component
     PatientOrdersTabComponent,
     PatientLoyaltyTabComponent,
     PatientRevenueTabComponent,
-    PatientMedicalTabComponent
+    PatientMedicalTabComponent,
+    PatientTimelineTabComponent
   ],
   template: `
     <div class="space-y-[var(--spacing-gap)]">
@@ -72,6 +74,9 @@ import { PatientMedicalTabComponent } from './tabs/patient-medical-tab.component
             </app-tab>
             <app-tab [title]="'patient.tabs.medical' | translate" [active]="false">
               <patient-medical-tab [patient]="patient!" />
+            </app-tab>
+            <app-tab [title]="'patient.tabs.timeline' | translate" [active]="false">
+              <patient-timeline-tab [patientId]="patient!.id" />
             </app-tab>
           </app-tabs>
         </div>

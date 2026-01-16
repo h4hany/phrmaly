@@ -20,7 +20,7 @@ import { StatCardComponent } from '../../../../shared/components/stat-card/stat-
         />
         <app-stat-card
           [label]="'patient.overview.totalSpent' | translate"
-          [value]="(totalSpent | currency:'USD':'symbol':'1.2-2') ?? '0.00'"
+          [value]="(totalSpent | currency:'USD':'':'1.2-2') ?? '0.00'"
           [icon]="moneyIcon"
         />
         <app-stat-card
@@ -30,7 +30,7 @@ import { StatCardComponent } from '../../../../shared/components/stat-card/stat-
         />
         <app-stat-card
           [label]="'patient.overview.walletBalance' | translate"
-          [value]="(walletBalance | currency:'USD':'symbol':'1.2-2') ?? '0.00'"
+          [value]="(walletBalance | currency:'USD':'':'1.2-2') ?? '0.00'"
           [icon]="walletIcon"
         />
       </div>

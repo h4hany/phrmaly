@@ -16,12 +16,12 @@ import { Invoice } from '../../../../core/models/invoice.model';
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <app-stat-card
           [label]="'patient.revenue.totalRevenue' | translate"
-          [value]="(totalRevenue | currency:'USD':'symbol':'1.2-2') ?? '0.00'"
+          [value]="(totalRevenue | currency:'USD':'':'1.2-2') ?? '0.00'"
           [icon]="moneyIcon"
         />
         <app-stat-card
           [label]="'patient.revenue.avgOrderValue' | translate"
-          [value]="(avgOrderValue | currency:'USD':'symbol':'1.2-2') ?? '0.00'"
+          [value]="(avgOrderValue | currency:'USD':'':'1.2-2') ?? '0.00'"
           [icon]="chartIcon"
         />
         <app-stat-card
@@ -93,7 +93,7 @@ export class PatientRevenueTabComponent implements OnInit {
         beginAtZero: true,
         ticks: {
           callback: function(value: any) {
-            return '$' + value.toFixed(2);
+            return value.toFixed(2);
           }
         }
       }

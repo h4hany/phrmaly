@@ -6,11 +6,12 @@ import { PharmacyDrug } from '../../../core/models/drug.model';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { AlertComponent } from '../../../shared/components/alert/alert.component';
 import { BadgeComponent } from '../../../shared/components/badge/badge.component';
+import { TranslatePipe } from '../../../core/pipes/translate.pipe';
 
 @Component({
   selector: 'app-drug-detail',
   standalone: true,
-  imports: [CommonModule, ButtonComponent, AlertComponent, BadgeComponent],
+  imports: [CommonModule, ButtonComponent, AlertComponent, BadgeComponent, TranslatePipe],
   template: `
     <div class="space-y-[var(--spacing-gap)]">
       @if (errorMessage) {
@@ -140,6 +141,33 @@ import { BadgeComponent } from '../../../shared/components/badge/badge.component
             </div>
           }
 
+          <!-- Shelf Location -->
+          <div class="mb-6 pb-6 border-b border-[var(--border-color)]">
+            <h2 class="text-lg font-semibold text-[var(--text-primary)] mb-4">{{ 'drug.shelfLocation' | translate }}</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-[var(--card-text)] mb-1">{{ 'drug.shelf' | translate }}</label>
+                <p class="text-[var(--text-primary)] font-medium">{{ getShelfLocation().shelf }}</p>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-[var(--card-text)] mb-1">{{ 'drug.row' | translate }}</label>
+                <p class="text-[var(--text-primary)] font-medium">{{ getShelfLocation().row }}</p>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-[var(--card-text)] mb-1">{{ 'drug.column' | translate }}</label>
+                <p class="text-[var(--text-primary)] font-medium">{{ getShelfLocation().column }}</p>
+              </div>
+            </div>
+            <div class="mt-4">
+              <app-button variant="outline" size="sm" (onClick)="viewShelfMap()">
+                <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                </svg>
+                {{ 'drug.viewOnMap' | translate }}
+              </app-button>
+            </div>
+          </div>
+
           <!-- Metadata -->
           <div class="pt-6 border-t border-[var(--border-color)]">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
@@ -222,5 +250,20 @@ export class DrugDetailComponent implements OnInit {
     const expiry = new Date(expiryDate);
     const daysUntilExpiry = Math.floor((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
     return daysUntilExpiry <= 30 && daysUntilExpiry >= 0;
+  }
+
+  getShelfLocation(): { shelf: string; row: number; column: number } {
+    // Mock shelf location - in real app, this would come from the drug data
+    const shelves = ['A', 'B', 'C', 'D'];
+    const shelfIndex = parseInt(this.drug?.id?.slice(-1) || '1', 10) % shelves.length;
+    return {
+      shelf: shelves[shelfIndex],
+      row: Math.floor(Math.random() * 4) + 1,
+      column: Math.floor(Math.random() * 8) + 1
+    };
+  }
+
+  viewShelfMap(): void {
+    this.router.navigate(['/inventory/map'], { queryParams: { drugId: this.drug?.id } });
   }
 }

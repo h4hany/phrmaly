@@ -1,0 +1,55 @@
+<header class="bg-white rounded-[var(--radius-lg)] px-6 py-4">
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">{{ title | translate }}</h1>
+      @if (subtitle) {
+        <p class="text-sm text-gray-600 mt-1">{{ subtitle | translate }}</p>
+      }
+    </div>
+    <div class="flex items-center gap-4">
+      <!-- Language Selector -->
+      <div class="relative">
+        <button
+          type="button"
+          (click)="toggleLanguage()"
+          class="flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-[var(--radius-md)] text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+          [attr.aria-label]="'header.language' | translate"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+          </svg>
+          <span>{{ currentLanguage === 'en' ? 'EN' : 'AR' }}</span>
+        </button>
+      </div>
+      <!-- Search -->
+      <div class="relative">
+        <input
+          type="text"
+          [placeholder]="'header.search' | translate"
+          class="pl-10 pr-4 py-2 border border-gray-300 rounded-[var(--radius-md)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary-bg)]/20 focus:border-[var(--primary-bg)]"
+          style="background-color: white;"
+          [attr.aria-label]="'header.search' | translate"
+        />
+        <app-icon name="search" size="20" class="absolute left-3 top-2.5 text-gray-400" [color]="'currentColor'" />
+      </div>
+      <!-- Notifications -->
+      <button
+        class="relative p-2 text-gray-600 hover:text-gray-900"
+        [attr.aria-label]="'header.notifications' | translate"
+      >
+        <app-icon name="bell" size="24" [color]="'currentColor'" />
+        <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" aria-hidden="true"></span>
+      </button>
+      <!-- User Profile -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 bg-gray-300 rounded-full" aria-hidden="true"></div>
+        <div class="text-left">
+          <div class="text-sm font-medium text-gray-900">James Bond</div>
+          <div class="text-xs text-gray-500">&#64;james.bond</div>
+        </div>
+        <app-icon name="chevron-down" size="16" [color]="'#9CA3AF'" />
+      </div>
+    </div>
+  </div>
+</header>
+

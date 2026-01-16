@@ -1,17 +1,72 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { StatCardComponent } from '../../shared/components/stat-card/stat-card.component';
 import { ChartComponent } from '../../shared/components/chart/chart.component';
 import { BadgeComponent } from '../../shared/components/badge/badge.component';
+import { RiskBadgeComponent } from '../../shared/components/risk-badge/risk-badge.component';
+import { InsightsEngineService, RiskInsight } from '../../core/engines/insights-engine.service';
+import { TranslatePipe } from '../../core/pipes/translate.pipe';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, StatCardComponent, ChartComponent, BadgeComponent],
+  imports: [CommonModule, StatCardComponent, ChartComponent, BadgeComponent, RiskBadgeComponent, TranslatePipe],
   template: `
     <div class="space-y-6">
+      <!-- What Needs Attention Today -->
+      @if (attentionItems.length > 0) {
+        <div class="p-6 rounded-lg border-2" style="background-color: var(--card-bg); border-color: #f59e0b;">
+          <h3 class="text-lg font-semibold mb-4" style="color: var(--card-text);">{{ 'dashboard.attention' | translate }}</h3>
+          <ul class="space-y-2">
+            @for (item of attentionItems; track $index) {
+              <li class="flex items-start gap-2 text-sm" style="color: var(--card-text);">
+                <span class="text-amber-500 mt-0.5">•</span>
+                <span>{{ item | translate }}</span>
+              </li>
+            }
+          </ul>
+        </div>
+      }
+
       <!-- KPI Cards -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        @for (kpi of kpis; track kpi.label) {
+          <app-stat-card
+            [label]="kpi.label | translate"
+            [value]="kpi.value"
+            [trend]="kpi.trend"
+            [trendPositive]="kpi.trendPositive"
+            [subtitle]="kpi.subtitle | translate"
+          ></app-stat-card>
+        }
+      </div>
+
+      <!-- Risk Panels -->
+      @if (riskInsights.length > 0) {
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          @for (insight of riskInsights; track insight.type) {
+            <div class="p-4 rounded-lg" [style]="getRiskPanelStyles(insight)">
+              <div class="flex items-center justify-between mb-2">
+                <h4 class="font-semibold text-sm">{{ insight.title | translate }}</h4>
+                <app-risk-badge [level]="insight.level"></app-risk-badge>
+              </div>
+              <p class="text-xs mb-2" style="opacity: 0.8;">{{ insight.description | translate }}</p>
+              @if (insight.actionRequired) {
+                <button 
+                  (click)="handleRiskAction(insight)"
+                  class="text-xs font-medium underline"
+                >
+                  {{ 'dashboard.takeAction' | translate }}
+                </button>
+              }
+            </div>
+          }
+        </div>
+      }
+
+      <!-- KPI Cards (Original) -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" style="display: none;">
         <app-stat-card
           label="Total Revenue"
           value="112,200"
@@ -71,11 +126,11 @@ import { BadgeComponent } from '../../shared/components/badge/badge.component';
         <!-- Revenue Chart -->
         <div class="bg-white rounded-lg shadow p-6">
           <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-semibold text-gray-900">Total Revenue</h3>
+            <h3 class="text-lg font-semibold text-gray-900">{{ 'dashboard.chart.revenue' | translate }}</h3>
             <select class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#166534]">
-              <option>This Month</option>
-              <option>Last Month</option>
-              <option>This Year</option>
+              <option>{{ 'dashboard.chart.thisMonth' | translate }}</option>
+              <option>{{ 'dashboard.chart.lastMonth' | translate }}</option>
+              <option>{{ 'dashboard.chart.thisYear' | translate }}</option>
             </select>
           </div>
           <div style="height: 300px;">
@@ -90,10 +145,10 @@ import { BadgeComponent } from '../../shared/components/badge/badge.component';
         <!-- Orders Chart -->
         <div class="bg-white rounded-lg shadow p-6">
           <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-semibold text-gray-900">Orders By Time</h3>
+            <h3 class="text-lg font-semibold text-gray-900">{{ 'dashboard.chart.orders' | translate }}</h3>
             <select class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#166534]">
-              <option>This Week</option>
-              <option>This Month</option>
+              <option>{{ 'dashboard.chart.thisWeek' | translate }}</option>
+              <option>{{ 'dashboard.chart.thisMonth' | translate }}</option>
             </select>
           </div>
           <div style="height: 300px;">
@@ -109,19 +164,19 @@ import { BadgeComponent } from '../../shared/components/badge/badge.component';
       <!-- Recent Orders Table -->
       <div class="bg-white rounded-lg shadow">
         <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-          <h3 class="text-lg font-semibold text-gray-900">Recent Orders</h3>
-          <a href="#" class="text-sm text-[#166534] hover:underline">View All</a>
+          <h3 class="text-lg font-semibold text-gray-900">{{ 'dashboard.recentOrders' | translate }}</h3>
+          <a href="#" class="text-sm text-[#166534] hover:underline">{{ 'dashboard.viewAll' | translate }}</a>
         </div>
         <div class="overflow-x-auto">
           <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
               <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Medicine Name</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order Status</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Status</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ 'dashboard.table.orderId' | translate }}</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ 'dashboard.table.medicineName' | translate }}</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ 'dashboard.table.price' | translate }}</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ 'dashboard.table.orderStatus' | translate }}</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ 'dashboard.table.paymentStatus' | translate }}</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ 'dashboard.table.action' | translate }}</th>
               </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
@@ -158,6 +213,13 @@ import { BadgeComponent } from '../../shared/components/badge/badge.component';
   styles: []
 })
 export class DashboardComponent implements OnInit {
+  private insightsEngine = inject(InsightsEngineService);
+  router = inject(Router);
+
+  kpis: any[] = [];
+  riskInsights: RiskInsight[] = [];
+  attentionItems: string[] = [];
+
   revenueChartData: any;
   revenueChartOptions: any;
   ordersChartData: any;
@@ -173,6 +235,43 @@ export class DashboardComponent implements OnInit {
   ngOnInit(): void {
     this.initRevenueChart();
     this.initOrdersChart();
+    this.loadInsights();
+  }
+
+  loadInsights(): void {
+    this.insightsEngine.getKPIs().subscribe(kpis => {
+      this.kpis = kpis;
+    });
+
+    this.insightsEngine.getRiskInsights().subscribe(insights => {
+      this.riskInsights = insights;
+    });
+
+    this.insightsEngine.getAttentionItems().subscribe(items => {
+      this.attentionItems = items;
+    });
+  }
+
+  getRiskPanelStyles(insight: RiskInsight): string {
+    const colors: { [key: string]: string } = {
+      low: 'background-color: #dbeafe; border: 1px solid #3b82f6;',
+      medium: 'background-color: #fef3c7; border: 1px solid #f59e0b;',
+      high: 'background-color: #fee2e2; border: 1px solid #ef4444;',
+      critical: 'background-color: #fee2e2; border: 2px solid #dc2626;'
+    };
+    return colors[insight.level] || colors['medium'];
+  }
+
+  handleRiskAction(insight: RiskInsight): void {
+    if (insight.type === 'inventory') {
+      this.router.navigate(['/inventory/movements/risk']);
+    } else if (insight.type === 'staff') {
+      this.router.navigate(['/pharmacy-staff']);
+    } else if (insight.type === 'expiry') {
+      this.router.navigate(['/inventory/alerts']);
+    } else if (insight.type === 'supplier') {
+      this.router.navigate(['/suppliers']);
+    }
   }
 
   private initRevenueChart(): void {

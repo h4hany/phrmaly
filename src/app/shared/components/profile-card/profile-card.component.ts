@@ -86,14 +86,14 @@ export interface ProfileBadge {
             class="text-lg font-bold mb-1.5 group-hover:opacity-90 transition-opacity duration-200 leading-tight"
             [style.color]="'var(--sidebar-text, #E3F4F5)'"
           >
-            {{ name }}
+            {{ title || name }}
           </h3>
-          @if (role) {
+          @if (subtitle || role) {
             <p
               class="text-sm mb-2 font-medium opacity-80"
               [style.color]="'var(--sidebar-text, #E3F4F5)'"
             >
-              {{ role }}
+              {{ subtitle || role }}
             </p>
           }
           @if (email) {
@@ -337,6 +337,8 @@ export class ProfileCardComponent {
 
   @Input() avatar?: string;
   @Input() name: string = '';
+  @Input() title?: string; // Alias for name
+  @Input() subtitle?: string; // Alias for role
   @Input() role?: string;
   @Input() email?: string;
   @Input() phone?: string;
@@ -355,12 +357,13 @@ export class ProfileCardComponent {
   }
 
   getInitials(): string {
-    if (!this.name) return '?';
-    const parts = this.name.trim().split(/\s+/);
+    const displayName = this.title || this.name;
+    if (!displayName) return '?';
+    const parts = displayName.trim().split(/\s+/);
     if (parts.length >= 2) {
       return (parts[0][0] + parts[1][0]).toUpperCase();
     }
-    return this.name.substring(0, 2).toUpperCase();
+    return displayName.substring(0, 2).toUpperCase();
   }
 
   getBadgeClasses(badge: ProfileBadge): string {
