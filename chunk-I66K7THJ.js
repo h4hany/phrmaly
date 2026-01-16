@@ -1,1 +1,0 @@
-import"./chunk-7CGTOI24.js";var t=[{path:"",loadComponent:()=>import("./chunk-6CPFACYK.js").then(o=>o.BundlesListComponent)},{path:"new",loadComponent:()=>import("./chunk-7XSEKLKQ.js").then(o=>o.BundleFormComponent)},{path:":id/edit",loadComponent:()=>import("./chunk-7XSEKLKQ.js").then(o=>o.BundleFormComponent)}];export{t as routes};
