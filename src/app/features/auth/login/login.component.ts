@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import { RbacService } from '../../../core/security/rbac.service';
 import { AlertComponent } from '../../../shared/components/alert/alert.component';
 
 @Component({
@@ -667,6 +668,7 @@ import { AlertComponent } from '../../../shared/components/alert/alert.component
 export class LoginComponent {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
+  private rbacService = inject(RbacService);
   private router = inject(Router);
 
   loading = signal(false);
@@ -692,7 +694,9 @@ export class LoginComponent {
 
       this.authService.login(identifier!, password!).subscribe({
         next: (user) => {
-          this.router.navigate(['/dashboard']);
+          // Redirect to role-based home route
+          const homeRoute = this.rbacService.getHomeRoute();
+          this.router.navigate([homeRoute]);
         },
         error: (error) => {
           this.errorMessage.set(error.message || 'Invalid credentials');

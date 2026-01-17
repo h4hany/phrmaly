@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TabsComponent, TabComponent } from '../../shared/components/tabs/tabs.component';
+import { CanAccessDirective } from '../../shared/directives/can-access.directive';
 import { AccountInfoComponent } from './account-info/account-info.component';
 import { ThemeSettingsComponent } from './theme-settings/theme-settings.component';
 import { TranslatePipe } from '../../core/pipes/translate.pipe';
@@ -12,6 +13,7 @@ import { TranslatePipe } from '../../core/pipes/translate.pipe';
     CommonModule,
     TabsComponent,
     TabComponent,
+    CanAccessDirective,
     AccountInfoComponent,
     ThemeSettingsComponent,
     TranslatePipe
@@ -26,7 +28,7 @@ import { TranslatePipe } from '../../core/pipes/translate.pipe';
 
         <!-- Tabs -->
         <app-tabs>
-          <app-tab [title]="'settings.tabs.account' | translate" [active]="true">
+          <app-tab *appCanAccess="'settings.tabs.account'" [title]="'settings.tabs.account' | translate" [active]="true">
             <app-account-info></app-account-info>
           </app-tab>
           <app-tab [title]="'settings.tabs.theme' | translate" [active]="false">

@@ -7,6 +7,7 @@ import { ButtonComponent } from '../../../shared/components/button/button.compon
 import { AlertComponent } from '../../../shared/components/alert/alert.component';
 import { TranslatePipe } from '../../../core/pipes/translate.pipe';
 import { TabsComponent, TabComponent } from '../../../shared/components/tabs/tabs.component';
+import { CanAccessDirective } from '../../../shared/directives/can-access.directive';
 import { PatientOverviewTabComponent } from './tabs/patient-overview-tab.component';
 import { PatientOrdersTabComponent } from './tabs/patient-orders-tab.component';
 import { PatientLoyaltyTabComponent } from './tabs/patient-loyalty-tab.component';
@@ -24,6 +25,7 @@ import { PatientTimelineTabComponent } from './tabs/patient-timeline-tab.compone
     TranslatePipe,
     TabsComponent,
     TabComponent,
+    CanAccessDirective,
     PatientOverviewTabComponent,
     PatientOrdersTabComponent,
     PatientLoyaltyTabComponent,
@@ -63,13 +65,13 @@ import { PatientTimelineTabComponent } from './tabs/patient-timeline-tab.compone
             <app-tab [title]="'patient.tabs.overview' | translate" [active]="true">
               <patient-overview-tab [patient]="patient!" />
             </app-tab>
-            <app-tab [title]="'patient.tabs.orders' | translate" [active]="false">
+            <app-tab *appCanAccess="'patient.tabs.orders'" [title]="'patient.tabs.orders' | translate" [active]="false">
               <patient-orders-tab [patientId]="patient!.id" />
             </app-tab>
-            <app-tab [title]="'patient.tabs.loyalty' | translate" [active]="false">
+            <app-tab *appCanAccess="'patient.tabs.loyalty'" [title]="'patient.tabs.loyalty' | translate" [active]="false">
               <patient-loyalty-tab [patientId]="patient!.id" />
             </app-tab>
-            <app-tab [title]="'patient.tabs.revenue' | translate" [active]="false">
+            <app-tab *appCanAccess="'patient.tabs.revenue'" [title]="'patient.tabs.revenue' | translate" [active]="false">
               <patient-revenue-tab [patientId]="patient!.id" />
             </app-tab>
             <app-tab [title]="'patient.tabs.medical' | translate" [active]="false">

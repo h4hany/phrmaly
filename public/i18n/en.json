@@ -1059,5 +1059,14 @@
   "auth.adminLogin": "System Console Login",
   "auth.pharmacyLogin": "Switch to Pharmacy Login",
   "auth.adminTitle": "Admin Sign In",
-  "auth.adminSubtitle": "Enter your admin credentials to access the System Console"
+  "auth.adminSubtitle": "Enter your admin credentials to access the System Console",
+  "accessDenied.title": "Access Denied",
+  "accessDenied.message": "You don't have permission to access this page.",
+  "accessDenied.attemptedRoute": "Attempted Route",
+  "accessDenied.goHome": "Go Back to Home",
+  "staff.tabs.details": "Staff Member Details",
+  "staff.tabs.performance": "Performance",
+  "staff.tabs.risk": "Risk",
+  "staff.tabs.activity": "Activity Timeline",
+  "staff.details.description": "View staff member information and details."
 }

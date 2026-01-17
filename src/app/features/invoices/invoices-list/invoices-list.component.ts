@@ -8,11 +8,12 @@ import { AlertComponent } from '../../../shared/components/alert/alert.component
 import { InvoicesService } from '../../../core/services/invoices.service';
 import { Invoice } from '../../../core/models/invoice.model';
 import { TranslatePipe } from '../../../core/pipes/translate.pipe';
+import { CanAccessDirective } from '../../../shared/directives/can-access.directive';
 
 @Component({
   selector: 'app-invoices-list',
   standalone: true,
-  imports: [CommonModule, ButtonComponent, TableComponent, ModalComponent, AlertComponent, TranslatePipe],
+  imports: [CommonModule, ButtonComponent, TableComponent, ModalComponent, AlertComponent, TranslatePipe, CanAccessDirective],
   template: `
     <div class="space-y-6">
       @if (errorMessage) {
@@ -38,7 +39,7 @@ import { TranslatePipe } from '../../../core/pipes/translate.pipe';
         <div class="flex gap-3">
           <app-button variant="outline">{{ 'common.filters' | translate }}</app-button>
           <app-button variant="outline">{{ 'common.export' | translate }}</app-button>
-          <app-button variant="primary" (onClick)="navigateToNew()">
+          <app-button *appCanAccess="'invoice.create'" variant="primary" (onClick)="navigateToNew()">
             <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
             </svg>
@@ -57,7 +58,7 @@ import { TranslatePipe } from '../../../core/pipes/translate.pipe';
         rowIdKey="id"
       >
         <ng-template #actionTemplate let-row>
-          <div class="flex items-center gap-2">
+          <div *appCanAccess="'invoice.actions'" class="flex items-center gap-2">
             <button class="p-1 text-gray-600 hover:text-gray-900" [title]="'common.view' | translate" (click)="viewInvoice(row.id)">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />

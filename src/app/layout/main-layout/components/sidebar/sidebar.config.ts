@@ -1,9 +1,9 @@
 /**
  * Sidebar Navigation Configuration
- * 
+ *
  * Centralized, config-driven navigation structure.
  * All navigation items must be defined here - NO hardcoded items in templates.
- * 
+ *
  * Business Domain Grouping:
  * - Overview: Dashboard
  * - Operations: Sales, Customers, Staff
@@ -54,11 +54,11 @@ export const SIDEBAR_GROUPS: SidebarGroup[] = [
         label: 'nav.customers',
         icon: 'user-heart'
       },
-      {
-        path: '/pharmacy-staff',
-        label: 'nav.pharmacyStaff',
-        icon: 'id-badge'
-      }
+      // {
+      //   path: '/pharmacy-staff',
+      //   label: 'nav.pharmacyStaff',
+      //   icon: 'id-badge'
+      // }
     ],
     collapsedByDefault: true,
     order: 2

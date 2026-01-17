@@ -2,6 +2,8 @@ export enum UserRole {
   ACCOUNT_OWNER = 'account_owner',
   PHARMACY_MANAGER = 'pharmacy_manager',
   PHARMACY_STAFF = 'pharmacy_staff',
+  PHARMACY_INVENTORY_MANAGER = 'pharmacy_inventory_manager',
+  PHARMACY_ACCOUNTING_MANAGER = 'pharmacy_accounting_manager',
   // Platform roles
   SUPER_ADMIN = 'super_admin',
   SUPPORT_ADMIN = 'support_admin',

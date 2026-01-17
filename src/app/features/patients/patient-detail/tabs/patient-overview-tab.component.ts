@@ -4,15 +4,16 @@ import { Patient } from '../../../../core/models/patient.model';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
 import { PharmacyContextService } from '../../../../core/services/pharmacy-context.service';
 import { StatCardComponent } from '../../../../shared/components/stat-card/stat-card.component';
+import { CanAccessDirective } from '../../../../shared/directives/can-access.directive';
 
 @Component({
   selector: 'patient-overview-tab',
   standalone: true,
-  imports: [CommonModule, DatePipe, StatCardComponent, TranslatePipe, CurrencyPipe],
+  imports: [CommonModule, DatePipe, StatCardComponent, TranslatePipe, CurrencyPipe, CanAccessDirective],
   template: `
     <div class="space-y-6">
       <!-- KPI Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" *appCanAccess="'patient.overview.kpi-cards'">
         <app-stat-card
           [label]="'patient.overview.totalOrders' | translate"
           [value]="totalOrders"

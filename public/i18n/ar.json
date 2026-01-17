@@ -961,5 +961,16 @@
   "auth.adminLogin": "تسجيل دخول وحدة التحكم",
   "auth.pharmacyLogin": "التبديل إلى تسجيل دخول الصيدلية",
   "auth.adminTitle": "تسجيل دخول المدير",
-  "auth.adminSubtitle": "أدخل بيانات اعتماد المدير للوصول إلى وحدة التحكم"
+  "auth.adminSubtitle": "أدخل بيانات اعتماد المدير للوصول إلى وحدة التحكم",
+  "accessDenied.title": "تم رفض الوصول",
+  "accessDenied.message": "ليس لديك صلاحية للوصول إلى هذه الصفحة.",
+  "accessDenied.attemptedRoute": "المسار المحاول",
+  "accessDenied.goHome": "العودة إلى الصفحة الرئيسية",
+  "staff.tabs.details": "تفاصيل عضو الفريق",
+  "staff.tabs.performance": "الأداء",
+  "staff.tabs.risk": "المخاطر",
+  "staff.tabs.activity": "الجدول الزمني للنشاط",
+  "staff.details.description": "عرض معلومات وتفاصيل عضو الفريق.",
+  "settings.tabs.account": "معلومات الحساب",
+  "settings.tabs.theme": "إعدادات المظهر"
 }

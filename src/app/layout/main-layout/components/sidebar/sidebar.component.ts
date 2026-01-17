@@ -18,6 +18,7 @@ import { PlatformContextService } from '../../../../core/services/platform-conte
 import { TranslationService } from '../../../../core/services/translation.service';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
 import { IconComponent } from '../../../../shared/components/icon/icon.component';
+import { RbacService } from '../../../../core/security/rbac.service';
 import { SIDEBAR_GROUPS, SidebarGroup, SidebarItem } from './sidebar.config';
 
 @Component({
@@ -43,6 +44,7 @@ export class SidebarComponent implements OnInit {
   private authService = inject(AuthService);
   private platformContext = inject(PlatformContextService);
   private translationService = inject(TranslationService);
+  private rbacService = inject(RbacService);
 
   // Navigation groups from config
   groups = SIDEBAR_GROUPS;
@@ -87,22 +89,13 @@ export class SidebarComponent implements OnInit {
       return false;
     }
     
-    // Check role-based visibility for other groups
-    if (group.roles && group.roles.length > 0) {
-      const user = this.authService.getCurrentUser();
-      return user ? group.roles.includes(user.role) : false;
-    }
-    
-    return true;
+    // Use RBAC service to check group access
+    return this.rbacService.canAccessGroup(group.key);
   }
 
   isItemVisible(item: SidebarItem): boolean {
-    // Check role-based visibility
-    if (item.roles && item.roles.length > 0) {
-      const user = this.authService.getCurrentUser();
-      return user ? item.roles.includes(user.role) : false;
-    }
-    return true;
+    // Use RBAC service to check item access
+    return this.rbacService.canAccessItem(item.path);
   }
 
   getVisibleItems(group: SidebarGroup): SidebarItem[] {
