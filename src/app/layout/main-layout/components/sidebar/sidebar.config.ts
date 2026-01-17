@@ -283,6 +283,11 @@ export const SIDEBAR_GROUPS: SidebarGroup[] = [
         icon: 'toggle-sliders'
       },
       {
+        path: '/payments/methods',
+        label: 'nav.paymentMethods',
+        icon: 'credit-card'
+      },
+      {
         path: '/settings',
         label: 'nav.settings',
         icon: 'gear'

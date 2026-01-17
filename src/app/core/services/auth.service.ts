@@ -75,6 +75,39 @@ export class AuthService {
       role: UserRole.SUPER_ADMIN,
       fullName: 'Super Admin',
       avatarUrl: 'https://ui-avatars.com/api/?name=Super+Admin'
+    },
+    {
+      id: '5',
+      email: 'inventory@pharmly.com',
+      username: 'inventory',
+      password: 'password',
+      role: UserRole.PHARMACY_INVENTORY_MANAGER,
+      fullName: 'Inventory Manager',
+      avatarUrl: 'https://ui-avatars.com/api/?name=Inventory+Manager',
+      pharmacies: [
+        {
+          id: 'ph1',
+          name: 'Main Pharmacy',
+          address: '123 Main St',
+          phone: '+1234567890',
+          email: 'main@pharmly.com',
+          primaryColor: '#166534',
+          secondaryColor: '#22c55e',
+          sidebarColor: '#14532d',
+          rtlEnabled: false
+        },
+        {
+          id: 'ph2',
+          name: 'Branch Pharmacy',
+          address: '456 Branch Ave',
+          phone: '+1234567891',
+          email: 'branch@pharmly.com',
+          primaryColor: '#166534',
+          secondaryColor: '#22c55e',
+          sidebarColor: '#14532d',
+          rtlEnabled: false
+        }
+      ]
     }
   ];
 

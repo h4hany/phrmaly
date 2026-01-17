@@ -18,6 +18,8 @@ export interface PharmacyDrug {
   minimumStock: number;
   expiryDate?: Date;
   status: 'active' | 'inactive' | 'out_of_stock';
+  classification?: 'medicinal' | 'cosmetic';
+  origin?: 'local' | 'imported';
   costLayers: CostLayer[];
   createdAt: Date;
   updatedAt: Date;

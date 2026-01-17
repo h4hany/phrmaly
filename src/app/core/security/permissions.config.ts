@@ -35,6 +35,7 @@ export const PERMISSIONS: PermissionsConfig = {
     '/pharmacy-staff': ['account_owner', 'pharmacy_manager'],
     '/pharmacy-staff/:id': ['account_owner', 'pharmacy_manager'],
     '/people/payroll': ['account_owner'], // PHARMACY_MANAGER should NOT see
+    '/people/attendance': ['account_owner', 'pharmacy_manager'], // PHARMACY_MANAGER should NOT see
     '/people/performance': ['account_owner'], // PHARMACY_MANAGER should NOT see
     '/purchases': ['account_owner', 'pharmacy_inventory_manager'], // PHARMACY_MANAGER should NOT see (procurement)
     '/suppliers': ['account_owner', 'pharmacy_inventory_manager'], // PHARMACY_MANAGER should NOT see (procurement)
@@ -49,10 +50,12 @@ export const PERMISSIONS: PermissionsConfig = {
     '/invoices/:id': ['account_owner', 'pharmacy_manager', 'pharmacy_staff', 'pharmacy_inventory_manager'],
     '/invoices/:id/edit': ['account_owner', 'pharmacy_manager', 'pharmacy_staff'],
     '/drugs': ['account_owner', 'pharmacy_manager', 'pharmacy_staff'],
+    '/drugs/new': ['account_owner', 'pharmacy_manager', 'pharmacy_staff'],
     '/bundles': ['account_owner', 'pharmacy_staff'],
-    '/inventory/map': ['account_owner', 'pharmacy_staff'],
-    '/inventory/transfers': ['account_owner', 'pharmacy_staff'],
-    '/inventory/alerts': ['account_owner', 'pharmacy_inventory_manager'],
+    '/inventory/map': ['account_owner', 'pharmacy_staff','pharmacy_manager'],
+    '/inventory/transfers': ['account_owner', 'pharmacy_staff','pharmacy_manager'],
+    '/inventory/alerts': ['account_owner', 'pharmacy_manager', 'pharmacy_inventory_manager'],
+    '/payments/methods': ['account_owner', 'pharmacy_inventory_manager'],
   },
 
   // Sidebar group permissions
@@ -65,7 +68,7 @@ export const PERMISSIONS: PermissionsConfig = {
     'procurement': ['account_owner', 'pharmacy_inventory_manager'], // PHARMACY_MANAGER should NOT see
     'finance': ['account_owner', 'pharmacy_inventory_manager'], // PHARMACY_MANAGER should NOT see (no audit-logs/movements)
     'growth': ['account_owner'], // PHARMACY_MANAGER should NOT see
-    'system': ['account_owner', 'pharmacy_manager'], // Visible because /settings is in it for PHARMACY_MANAGER
+    'system': ['account_owner', 'pharmacy_manager', 'pharmacy_inventory_manager'], // Visible because /settings is in it for PHARMACY_MANAGER and /payments/methods for PHARMACY_INVENTORY_MANAGER
     'support': ['account_owner', 'pharmacy_staff', 'pharmacy_inventory_manager'], // PHARMACY_MANAGER should NOT see
   },
 
@@ -91,6 +94,7 @@ export const PERMISSIONS: PermissionsConfig = {
     '/purchases': ['account_owner', 'pharmacy_inventory_manager'], // PHARMACY_MANAGER should NOT see (procurement)
     '/suppliers': ['account_owner', 'pharmacy_inventory_manager'], // PHARMACY_MANAGER should NOT see (procurement)
     '/payments': ['account_owner'], // PHARMACY_MANAGER should NOT see
+    '/payments/methods': ['account_owner', 'pharmacy_inventory_manager'], // Payment methods management
     '/audit-logs': ['account_owner'], // PHARMACY_MANAGER should NOT see
     '/inventory/movements': ['account_owner'], // PHARMACY_MANAGER should NOT see
     '/growth/referrals': ['account_owner'], // PHARMACY_MANAGER should NOT see

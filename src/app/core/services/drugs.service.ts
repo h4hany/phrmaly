@@ -28,6 +28,20 @@ export class DrugsService {
       description: 'Antibiotic',
       manufacturer: 'ABC Pharmaceuticals',
       internationalBarcode: '1234567890125'
+    },
+    {
+      id: 'DRG004',
+      name: 'Aspirin 100mg',
+      description: 'Blood thinner and pain reliever',
+      manufacturer: 'MedTech Industries',
+      internationalBarcode: '1234567890126'
+    },
+    {
+      id: 'DRG005',
+      name: 'Metformin 500mg',
+      description: 'Diabetes medication',
+      manufacturer: 'ABC Pharmaceuticals',
+      internationalBarcode: '1234567890127'
     }
   ];
 
@@ -43,6 +57,8 @@ export class DrugsService {
       minimumStock: 50,
       expiryDate: new Date('2025-12-31'),
       status: 'active',
+      classification: 'medicinal',
+      origin: 'local',
       costLayers: [
         { quantity: 150, unitCost: 3.50, purchaseDate: new Date('2024-01-15'), expiryDate: new Date('2025-12-31') }
       ],
@@ -60,6 +76,8 @@ export class DrugsService {
       minimumStock: 30,
       expiryDate: new Date('2025-11-30'),
       status: 'active',
+      classification: 'medicinal',
+      origin: 'imported',
       costLayers: [
         { quantity: 100, unitCost: 5.00, purchaseDate: new Date('2024-02-10'), expiryDate: new Date('2025-11-30') }
       ],
@@ -77,6 +95,8 @@ export class DrugsService {
       minimumStock: 50,
       expiryDate: new Date('2025-06-30'),
       status: 'active',
+      classification: 'medicinal',
+      origin: 'imported',
       costLayers: [
         { quantity: 50, unitCost: 8.00, purchaseDate: new Date('2024-03-15'), expiryDate: new Date('2025-06-30') }
       ],
@@ -94,6 +114,8 @@ export class DrugsService {
       minimumStock: 40,
       expiryDate: new Date('2025-01-15'),
       status: 'active',
+      classification: 'medicinal',
+      origin: 'local',
       costLayers: [
         { quantity: 40, unitCost: 4.00, purchaseDate: new Date('2024-04-20'), expiryDate: new Date('2025-01-15') }
       ],
@@ -111,6 +133,8 @@ export class DrugsService {
       minimumStock: 50,
       expiryDate: new Date('2026-01-24'),
       status: 'active',
+      classification: 'cosmetic',
+      origin: 'local',
       costLayers: [
         { quantity: 200, unitCost: 6.00, purchaseDate: new Date('2024-05-10'), expiryDate: new Date('2026-01-24') }
       ],
@@ -128,6 +152,8 @@ export class DrugsService {
       minimumStock: 30,
       expiryDate: new Date('2026-01-17'),
       status: 'active',
+      classification: 'medicinal',
+      origin: 'imported',
       costLayers: [
         { quantity: 30, unitCost: 10.00, purchaseDate: new Date('2024-06-01'), expiryDate: new Date('2026-01-17') }
       ],
@@ -145,11 +171,226 @@ export class DrugsService {
       minimumStock: 60,
       expiryDate: new Date('2025-03-15'),
       status: 'active',
+      classification: 'medicinal',
+      origin: 'local',
       costLayers: [
         { quantity: 60, unitCost: 3.75, purchaseDate: new Date('2024-07-15'), expiryDate: new Date('2025-03-15') }
       ],
       createdAt: new Date('2024-07-15'),
       updatedAt: new Date('2024-11-21')
+    },
+    // Pharmacy 1 - Additional Near Expiry Items
+    {
+      id: 'PDRG015',
+      generalDrugId: 'DRG004',
+      pharmacyId: 'ph1',
+      internalBarcode: '123463',
+      price: 3.50,
+      priceAfterDiscount: 3.00,
+      stockQuantity: 120,
+      minimumStock: 50,
+      expiryDate: new Date('2024-12-28'), // Expiring in ~32 days
+      status: 'active',
+      classification: 'medicinal',
+      origin: 'local',
+      costLayers: [
+        { quantity: 120, unitCost: 2.00, purchaseDate: new Date('2024-08-01'), expiryDate: new Date('2024-12-28') }
+      ],
+      createdAt: new Date('2024-08-01'),
+      updatedAt: new Date('2024-11-20')
+    },
+    {
+      id: 'PDRG016',
+      generalDrugId: 'DRG005',
+      pharmacyId: 'ph1',
+      internalBarcode: '123464',
+      price: 10.00,
+      priceAfterDiscount: 9.50,
+      stockQuantity: 90,
+      minimumStock: 40,
+      expiryDate: new Date('2025-01-02'), // Expiring in ~37 days
+      status: 'active',
+      classification: 'medicinal',
+      origin: 'imported',
+      costLayers: [
+        { quantity: 90, unitCost: 7.00, purchaseDate: new Date('2024-08-15'), expiryDate: new Date('2025-01-02') }
+      ],
+      createdAt: new Date('2024-08-15'),
+      updatedAt: new Date('2024-11-19')
+    },
+    // Pharmacy 2 (Branch Pharmacy) - Low Stock Items
+    {
+      id: 'PDRG008',
+      generalDrugId: 'DRG001',
+      pharmacyId: 'ph2',
+      internalBarcode: '223456',
+      price: 5.50,
+      priceAfterDiscount: 5.00,
+      stockQuantity: 20,
+      minimumStock: 50,
+      expiryDate: new Date('2025-10-31'),
+      status: 'active',
+      classification: 'medicinal',
+      origin: 'local',
+      costLayers: [
+        { quantity: 20, unitCost: 3.50, purchaseDate: new Date('2024-08-10'), expiryDate: new Date('2025-10-31') }
+      ],
+      createdAt: new Date('2024-08-10'),
+      updatedAt: new Date('2024-11-27')
+    },
+    {
+      id: 'PDRG009',
+      generalDrugId: 'DRG002',
+      pharmacyId: 'ph2',
+      internalBarcode: '223457',
+      price: 8.00,
+      priceAfterDiscount: 7.50,
+      stockQuantity: 15,
+      minimumStock: 30,
+      expiryDate: new Date('2025-11-15'),
+      status: 'active',
+      classification: 'cosmetic',
+      origin: 'imported',
+      costLayers: [
+        { quantity: 15, unitCost: 5.00, purchaseDate: new Date('2024-09-05'), expiryDate: new Date('2025-11-15') }
+      ],
+      createdAt: new Date('2024-09-05'),
+      updatedAt: new Date('2024-11-26')
+    },
+    {
+      id: 'PDRG010',
+      generalDrugId: 'DRG003',
+      pharmacyId: 'ph2',
+      internalBarcode: '223458',
+      price: 12.00,
+      priceAfterDiscount: 11.50,
+      stockQuantity: 10,
+      minimumStock: 40,
+      expiryDate: new Date('2025-12-20'),
+      status: 'active',
+      classification: 'medicinal',
+      origin: 'imported',
+      costLayers: [
+        { quantity: 10, unitCost: 8.00, purchaseDate: new Date('2024-10-12'), expiryDate: new Date('2025-12-20') }
+      ],
+      createdAt: new Date('2024-10-12'),
+      updatedAt: new Date('2024-11-25')
+    },
+    // Pharmacy 2 - Near Expiry Items
+    {
+      id: 'PDRG011',
+      generalDrugId: 'DRG001',
+      pharmacyId: 'ph2',
+      internalBarcode: '223459',
+      price: 6.00,
+      priceAfterDiscount: 5.50,
+      stockQuantity: 80,
+      minimumStock: 40,
+      expiryDate: new Date('2025-01-10'), // Expiring in ~45 days
+      status: 'active',
+      classification: 'medicinal',
+      origin: 'local',
+      costLayers: [
+        { quantity: 80, unitCost: 4.00, purchaseDate: new Date('2024-04-20'), expiryDate: new Date('2025-01-10') }
+      ],
+      createdAt: new Date('2024-04-20'),
+      updatedAt: new Date('2024-11-24')
+    },
+    {
+      id: 'PDRG012',
+      generalDrugId: 'DRG002',
+      pharmacyId: 'ph2',
+      internalBarcode: '223460',
+      price: 9.00,
+      priceAfterDiscount: 8.50,
+      stockQuantity: 60,
+      minimumStock: 50,
+      expiryDate: new Date('2025-01-05'), // Expiring in ~40 days
+      status: 'active',
+      classification: 'cosmetic',
+      origin: 'local',
+      costLayers: [
+        { quantity: 60, unitCost: 6.00, purchaseDate: new Date('2024-05-10'), expiryDate: new Date('2025-01-05') }
+      ],
+      createdAt: new Date('2024-05-10'),
+      updatedAt: new Date('2024-11-23')
+    },
+    {
+      id: 'PDRG013',
+      generalDrugId: 'DRG003',
+      pharmacyId: 'ph2',
+      internalBarcode: '223461',
+      price: 15.00,
+      priceAfterDiscount: 14.00,
+      stockQuantity: 35,
+      minimumStock: 30,
+      expiryDate: new Date('2024-12-25'), // Expiring in ~30 days
+      status: 'active',
+      classification: 'medicinal',
+      origin: 'imported',
+      costLayers: [
+        { quantity: 35, unitCost: 10.00, purchaseDate: new Date('2024-06-01'), expiryDate: new Date('2024-12-25') }
+      ],
+      createdAt: new Date('2024-06-01'),
+      updatedAt: new Date('2024-11-22')
+    },
+    {
+      id: 'PDRG014',
+      generalDrugId: 'DRG001',
+      pharmacyId: 'ph2',
+      internalBarcode: '223462',
+      price: 5.75,
+      priceAfterDiscount: 5.25,
+      stockQuantity: 100,
+      minimumStock: 60,
+      expiryDate: new Date('2024-12-20'), // Expiring in ~25 days
+      status: 'active',
+      classification: 'medicinal',
+      origin: 'local',
+      costLayers: [
+        { quantity: 100, unitCost: 3.75, purchaseDate: new Date('2024-07-15'), expiryDate: new Date('2024-12-20') }
+      ],
+      createdAt: new Date('2024-07-15'),
+      updatedAt: new Date('2024-11-21')
+    },
+    // Pharmacy 2 - Additional Low Stock Items
+    {
+      id: 'PDRG017',
+      generalDrugId: 'DRG004',
+      pharmacyId: 'ph2',
+      internalBarcode: '223463',
+      price: 3.50,
+      priceAfterDiscount: 3.00,
+      stockQuantity: 25,
+      minimumStock: 50,
+      expiryDate: new Date('2025-08-15'),
+      status: 'active',
+      classification: 'medicinal',
+      origin: 'local',
+      costLayers: [
+        { quantity: 25, unitCost: 2.00, purchaseDate: new Date('2024-09-20'), expiryDate: new Date('2025-08-15') }
+      ],
+      createdAt: new Date('2024-09-20'),
+      updatedAt: new Date('2024-11-18')
+    },
+    {
+      id: 'PDRG018',
+      generalDrugId: 'DRG005',
+      pharmacyId: 'ph2',
+      internalBarcode: '223464',
+      price: 10.00,
+      priceAfterDiscount: 9.50,
+      stockQuantity: 18,
+      minimumStock: 40,
+      expiryDate: new Date('2025-09-10'),
+      status: 'active',
+      classification: 'medicinal',
+      origin: 'imported',
+      costLayers: [
+        { quantity: 18, unitCost: 7.00, purchaseDate: new Date('2024-10-05'), expiryDate: new Date('2025-09-10') }
+      ],
+      createdAt: new Date('2024-10-05'),
+      updatedAt: new Date('2024-11-17')
     }
   ];
 

@@ -1,8 +1,8 @@
-import { Component, inject, Input, output, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { TranslationService } from '../../../core/services/translation.service';
-import { PharmacyDrug, InventoryCostingMethod } from '../../../core/models/drug.model';
-import { TranslatePipe } from '../../../core/pipes/translate.pipe';
+import {Component, inject, Input, output, signal} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {TranslationService} from '../../../core/services/translation.service';
+import {InventoryCostingMethod, PharmacyDrug} from '../../../core/models/drug.model';
+import {TranslatePipe} from '../../../core/pipes/translate.pipe';
 
 export interface DrugBadge {
   label: string;
@@ -16,10 +16,18 @@ export interface DrugBadge {
   template: `
     <div
       class="drug-card group relative rounded-xl p-6 transition-all duration-200 cursor-pointer hover:-translate-y-0.5 flex flex-col"
+      [class.imported-card]="isImported()"
       [style.color]="'var(--sidebar-text, #E3F4F5)'"
-      [style.min-height]="'420px'"
+      [style.min-height]="'440px'"
       (click)="onCardClick($event)"
     >
+      <!-- Imported Drug Left Border Badge -->
+      @if (isImported()) {
+        <div class="import-badge-left">
+          <span>{{ 'drug.origin.imported' | translate }}</span>
+        </div>
+      }
+
       <!-- Selection Overlay (Semi-transparent with centered checkmark) -->
       @if (selectionMode) {
         <div
@@ -96,21 +104,18 @@ export interface DrugBadge {
       <!-- Content Container -->
       <div class="relative z-10 flex-1 flex flex-col">
         <!-- Top Section: Drug Icon/Initials -->
-        <div class="flex items-start mb-5">
-          <div class="relative flex-shrink-0">
-            <div
-              class="w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold ring-2 transition-all duration-200 shadow-lg"
-              [style.background]="'var(--sidebar-active-bg, #D9F275)'"
-              [style.color]="'var(--sidebar-active-text, #003032)'"
-              [style.border-color]="'rgba(255, 255, 255, 0.2)'"
-            >
-              {{ getDrugInitials() }}
-            </div>
-          </div>
-        </div>
+
 
         <!-- Main Content -->
         <div class="mb-4 flex-1">
+          <!-- Cosmetic Badge (Inline) -->
+          @if (isCosmetic()) {
+            <div class="cosmetic-badge-inline">
+              <span>✨</span>
+              <span>{{ 'drug.classification.cosmetic' | translate }}</span>
+            </div>
+          }
+
           <h3
             class="text-lg font-bold mb-1.5 group-hover:opacity-90 transition-opacity duration-200 leading-tight"
             [style.color]="'var(--sidebar-text, #E3F4F5)'"
@@ -161,24 +166,9 @@ export interface DrugBadge {
               >
                 {{ formatPrice(getCurrentPrice()) }}
               </span>
-              @if (hasDiscount()) {
-                <span
-                  class="text-lg line-through opacity-60"
-                  [style.color]="'var(--sidebar-text, #E3F4F5)'"
-                >
-                  {{ formatPrice(drug.price) }}
-                </span>
-              }
+
             </div>
-            @if (hasDiscount()) {
-              <span
-                class="inline-block px-2 py-0.5 rounded text-xs font-medium"
-                [style.background]="'rgba(34, 197, 94, 0.2)'"
-                [style.color]="'#86efac'"
-              >
-                {{ 'drugCard.save' | translate }} {{ getDiscountPercentage() }}% • {{ formatPrice(getDiscountAmount()) }} {{ 'drugCard.off' | translate }}
-              </span>
-            }
+
           </div>
 
           <!-- Stock Level -->
@@ -287,7 +277,7 @@ export interface DrugBadge {
           @if (badges && badges.length > 0) {
             @for (badge of badges; track $index) {
               <span [class]="getBadgeClasses(badge)">
-                {{ badge.label }}
+                {{ badge.label | translate }}
               </span>
             }
           }
@@ -406,6 +396,110 @@ export interface DrugBadge {
       background-size: var(--size) var(--size),
       var(--size) var(--size),
       cover;
+    }
+
+    /* ========================================
+    IMPORTED DRUG RIGHT BORDER BADGE (Bottom Right)
+    ======================================== */
+    .imported-card::after {
+      content: '';
+      position: absolute;
+      right: 0;
+      top: 79px; /* Start below the view button area */
+      bottom: 0; /* Go to bottom */
+      width: 5px;
+      background: var(--sidebar-active-bg, #D9F275);
+      border-radius: 0 16px 16px 0; /* Rounded on the right side */
+      box-shadow: 3px 0 12px rgba(217, 242, 117, 0.3);
+      z-index: 5;
+    }
+
+    /* RTL: Move border to left */
+    [dir="rtl"] .imported-card::after,
+    :host-context([dir="rtl"]) .imported-card::after,
+    :host-context(html[dir="rtl"]) .imported-card::after {
+      right: auto;
+      left: 0;
+      border-radius: 16px 0 0 16px; /* Rounded on the left side */
+      box-shadow: -3px 0 12px rgba(217, 242, 117, 0.3);
+    }
+
+    .import-badge-left {
+      position: absolute;
+      bottom: 1rem;
+      right: -14px;
+      background: var(--sidebar-active-bg, #D9F275);
+      color: var(--sidebar-active-text, #003032);
+      font-size: 0.85rem;
+      font-weight: 800;
+      padding: 0.5rem 0.65rem;
+      border-radius: 6px;
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+      letter-spacing: 0.15em;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+      z-index: 11;
+      animation: slideInRight 0.5s ease-out;
+    }
+
+    @keyframes slideInRight {
+      from {
+        right: -30px;
+        opacity: 0;
+      }
+      to {
+        right: -14px;
+        opacity: 1;
+      }
+    }
+
+    /* RTL: Move badge to left bottom */
+    [dir="rtl"] .import-badge-left,
+    :host-context([dir="rtl"]) .import-badge-left,
+    :host-context(html[dir="rtl"]) .import-badge-left {
+      right: auto;
+      left: -14px;
+      animation: slideInLeft 0.5s ease-out;
+    }
+
+    @keyframes slideInLeft {
+      from {
+        left: -30px;
+        opacity: 0;
+      }
+      to {
+        left: -14px;
+        opacity: 1;
+      }
+    }
+
+    /* ========================================
+       COSMETIC INLINE BADGE
+       ======================================== */
+    .cosmetic-badge-inline {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
+      color: white;
+      padding: 0.35rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+      box-shadow: 0 2px 8px rgba(236, 72, 153, 0.25);
+      animation: fadeInScale 0.4s ease-out;
+    }
+
+    @keyframes fadeInScale {
+      from {
+        opacity: 0;
+        transform: scale(0.9);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
     }
 
     /* ========================================
@@ -698,6 +792,14 @@ export class DrugCardComponent {
 
   get isRTL(): boolean {
     return this.translationService.getCurrentLanguage() === 'ar';
+  }
+
+  isImported(): boolean {
+    return this.drug?.origin === 'imported';
+  }
+
+  isCosmetic(): boolean {
+    return this.drug?.classification === 'cosmetic';
   }
 
   getDrugInitials(): string {

@@ -6,6 +6,7 @@ import { DrugsService } from '../../../core/services/drugs.service';
 import { FormWrapperComponent } from '../../../shared/components/form-wrapper/form-wrapper.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { AlertComponent } from '../../../shared/components/alert/alert.component';
+import { TranslatePipe } from '../../../core/pipes/translate.pipe';
 
 @Component({
   selector: 'app-drug-form',
@@ -15,7 +16,8 @@ import { AlertComponent } from '../../../shared/components/alert/alert.component
     ReactiveFormsModule,
     FormWrapperComponent,
     ButtonComponent,
-    AlertComponent
+    AlertComponent,
+    TranslatePipe
   ],
   template: `
     <app-form-wrapper [title]="isEdit ? 'Edit Pharmacy Drug' : 'Add New Pharmacy Drug'">
@@ -129,6 +131,58 @@ import { AlertComponent } from '../../../shared/components/alert/alert.component
               <option value="out_of_stock">Out of Stock</option>
             </select>
           </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              {{ 'drug.classification' | translate }}
+            </label>
+            <div class="flex gap-4">
+              <label class="flex items-center cursor-pointer">
+                <input
+                  type="radio"
+                  formControlName="classification"
+                  value="medicinal"
+                  class="w-4 h-4 text-[var(--primary-color)] focus:ring-[var(--primary-color)] border-gray-300"
+                />
+                <span class="ml-2 text-sm text-gray-700">{{ 'drug.classification.medicinal' | translate }}</span>
+              </label>
+              <label class="flex items-center cursor-pointer">
+                <input
+                  type="radio"
+                  formControlName="classification"
+                  value="cosmetic"
+                  class="w-4 h-4 text-[var(--primary-color)] focus:ring-[var(--primary-color)] border-gray-300"
+                />
+                <span class="ml-2 text-sm text-gray-700">{{ 'drug.classification.cosmetic' | translate }}</span>
+              </label>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              {{ 'drug.origin' | translate }}
+            </label>
+            <div class="flex gap-4">
+              <label class="flex items-center cursor-pointer">
+                <input
+                  type="radio"
+                  formControlName="origin"
+                  value="local"
+                  class="w-4 h-4 text-[var(--primary-color)] focus:ring-[var(--primary-color)] border-gray-300"
+                />
+                <span class="ml-2 text-sm text-gray-700">{{ 'drug.origin.local' | translate }}</span>
+              </label>
+              <label class="flex items-center cursor-pointer">
+                <input
+                  type="radio"
+                  formControlName="origin"
+                  value="imported"
+                  class="w-4 h-4 text-[var(--primary-color)] focus:ring-[var(--primary-color)] border-gray-300"
+                />
+                <span class="ml-2 text-sm text-gray-700">{{ 'drug.origin.imported' | translate }}</span>
+              </label>
+            </div>
+          </div>
         </div>
 
         <!-- Form Actions -->
@@ -175,7 +229,9 @@ export class DrugFormComponent implements OnInit {
       stockQuantity: [0, [Validators.required, Validators.min(0)]],
       minimumStock: [0, [Validators.required, Validators.min(0)]],
       expiryDate: [''],
-      status: ['active']
+      status: ['active'],
+      classification: ['medicinal'],
+      origin: ['local']
     });
 
     this.loadGeneralDrugs();
@@ -205,7 +261,9 @@ export class DrugFormComponent implements OnInit {
             stockQuantity: drug.stockQuantity,
             minimumStock: drug.minimumStock,
             expiryDate: drug.expiryDate ? this.formatDateForInput(drug.expiryDate) : '',
-            status: drug.status
+            status: drug.status,
+            classification: drug.classification || 'medicinal',
+            origin: drug.origin || 'local'
           });
         }
       },
@@ -230,7 +288,9 @@ export class DrugFormComponent implements OnInit {
         stockQuantity: formValue.stockQuantity,
         minimumStock: formValue.minimumStock,
         expiryDate: formValue.expiryDate ? new Date(formValue.expiryDate) : undefined,
-        status: formValue.status
+        status: formValue.status,
+        classification: formValue.classification,
+        origin: formValue.origin
       };
 
       const operation = this.isEdit
