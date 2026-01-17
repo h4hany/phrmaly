@@ -6,6 +6,7 @@ import { InvoicesService } from '../../../core/services/invoices.service';
 import { PatientsService } from '../../../core/services/patients.service';
 import { DrugsService } from '../../../core/services/drugs.service';
 import { BundlesService } from '../../../core/services/bundles.service';
+import { InvoiceCartService } from '../../../core/services/invoice-cart.service';
 import { BarcodeService } from '../../../shared/services/barcode.service';
 import { BarcodeScannerDirective } from '../../../shared/directives/barcode-scanner.directive';
 import { FormWrapperComponent } from '../../../shared/components/form-wrapper/form-wrapper.component';
@@ -284,6 +285,7 @@ export class InvoiceFormComponent implements OnInit {
   private patientsService = inject(PatientsService);
   private drugsService = inject(DrugsService);
   private bundlesService = inject(BundlesService);
+  private invoiceCartService = inject(InvoiceCartService);
   private barcodeService = inject(BarcodeService);
 
   invoiceForm!: FormGroup;
@@ -360,6 +362,7 @@ export class InvoiceFormComponent implements OnInit {
     if (this.isEdit && this.invoiceId) {
       this.loadInvoice();
     }
+    // Cart drugs will be loaded after pharmacyDrugs are loaded (in loadDrugs callback)
   }
 
   private loadPatients(): void {
@@ -374,6 +377,10 @@ export class InvoiceFormComponent implements OnInit {
     this.drugsService.getPharmacyDrugs({ page: 1, pageSize: 100 }).subscribe({
       next: (response) => {
         this.pharmacyDrugs = response.data;
+        // If this is a new invoice and we haven't loaded cart drugs yet, do it now
+        if (!this.isEdit && this.itemsArray.length === 0) {
+          this.loadDrugsFromCart();
+        }
       }
     });
   }
@@ -436,12 +443,38 @@ export class InvoiceFormComponent implements OnInit {
   }
 
   addItemWithDrug(drug: any): void {
+    // Check if drug already exists in the form to prevent duplicates
+    const existingIndex = this.itemsArray.controls.findIndex(
+      control => control.get('drugId')?.value === drug.id
+    );
+    
+    if (existingIndex >= 0) {
+      // Drug already exists, just increment quantity
+      const existingControl = this.itemsArray.at(existingIndex);
+      const currentQuantity = existingControl.get('quantity')?.value || 1;
+      existingControl.patchValue({ quantity: currentQuantity + 1 });
+      return;
+    }
+
     const itemForm = this.fb.group({
       drugId: [drug.id, [Validators.required]],
       quantity: [1, [Validators.required, Validators.min(1)]],
-      unitPrice: [drug.price, [Validators.required]]
+      unitPrice: [drug.priceAfterDiscount || drug.price, [Validators.required]]
     });
     this.itemsArray.push(itemForm);
+  }
+
+  private loadDrugsFromCart(): void {
+    if (this.isEdit) return; // Don't load cart for edit mode
+    
+    const cartDrugs = this.invoiceCartService.getDrugs();
+    if (cartDrugs.length > 0) {
+      // Use pharmacyDrugs if available (more complete data), otherwise use cart drugs
+      cartDrugs.forEach(cartDrug => {
+        const fullDrug = this.pharmacyDrugs.find(d => d.id === cartDrug.id) || cartDrug;
+        this.addItemWithDrug(fullDrug);
+      });
+    }
   }
 
   addItemWithData(item: any): void {
@@ -493,6 +526,8 @@ export class InvoiceFormComponent implements OnInit {
 
       operation.subscribe({
         next: () => {
+          // Clear cart after successful invoice creation
+          this.invoiceCartService.clear();
           this.router.navigate(['/invoices']);
         },
         error: (error) => {

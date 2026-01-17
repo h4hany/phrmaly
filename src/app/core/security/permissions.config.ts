@@ -15,7 +15,7 @@
  * - PHARMACY_INVENTORY_MANAGER: Inventory-focused access (procurement, inventory alerts, invoices with restrictions)
  */
 
-import { UserRole } from '../models/user.model';
+import {UserRole} from '../models/user.model';
 
 export interface PermissionsConfig {
   routes: Record<string, string[]>;
@@ -44,7 +44,10 @@ export const PERMISSIONS: PermissionsConfig = {
     '/system/permissions': ['account_owner'], // PHARMACY_MANAGER should NOT see
     '/system/features': ['account_owner'], // PHARMACY_MANAGER should NOT see
     '/settings': ['account_owner', 'pharmacy_manager'],
-    '/invoices': ['account_owner','pharmacy_manager', 'pharmacy_staff', 'pharmacy_inventory_manager'],
+    '/invoices': ['account_owner', 'pharmacy_manager', 'pharmacy_staff', 'pharmacy_inventory_manager'],
+    '/invoices/new': ['account_owner', 'pharmacy_manager', 'pharmacy_staff', 'pharmacy_inventory_manager'],
+    '/invoices/:id': ['account_owner', 'pharmacy_manager', 'pharmacy_staff', 'pharmacy_inventory_manager'],
+    '/invoices/:id/edit': ['account_owner', 'pharmacy_manager', 'pharmacy_staff'],
     '/drugs': ['account_owner', 'pharmacy_manager', 'pharmacy_staff'],
     '/bundles': ['account_owner', 'pharmacy_staff'],
     '/inventory/map': ['account_owner', 'pharmacy_staff'],
@@ -57,7 +60,7 @@ export const PERMISSIONS: PermissionsConfig = {
   groups: {
     'overview': ['account_owner'],
     'operations': ['account_owner', 'pharmacy_manager', 'pharmacy_staff'], // Visible because /patients and /pharmacy-staff are in it
-    'people': ['account_owner','pharmacy_manager'], // PHARMACY_MANAGER should NOT see (no payroll/performance access)
+    'people': ['account_owner', 'pharmacy_manager'], // PHARMACY_MANAGER should NOT see (no payroll/performance access)
     'inventory': ['account_owner', 'pharmacy_manager', 'pharmacy_staff', 'pharmacy_inventory_manager'], // Visible because /drugs is in it for PHARMACY_MANAGER
     'procurement': ['account_owner', 'pharmacy_inventory_manager'], // PHARMACY_MANAGER should NOT see
     'finance': ['account_owner', 'pharmacy_inventory_manager'], // PHARMACY_MANAGER should NOT see (no audit-logs/movements)
@@ -73,18 +76,18 @@ export const PERMISSIONS: PermissionsConfig = {
   // - /settings (but NOT Account Information tab)
   items: {
     '/dashboard': ['account_owner'],
-    '/invoices': ['account_owner','pharmacy_manager', 'pharmacy_staff', 'pharmacy_inventory_manager'], // PHARMACY_MANAGER should NOT see
+    '/invoices': ['account_owner', 'pharmacy_manager', 'pharmacy_staff', 'pharmacy_inventory_manager'], // PHARMACY_MANAGER should NOT see
     '/patients': ['account_owner', 'pharmacy_manager'],
     '/pharmacy-staff': ['account_owner', 'pharmacy_manager'],
     '/people/payroll': ['account_owner'], // PHARMACY_MANAGER should NOT see
     '/people/performance': ['account_owner'], // PHARMACY_MANAGER should NOT see
-    '/people/attendance': ['account_owner','pharmacy_manager'], // PHARMACY_MANAGER should NOT see
+    '/people/attendance': ['account_owner', 'pharmacy_manager'], // PHARMACY_MANAGER should NOT see
     '/people/training': ['account_owner'], // PHARMACY_MANAGER should NOT see
     '/drugs': ['account_owner', 'pharmacy_manager', 'pharmacy_staff'], // Home screen for PHARMACY_MANAGER
-    '/bundles': ['account_owner', 'pharmacy_staff','pharmacy_manager'], // PHARMACY_MANAGER should NOT see
-    '/inventory/alerts': ['account_owner', 'pharmacy_inventory_manager','pharmacy_manager'], // PHARMACY_MANAGER should NOT see
-    '/inventory/transfers': ['account_owner', 'pharmacy_staff','pharmacy_manager'], // PHARMACY_MANAGER should NOT see
-    '/inventory/map': ['account_owner', 'pharmacy_staff','pharmacy_manager'], // PHARMACY_MANAGER should NOT see
+    '/bundles': ['account_owner', 'pharmacy_staff', 'pharmacy_manager'], // PHARMACY_MANAGER should NOT see
+    '/inventory/alerts': ['account_owner', 'pharmacy_inventory_manager', 'pharmacy_manager'], // PHARMACY_MANAGER should NOT see
+    '/inventory/transfers': ['account_owner', 'pharmacy_staff', 'pharmacy_manager'], // PHARMACY_MANAGER should NOT see
+    '/inventory/map': ['account_owner', 'pharmacy_staff', 'pharmacy_manager'], // PHARMACY_MANAGER should NOT see
     '/purchases': ['account_owner', 'pharmacy_inventory_manager'], // PHARMACY_MANAGER should NOT see (procurement)
     '/suppliers': ['account_owner', 'pharmacy_inventory_manager'], // PHARMACY_MANAGER should NOT see (procurement)
     '/payments': ['account_owner'], // PHARMACY_MANAGER should NOT see
@@ -114,8 +117,8 @@ export const PERMISSIONS: PermissionsConfig = {
     'staff.tabs.activity': ['account_owner'],
 
     // Invoice page features
-    'invoice.create': ['account_owner', 'pharmacy_staff','pharmacy_manager'],
-    'invoice.actions': ['account_owner', 'pharmacy_staff','pharmacy_manager'],
+    'invoice.create': ['account_owner', 'pharmacy_staff', 'pharmacy_manager'],
+    'invoice.actions': ['account_owner', 'pharmacy_staff', 'pharmacy_manager'],
 
     // Settings page features
     'settings.tabs.account': ['account_owner'],

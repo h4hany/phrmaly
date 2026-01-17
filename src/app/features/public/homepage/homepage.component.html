@@ -9,23 +9,29 @@
   </a>
 
   <ul class="nav-menu" id="navMenu">
-    <li><a href="#features">Features</a></li>
-    <li><a href="#capabilities">Capabilities</a></li>
-    <li><a href="#pricing">Pricing</a></li>
-    <li><a routerLink="/drug-index">Drug Index</a></li>
-    <li><a href="#resources">Resources</a></li>
+    <li><a href="#features">{{ 'home.nav.features' | translate }}</a></li>
+    <li><a href="#capabilities">{{ 'home.nav.capabilities' | translate }}</a></li>
+    <li><a href="#pricing">{{ 'home.nav.pricing' | translate }}</a></li>
+    <li><a routerLink="/drug-index">{{ 'home.nav.drugIndex' | translate }}</a></li>
+    <li><a href="#resources">{{ 'home.nav.resources' | translate }}</a></li>
   </ul>
 
   <div class="nav-actions">
+    <button class="btn-language-toggle" (click)="toggleLanguage()" [attr.aria-label]="'common.changeLanguage' | translate">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+      </svg>
+      <span>{{ currentLanguage === 'en' ? 'AR' : 'EN' }}</span>
+    </button>
     <a routerLink="/login" class="btn-nav-login">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
         <polyline points="10 17 15 12 10 7"></polyline>
         <line x1="15" y1="12" x2="3" y2="12"></line>
       </svg>
-      Login
+      {{ 'home.nav.login' | translate }}
     </a>
-    <a href="#pricing" class="btn-nav-trial">Start Free Trial</a>
+    <a href="#pricing" class="btn-nav-trial">{{ 'home.nav.startTrial' | translate }}</a>
     <button class="mobile-menu-toggle" id="mobileToggle" (click)="toggleMobileMenu()">☰</button>
   </div>
 </nav>
@@ -49,28 +55,28 @@
   <div class="hero-content">
     <div class="hero-badge">
       <span>✨</span>
-      Enterprise Pharmacy Operating System
+      {{ 'home.hero.badge' | translate }}
     </div>
     <h1 class="hero-title">
-      Pharmaly <span class="gradient-text">OS</span>
+      {{ 'home.hero.title' | translate }} <span class="gradient-text">OS</span>
     </h1>
     <p class="hero-subtitle">
-      The complete business operating system for modern pharmacies. Streamline operations, prevent theft, automate workflows, and scale across multiple branches with enterprise-grade technology.
+      {{ 'home.hero.subtitle' | translate }}
     </p>
     <div class="hero-cta">
       <a href="#pricing" class="btn btn-primary">
-        Start Free Trial
-        <span>→</span>
+        {{ 'home.hero.startTrial' | translate }}
+        <span [attr.dir]="currentLanguage === 'ar' ? 'rtl' : 'ltr'">{{ currentLanguage === 'ar' ? '←' : '→' }}</span>
       </a>
       <a routerLink="/drug-index" class="btn btn-secondary" (click)="navigateToDrugIndex()">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" [attr.style]="currentLanguage === 'ar' ? 'margin-left: 4px;' : 'margin-right: 4px;'">
           <circle cx="11" cy="11" r="8"></circle>
           <path d="m21 21-4.35-4.35"></path>
         </svg>
-        Search Drugs
+        {{ 'home.hero.searchDrugs' | translate }}
       </a>
       <a href="#features" class="btn btn-secondary">
-        Explore Features
+        {{ 'home.hero.exploreFeatures' | translate }}
       </a>
     </div>
   </div>
@@ -81,19 +87,19 @@
   <div class="stats-grid">
     <div class="stat-card">
       <div class="stat-number" data-target="50" data-suffix="+">0+</div>
-      <div class="stat-label">Core Business Features</div>
+      <div class="stat-label">{{ 'home.stats.coreFeatures' | translate }}</div>
     </div>
     <div class="stat-card">
       <div class="stat-number" data-target="99" data-suffix=".9%">0%</div>
-      <div class="stat-label">Uptime Guarantee</div>
+      <div class="stat-label">{{ 'home.stats.uptime' | translate }}</div>
     </div>
     <div class="stat-card">
       <div class="stat-number" data-target="24" data-suffix="/7">0</div>
-      <div class="stat-label">Support & Monitoring</div>
+      <div class="stat-label">{{ 'home.stats.support' | translate }}</div>
     </div>
     <div class="stat-card">
       <div class="stat-number" data-target="500" data-suffix="+">0+</div>
-      <div class="stat-label">Pharmacies Powered</div>
+      <div class="stat-label">{{ 'home.stats.pharmacies' | translate }}</div>
     </div>
   </div>
 </section>
@@ -101,91 +107,91 @@
 <!-- Features Section -->
 <section class="features" id="features">
   <div class="section-header scroll-reveal">
-    <span class="section-badge">COMPREHENSIVE SOLUTION</span>
-    <h2 class="section-title">Everything Your Pharmacy Needs to Thrive</h2>
+    <span class="section-badge">{{ 'home.features.badge' | translate }}</span>
+    <h2 class="section-title">{{ 'home.features.title' | translate }}</h2>
     <p class="section-description">
-      From inventory management to HR automation, Pharmaly OS provides a complete suite of enterprise-grade tools designed specifically for modern pharmacies.
+      {{ 'home.features.description' | translate }}
     </p>
   </div>
 
   <div class="features-grid">
     <div class="feature-card scroll-reveal">
       <div class="feature-icon">💊</div>
-      <h3 class="feature-title">Advanced Inventory Management</h3>
+      <h3 class="feature-title">{{ 'home.features.inventory.title' | translate }}</h3>
       <p class="feature-description">
-        Real-time tracking, batch/lot management, expiry alerts, automated reordering, and multi-location inventory with shelf mapping and barcode scanning.
+        {{ 'home.features.inventory.description' | translate }}
       </p>
     </div>
 
     <div class="feature-card scroll-reveal">
       <div class="feature-icon">🔍</div>
-      <h3 class="feature-title">Public Drug Index</h3>
+      <h3 class="feature-title">{{ 'home.features.drugIndex.title' | translate }}</h3>
       <p class="feature-description">
-        Customer-facing drug search portal with comprehensive information on medications, active ingredients, pricing, and manufacturer details for informed decisions.
+        {{ 'home.features.drugIndex.description' | translate }}
       </p>
     </div>
 
     <div class="feature-card scroll-reveal">
       <div class="feature-icon">🛡️</div>
-      <h3 class="feature-title">Anti-Theft & Drug Movement Tracking</h3>
+      <h3 class="feature-title">{{ 'home.features.antiTheft.title' | translate }}</h3>
       <p class="feature-description">
-        Comprehensive movement engine tracks every drug with staff accountability, risk scoring, suspicious activity alerts, and forensic audit trails.
+        {{ 'home.features.antiTheft.description' | translate }}
       </p>
     </div>
 
     <div class="feature-card scroll-reveal">
       <div class="feature-icon">🏪</div>
-      <h3 class="feature-title">Multi-Branch Management</h3>
+      <h3 class="feature-title">{{ 'home.features.multiBranch.title' | translate }}</h3>
       <p class="feature-description">
-        Manage multiple pharmacies from one platform. Inter-branch transfers, centralized reporting, and complete tenant isolation for security.
+        {{ 'home.features.multiBranch.description' | translate }}
       </p>
     </div>
 
     <div class="feature-card scroll-reveal">
       <div class="feature-icon">🤖</div>
-      <h3 class="feature-title">Workflow Automation Engine</h3>
+      <h3 class="feature-title">{{ 'home.features.automation.title' | translate }}</h3>
       <p class="feature-description">
-        Create custom automation rules for low stock alerts, expiry notifications, staff scheduling, and more. Save hours of manual work daily.
+        {{ 'home.features.automation.description' | translate }}
       </p>
     </div>
 
     <div class="feature-card scroll-reveal">
       <div class="feature-icon">👥</div>
-      <h3 class="feature-title">Complete HR System</h3>
+      <h3 class="feature-title">{{ 'home.features.hr.title' | translate }}</h3>
       <p class="feature-description">
-        Attendance tracking, shift management, payroll with commission calculation, performance scoring, and comprehensive training modules.
+        {{ 'home.features.hr.description' | translate }}
       </p>
     </div>
 
     <div class="feature-card scroll-reveal">
       <div class="feature-icon">💳</div>
-      <h3 class="feature-title">Advanced Point of Sale</h3>
+      <h3 class="feature-title">{{ 'home.features.pos.title' | translate }}</h3>
       <p class="feature-description">
-        Fast invoicing, prescription management, patient profiles, loyalty wallets, and integrated payment processing with real-time reporting.
+        {{ 'home.features.pos.description' | translate }}
       </p>
     </div>
 
     <div class="feature-card scroll-reveal">
       <div class="feature-icon">📊</div>
-      <h3 class="feature-title">Business Intelligence & Analytics</h3>
+      <h3 class="feature-title">{{ 'home.features.analytics.title' | translate }}</h3>
       <p class="feature-description">
-        Command center dashboard with KPIs, risk insights, revenue forecasting, staff performance analytics, and custom report builder.
+        {{ 'home.features.analytics.description' | translate }}
       </p>
     </div>
 
     <div class="feature-card scroll-reveal">
       <div class="feature-icon">🔐</div>
-      <h3 class="feature-title">Enterprise Security & Compliance</h3>
+      <h3 class="feature-title">{{ 'home.features.security.title' | translate }}</h3>
       <p class="feature-description">
-        Role-based permissions, granular access control, comprehensive audit logging, data encryption, and regulatory compliance built-in.
+        {{ 'home.features.security.description' | translate }}
       </p>
     </div>
 
     <div class="feature-card scroll-reveal">
       <div class="feature-icon">🚀</div>
-      <h3 class="feature-title">Growth & Referral System</h3>
+      <h3 class="feature-title">{{ 'home.features.growth.title' | translate }}</h3>
       <p class="feature-description">
-        Doctor and clinic referral tracking, revenue attribution, performance leaderboards, and automated commission calculations.
+        {{ 'home.features.growth.description' | translate }}
       </p>
     </div>
   </div>
@@ -194,84 +200,84 @@
 <!-- System Capabilities -->
 <section class="capabilities" id="capabilities">
   <div class="section-header scroll-reveal">
-    <span class="section-badge" style="background: rgba(0, 212, 170, 0.15); color: var(--accent);">COMPLETE ECOSYSTEM</span>
-    <h2 class="section-title">50+ Enterprise Features & Counting</h2>
+    <span class="section-badge" style="background: rgba(0, 212, 170, 0.15); color: var(--accent);">{{ 'home.capabilities.badge' | translate }}</span>
+    <h2 class="section-title">{{ 'home.capabilities.title' | translate }}</h2>
     <p class="section-description">
-      A comprehensive suite of capabilities designed to handle every aspect of pharmacy operations.
+      {{ 'home.capabilities.description' | translate }}
     </p>
   </div>
 
   <div class="capabilities-grid">
     <div class="capability-item scroll-reveal">
       <div class="capability-icon">📦</div>
-      <div class="capability-title">Product Bundles</div>
-      <div class="capability-description">Create and manage product packages with dynamic pricing</div>
+      <div class="capability-title">{{ 'home.capabilities.productBundles.title' | translate }}</div>
+      <div class="capability-description">{{ 'home.capabilities.productBundles.description' | translate }}</div>
     </div>
 
     <div class="capability-item scroll-reveal">
       <div class="capability-icon">🔔</div>
-      <div class="capability-title">Inventory Alerts</div>
-      <div class="capability-description">Automated notifications for low stock and expiring items</div>
+      <div class="capability-title">{{ 'home.capabilities.inventoryAlerts.title' | translate }}</div>
+      <div class="capability-description">{{ 'home.capabilities.inventoryAlerts.description' | translate }}</div>
     </div>
 
     <div class="capability-item scroll-reveal">
       <div class="capability-icon">🚚</div>
-      <div class="capability-title">Purchase Orders</div>
-      <div class="capability-description">Streamlined procurement with supplier management</div>
+      <div class="capability-title">{{ 'home.capabilities.purchaseOrders.title' | translate }}</div>
+      <div class="capability-description">{{ 'home.capabilities.purchaseOrders.description' | translate }}</div>
     </div>
 
     <div class="capability-item scroll-reveal">
       <div class="capability-icon">💰</div>
-      <div class="capability-title">Supplier Payments</div>
-      <div class="capability-description">Track payables and payment schedules efficiently</div>
+      <div class="capability-title">{{ 'home.capabilities.supplierPayments.title' | translate }}</div>
+      <div class="capability-description">{{ 'home.capabilities.supplierPayments.description' | translate }}</div>
     </div>
 
     <div class="capability-item scroll-reveal">
       <div class="capability-icon">👤</div>
-      <div class="capability-title">Patient Management</div>
-      <div class="capability-description">Complete patient profiles with purchase history</div>
+      <div class="capability-title">{{ 'home.capabilities.patientManagement.title' | translate }}</div>
+      <div class="capability-description">{{ 'home.capabilities.patientManagement.description' | translate }}</div>
     </div>
 
     <div class="capability-item scroll-reveal">
       <div class="capability-icon">🎯</div>
-      <div class="capability-title">Shelf Location Mapping</div>
-      <div class="capability-description">Visual shelf layout with real-time stock indicators</div>
+      <div class="capability-title">{{ 'home.capabilities.shelfMapping.title' | translate }}</div>
+      <div class="capability-description">{{ 'home.capabilities.shelfMapping.description' | translate }}</div>
     </div>
 
     <div class="capability-item scroll-reveal">
       <div class="capability-icon">📱</div>
-      <div class="capability-title">Mobile Optimized</div>
-      <div class="capability-description">Full functionality on tablets and smartphones</div>
+      <div class="capability-title">{{ 'home.capabilities.mobileOptimized.title' | translate }}</div>
+      <div class="capability-description">{{ 'home.capabilities.mobileOptimized.description' | translate }}</div>
     </div>
 
     <div class="capability-item scroll-reveal">
       <div class="capability-icon">🌐</div>
-      <div class="capability-title">Multi-Language</div>
-      <div class="capability-description">English and Arabic with RTL support</div>
+      <div class="capability-title">{{ 'home.capabilities.multiLanguage.title' | translate }}</div>
+      <div class="capability-description">{{ 'home.capabilities.multiLanguage.description' | translate }}</div>
     </div>
 
     <div class="capability-item scroll-reveal">
       <div class="capability-icon">🎨</div>
-      <div class="capability-title">Custom Theming</div>
-      <div class="capability-description">Per-pharmacy branding and color schemes</div>
+      <div class="capability-title">{{ 'home.capabilities.customTheming.title' | translate }}</div>
+      <div class="capability-description">{{ 'home.capabilities.customTheming.description' | translate }}</div>
     </div>
 
     <div class="capability-item scroll-reveal">
       <div class="capability-icon">📈</div>
-      <div class="capability-title">Revenue Forecasting</div>
-      <div class="capability-description">AI-powered sales predictions and insights</div>
+      <div class="capability-title">{{ 'home.capabilities.revenueForecasting.title' | translate }}</div>
+      <div class="capability-description">{{ 'home.capabilities.revenueForecasting.description' | translate }}</div>
     </div>
 
     <div class="capability-item scroll-reveal">
       <div class="capability-icon">⚡</div>
-      <div class="capability-title">Feature Flags</div>
-      <div class="capability-description">Control feature rollout per pharmacy or user</div>
+      <div class="capability-title">{{ 'home.capabilities.featureFlags.title' | translate }}</div>
+      <div class="capability-description">{{ 'home.capabilities.featureFlags.description' | translate }}</div>
     </div>
 
     <div class="capability-item scroll-reveal">
       <div class="capability-icon">📋</div>
-      <div class="capability-title">Data Migration</div>
-      <div class="capability-description">Easy import from spreadsheets and legacy systems</div>
+      <div class="capability-title">{{ 'home.capabilities.dataMigration.title' | translate }}</div>
+      <div class="capability-description">{{ 'home.capabilities.dataMigration.description' | translate }}</div>
     </div>
   </div>
 </section>
@@ -279,10 +285,10 @@
 <!-- Pricing Section -->
 <section class="pricing" id="pricing">
   <div class="section-header scroll-reveal">
-    <span class="section-badge">TRANSPARENT PRICING</span>
-    <h2 class="section-title">Choose Your Plan</h2>
+    <span class="section-badge">{{ 'home.pricing.badge' | translate }}</span>
+    <h2 class="section-title">{{ 'home.pricing.title' | translate }}</h2>
     <p class="section-description">
-      Flexible pricing designed to grow with your pharmacy business. All plans include core features with increasing capabilities.
+      {{ 'home.pricing.description' | translate }}
     </p>
   </div>
 
@@ -290,81 +296,81 @@
     <!-- Starter Plan -->
     <div class="pricing-card scroll-reveal">
       <div class="pricing-header">
-        <h3 class="pricing-name">Starter</h3>
-        <p class="pricing-description">Perfect for single-pharmacy operations</p>
+        <h3 class="pricing-name">{{ 'home.pricing.starter.name' | translate }}</h3>
+        <p class="pricing-description">{{ 'home.pricing.starter.description' | translate }}</p>
       </div>
       <div class="pricing-price">
         <span class="price-amount">$99</span>
-        <span class="price-period">/month</span>
+        <span class="price-period">{{ 'home.pricing.starter.price' | translate }}</span>
       </div>
       <ul class="pricing-features">
-        <li>Single pharmacy location</li>
-        <li>Up to 5 staff members</li>
-        <li>Basic inventory management</li>
-        <li>Point of sale system</li>
-        <li>Patient management</li>
-        <li>Sales & purchase tracking</li>
-        <li>Basic reporting</li>
-        <li>Email support</li>
-        <li>Mobile access</li>
-        <li>SSL security</li>
+        <li>{{ 'home.pricing.starter.feature1' | translate }}</li>
+        <li>{{ 'home.pricing.starter.feature2' | translate }}</li>
+        <li>{{ 'home.pricing.starter.feature3' | translate }}</li>
+        <li>{{ 'home.pricing.starter.feature4' | translate }}</li>
+        <li>{{ 'home.pricing.starter.feature5' | translate }}</li>
+        <li>{{ 'home.pricing.starter.feature6' | translate }}</li>
+        <li>{{ 'home.pricing.starter.feature7' | translate }}</li>
+        <li>{{ 'home.pricing.starter.feature8' | translate }}</li>
+        <li>{{ 'home.pricing.starter.feature9' | translate }}</li>
+        <li>{{ 'home.pricing.starter.feature10' | translate }}</li>
       </ul>
-      <a href="#" class="pricing-cta">Start Free Trial</a>
+      <a href="#" class="pricing-cta">{{ 'home.pricing.startTrial' | translate }}</a>
     </div>
 
     <!-- Professional Plan (Featured) -->
     <div class="pricing-card featured scroll-reveal">
-      <span class="pricing-badge">Most Popular</span>
+      <span class="pricing-badge">{{ 'home.pricing.professional.badge' | translate }}</span>
       <div class="pricing-header">
-        <h3 class="pricing-name">Professional</h3>
-        <p class="pricing-description">Advanced features for growing pharmacies</p>
+        <h3 class="pricing-name">{{ 'home.pricing.professional.name' | translate }}</h3>
+        <p class="pricing-description">{{ 'home.pricing.professional.description' | translate }}</p>
       </div>
       <div class="pricing-price">
         <span class="price-amount">$299</span>
-        <span class="price-period">/month</span>
+        <span class="price-period">{{ 'home.pricing.starter.price' | translate }}</span>
       </div>
       <ul class="pricing-features">
-        <li>Up to 3 pharmacy locations</li>
-        <li>Up to 25 staff members</li>
-        <li>Advanced inventory with batch tracking</li>
-        <li>Drug movement tracking & alerts</li>
-        <li>Inter-branch transfers</li>
-        <li>HR & payroll system</li>
-        <li>Performance analytics</li>
-        <li>Automation rules engine</li>
-        <li>Advanced reporting & BI</li>
-        <li>Priority support (24/7)</li>
-        <li>Custom theming</li>
-        <li>API access</li>
+        <li>{{ 'home.pricing.professional.feature1' | translate }}</li>
+        <li>{{ 'home.pricing.professional.feature2' | translate }}</li>
+        <li>{{ 'home.pricing.professional.feature3' | translate }}</li>
+        <li>{{ 'home.pricing.professional.feature4' | translate }}</li>
+        <li>{{ 'home.pricing.professional.feature5' | translate }}</li>
+        <li>{{ 'home.pricing.professional.feature6' | translate }}</li>
+        <li>{{ 'home.pricing.professional.feature7' | translate }}</li>
+        <li>{{ 'home.pricing.professional.feature8' | translate }}</li>
+        <li>{{ 'home.pricing.professional.feature9' | translate }}</li>
+        <li>{{ 'home.pricing.professional.feature10' | translate }}</li>
+        <li>{{ 'home.pricing.professional.feature11' | translate }}</li>
+        <li>{{ 'home.pricing.professional.feature12' | translate }}</li>
       </ul>
-      <a href="#" class="pricing-cta">Start Free Trial</a>
+      <a href="#" class="pricing-cta">{{ 'home.pricing.startTrial' | translate }}</a>
     </div>
 
     <!-- Enterprise Plan -->
     <div class="pricing-card scroll-reveal">
       <div class="pricing-header">
-        <h3 class="pricing-name">Enterprise</h3>
-        <p class="pricing-description">Complete solution for pharmacy chains</p>
+        <h3 class="pricing-name">{{ 'home.pricing.enterprise.name' | translate }}</h3>
+        <p class="pricing-description">{{ 'home.pricing.enterprise.description' | translate }}</p>
       </div>
       <div class="pricing-price">
-        <span class="price-amount">Custom</span>
-        <span class="price-period">pricing</span>
+        <span class="price-amount">{{ 'home.pricing.custom' | translate }}</span>
+        <span class="price-period">{{ 'home.pricing.enterprise.price' | translate }}</span>
       </div>
       <ul class="pricing-features">
-        <li>Unlimited pharmacy locations</li>
-        <li>Unlimited staff members</li>
-        <li>All Professional features</li>
-        <li>Dedicated account manager</li>
-        <li>Custom integrations</li>
-        <li>Advanced security features</li>
-        <li>On-premise deployment option</li>
-        <li>SLA guarantee (99.99%)</li>
-        <li>Training & onboarding</li>
-        <li>White-label options</li>
-        <li>Data migration assistance</li>
-        <li>Compliance consulting</li>
+        <li>{{ 'home.pricing.enterprise.feature1' | translate }}</li>
+        <li>{{ 'home.pricing.enterprise.feature2' | translate }}</li>
+        <li>{{ 'home.pricing.enterprise.feature3' | translate }}</li>
+        <li>{{ 'home.pricing.enterprise.feature4' | translate }}</li>
+        <li>{{ 'home.pricing.enterprise.feature5' | translate }}</li>
+        <li>{{ 'home.pricing.enterprise.feature6' | translate }}</li>
+        <li>{{ 'home.pricing.enterprise.feature7' | translate }}</li>
+        <li>{{ 'home.pricing.enterprise.feature8' | translate }}</li>
+        <li>{{ 'home.pricing.enterprise.feature9' | translate }}</li>
+        <li>{{ 'home.pricing.enterprise.feature10' | translate }}</li>
+        <li>{{ 'home.pricing.enterprise.feature11' | translate }}</li>
+        <li>{{ 'home.pricing.enterprise.feature12' | translate }}</li>
       </ul>
-      <a href="#" class="pricing-cta">Contact Sales</a>
+      <a href="#" class="pricing-cta">{{ 'home.pricing.contactSales' | translate }}</a>
     </div>
   </div>
 </section>
@@ -372,17 +378,17 @@
 <!-- CTA Section -->
 <section class="cta-section">
   <div class="cta-content scroll-reveal">
-    <h2 class="cta-title">Ready to Transform Your Pharmacy?</h2>
+    <h2 class="cta-title">{{ 'home.cta.title' | translate }}</h2>
     <p class="cta-description">
-      Join hundreds of pharmacies already using Pharmaly OS to streamline operations, prevent losses, and grow their business. Start your free 14-day trial today—no credit card required.
+      {{ 'home.cta.description' | translate }}
     </p>
     <div class="hero-cta">
       <a href="#" class="btn btn-primary">
-        Start Free Trial
-        <span>→</span>
+        {{ 'home.hero.startTrial' | translate }}
+        <span [attr.dir]="currentLanguage === 'ar' ? 'rtl' : 'ltr'">{{ currentLanguage === 'ar' ? '←' : '→' }}</span>
       </a>
       <a href="#" class="btn btn-secondary">
-        Schedule Demo
+        {{ 'home.cta.scheduleDemo' | translate }}
       </a>
     </div>
   </div>
@@ -397,47 +403,47 @@
         <span class="footer-brand-text">Pharmaly OS</span>
       </div>
       <p class="footer-description">
-        The enterprise operating system for modern pharmacies. Built with cutting-edge technology to help your pharmacy thrive.
+        {{ 'home.footer.description' | translate }}
       </p>
     </div>
 
     <div>
-      <h4 class="footer-title">Product</h4>
+      <h4 class="footer-title">{{ 'home.footer.product' | translate }}</h4>
       <ul class="footer-links">
-        <li><a href="#features">Features</a></li>
-        <li><a href="#pricing">Pricing</a></li>
-        <li><a routerLink="/drug-index">Drug Index</a></li>
-        <li><a href="#">Integrations</a></li>
-        <li><a href="#">API Documentation</a></li>
-        <li><a href="#">Release Notes</a></li>
+        <li><a href="#features">{{ 'home.nav.features' | translate }}</a></li>
+        <li><a href="#pricing">{{ 'home.nav.pricing' | translate }}</a></li>
+        <li><a routerLink="/drug-index">{{ 'home.nav.drugIndex' | translate }}</a></li>
+        <li><a href="#">{{ 'home.footer.integrations' | translate }}</a></li>
+        <li><a href="#">{{ 'home.footer.apiDocs' | translate }}</a></li>
+        <li><a href="#">{{ 'home.footer.releaseNotes' | translate }}</a></li>
       </ul>
     </div>
 
     <div>
-      <h4 class="footer-title">Company</h4>
+      <h4 class="footer-title">{{ 'home.footer.company' | translate }}</h4>
       <ul class="footer-links">
-        <li><a href="#">About Us</a></li>
-        <li><a href="#">Careers</a></li>
-        <li><a href="#">Blog</a></li>
-        <li><a href="#">Partners</a></li>
-        <li><a href="#">Contact</a></li>
+        <li><a href="#">{{ 'home.footer.aboutUs' | translate }}</a></li>
+        <li><a href="#">{{ 'home.footer.careers' | translate }}</a></li>
+        <li><a href="#">{{ 'home.footer.blog' | translate }}</a></li>
+        <li><a href="#">{{ 'home.footer.partners' | translate }}</a></li>
+        <li><a href="#">{{ 'home.footer.contact' | translate }}</a></li>
       </ul>
     </div>
 
     <div>
-      <h4 class="footer-title">Support</h4>
+      <h4 class="footer-title">{{ 'home.footer.support' | translate }}</h4>
       <ul class="footer-links">
-        <li><a href="#">Help Center</a></li>
-        <li><a href="#">Video Tutorials</a></li>
-        <li><a href="#">Community Forum</a></li>
-        <li><a href="#">System Status</a></li>
-        <li><a href="#">Security</a></li>
+        <li><a href="#">{{ 'home.footer.helpCenter' | translate }}</a></li>
+        <li><a href="#">{{ 'home.footer.videoTutorials' | translate }}</a></li>
+        <li><a href="#">{{ 'home.footer.communityForum' | translate }}</a></li>
+        <li><a href="#">{{ 'home.footer.systemStatus' | translate }}</a></li>
+        <li><a href="#">{{ 'home.footer.security' | translate }}</a></li>
       </ul>
     </div>
   </div>
 
   <div class="footer-bottom">
-    <p>© 2024 Pharmaly OS. All rights reserved. | <a href="#" style="color: var(--accent);">Privacy Policy</a> | <a href="#" style="color: var(--accent);">Terms of Service</a></p>
+    <p>{{ 'home.footer.copyright' | translate }} | <a href="#" style="color: var(--accent);">{{ 'home.footer.privacy' | translate }}</a> | <a href="#" style="color: var(--accent);">{{ 'home.footer.terms' | translate }}</a></p>
   </div>
 </footer>
 

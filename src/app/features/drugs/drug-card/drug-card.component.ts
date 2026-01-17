@@ -18,7 +18,44 @@ export interface DrugBadge {
       class="drug-card group relative rounded-xl p-6 transition-all duration-200 cursor-pointer hover:-translate-y-0.5 flex flex-col"
       [style.color]="'var(--sidebar-text, #E3F4F5)'"
       [style.min-height]="'420px'"
+      (click)="onCardClick($event)"
     >
+      <!-- Selection Overlay (Semi-transparent with centered checkmark) -->
+      @if (selectionMode) {
+        <div
+          class="selection-overlay absolute inset-0 rounded-xl transition-all duration-300 pointer-events-none"
+          [class.active]="selected"
+        >
+          <!-- Semi-transparent background with border -->
+          <div class="absolute inset-0 rounded-xl bg-[var(--primary-bg,#D9F275)]/25 backdrop-blur-[2px] border-3"
+               style="border-color: var(--primary-bg, #D9F275);"></div>
+
+          <!-- Animated checkmark circle -->
+          <div class="absolute inset-0 flex items-center justify-center">
+            <div class="checkmark-container">
+              <div class="checkmark-circle">
+                <!-- Checkmark SVG -->
+                <svg class="checkmark-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="3"
+                    d="M5 13l4 4L19 7"
+                    class="checkmark-path"
+                  />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- Glow effect in corners -->
+          <div class="corner-glow corner-glow-1"></div>
+          <div class="corner-glow corner-glow-2"></div>
+          <div class="corner-glow corner-glow-3"></div>
+          <div class="corner-glow corner-glow-4"></div>
+        </div>
+      }
+
       <!-- Medicine Icon Pattern Background -->
       <div class="medicine-pattern absolute inset-0 pointer-events-none overflow-visible rounded-xl">
         <div
@@ -88,7 +125,7 @@ export interface DrugBadge {
               {{ getManufacturer() }}
             </p>
           }
-          
+
           <!-- Identifiers -->
           <div class="space-y-1 mb-2">
             @if (drug.internalBarcode) {
@@ -327,20 +364,20 @@ export interface DrugBadge {
           transparent var(--radius),
           #F7F7F7 var(--radius)
         ),
-        /* vertical carve */
+          /* vertical carve */
         calc(100% - var(--w)) var(--offset)
         radial-gradient(
           circle at left bottom,
           transparent var(--radius),
           #F7F7F7 var(--radius)
         ),
-        /* Card background */
+          /* Card background */
         var(--sidebar-bg, #003032);
 
       background-repeat: no-repeat;
       background-size: var(--size) var(--size),
-                       var(--size) var(--size),
-                       cover;
+      var(--size) var(--size),
+      cover;
     }
 
     /* RTL: Flip cutout to top-left */
@@ -355,20 +392,204 @@ export interface DrugBadge {
           transparent var(--radius),
           #F7F7F7 var(--radius)
         ),
-        /* vertical carve */
+          /* vertical carve */
         var(--w) var(--offset)
         radial-gradient(
           circle at right bottom,
           transparent var(--radius),
           #F7F7F7 var(--radius)
         ),
-        /* Card background */
+          /* Card background */
         var(--sidebar-bg, #003032);
 
       background-repeat: no-repeat;
       background-size: var(--size) var(--size),
-                       var(--size) var(--size),
-                       cover;
+      var(--size) var(--size),
+      cover;
+    }
+
+    /* ========================================
+       SELECTION OVERLAY STYLES
+       ======================================== */
+    .selection-overlay {
+      z-index: 15;
+      opacity: 0;
+      transform: scale(0.98);
+    }
+
+    .selection-overlay.active {
+      opacity: 1;
+      transform: scale(1);
+      pointer-events: auto;
+    }
+
+    /* Semi-transparent background with border */
+    .selection-overlay > div:first-child {
+      box-shadow:
+        inset 0 0 80px rgba(217, 242, 117, 0.15),
+        0 0 0 3px var(--primary-bg, #D9F275),
+        0 8px 24px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Corner glow effects */
+    .corner-glow {
+      position: absolute;
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: radial-gradient(circle, var(--primary-bg, #D9F275) 0%, transparent 70%);
+      opacity: 0;
+      filter: blur(20px);
+    }
+
+    .corner-glow-1 {
+      top: -20px;
+      right: -20px;
+    }
+
+    .corner-glow-2 {
+      bottom: -20px;
+      right: -20px;
+    }
+
+    .corner-glow-3 {
+      top: -20px;
+      left: -20px;
+    }
+
+    .corner-glow-4 {
+      bottom: -20px;
+      left: -20px;
+    }
+
+    .selection-overlay.active .corner-glow {
+      animation: glowPulse 2s ease-in-out infinite;
+    }
+
+    .selection-overlay.active .corner-glow-1 {
+      animation-delay: 0s;
+    }
+
+    .selection-overlay.active .corner-glow-2 {
+      animation-delay: 0.5s;
+    }
+
+    .selection-overlay.active .corner-glow-3 {
+      animation-delay: 1s;
+    }
+
+    .selection-overlay.active .corner-glow-4 {
+      animation-delay: 1.5s;
+    }
+
+    @keyframes glowPulse {
+      0%, 100% {
+        opacity: 0.3;
+        transform: scale(1);
+      }
+      50% {
+        opacity: 0.6;
+        transform: scale(1.2);
+      }
+    }
+
+    /* Checkmark Container */
+    .checkmark-container {
+      position: relative;
+      width: 80px;
+      height: 80px;
+      transform: scale(0);
+      opacity: 0;
+    }
+
+    .selection-overlay.active .checkmark-container {
+      animation: checkmarkBounce 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+    }
+
+    @keyframes checkmarkBounce {
+      0% {
+        transform: scale(0) rotate(-45deg);
+        opacity: 0;
+      }
+      70% {
+        transform: scale(1.15) rotate(5deg);
+        opacity: 1;
+      }
+      100% {
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+      }
+    }
+
+    /* Checkmark Circle */
+    .checkmark-circle {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary-bg, #D9F275) 0%, #bef264 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow:
+        0 0 0 3px var(--sidebar-bg, #003032),
+        0 0 0 6px var(--primary-bg, #D9F275),
+        0 8px 20px rgba(0, 0, 0, 0.3);
+      position: relative;
+    }
+
+    .checkmark-circle::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.5), transparent);
+      opacity: 0.8;
+    }
+
+    .checkmark-circle::after {
+      content: '';
+      position: absolute;
+      inset: -6px;
+      border-radius: 50%;
+      background: transparent;
+      border: 2px solid var(--primary-bg, #D9F275);
+      animation: ripple 1.5s ease-out infinite;
+    }
+
+    @keyframes ripple {
+      0% {
+        transform: scale(1);
+        opacity: 1;
+      }
+      100% {
+        transform: scale(1.5);
+        opacity: 0;
+      }
+    }
+
+    /* Checkmark Icon */
+    .checkmark-icon {
+      width: 40px;
+      height: 40px;
+      color: var(--primary-text, #003032);
+      position: relative;
+      z-index: 1;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+    }
+
+    .checkmark-path {
+      stroke-dasharray: 50;
+      stroke-dashoffset: 50;
+    }
+
+    .selection-overlay.active .checkmark-path {
+      animation: drawCheck 0.4s ease-out 0.3s forwards;
+    }
+
+    @keyframes drawCheck {
+      to {
+        stroke-dashoffset: 0;
+      }
     }
 
     /* ROUND BUTTON SLOT - positioned outside cutout */
@@ -450,6 +671,11 @@ export interface DrugBadge {
     .arrow-icon-ltr {
       display: block;
     }
+
+    /* In selection mode, make card clickable */
+    .drug-card {
+      user-select: none;
+    }
   `]
 })
 export class DrugCardComponent {
@@ -460,10 +686,13 @@ export class DrugCardComponent {
   @Input() showEdit: boolean = true;
   @Input() showDelete: boolean = true;
   @Input() costingMethod: InventoryCostingMethod = 'FIFO';
+  @Input() selectionMode: boolean = false;
+  @Input() selected: boolean = false;
 
   view = output<void>();
   edit = output<void>();
   delete = output<void>();
+  selectionToggle = output<boolean>();
 
   showCostLayers = signal(false);
 
@@ -589,6 +818,13 @@ export class DrugCardComponent {
     this.showCostLayers.update(val => !val);
   }
 
+  onCardClick(event: Event): void {
+    // Only toggle selection if in selection mode and not clicking buttons
+    if (this.selectionMode && !this.isButtonClick(event)) {
+      this.selectionToggle.emit(!this.selected);
+    }
+  }
+
   onViewClick(event: Event): void {
     event.stopPropagation();
     this.view.emit();
@@ -602,6 +838,11 @@ export class DrugCardComponent {
   onDeleteClick(event: Event): void {
     event.stopPropagation();
     this.delete.emit();
+  }
+
+  private isButtonClick(event: Event): boolean {
+    const target = event.target as HTMLElement;
+    return target.closest('button') !== null;
   }
 
   formatDate(date: Date | string | undefined): string {

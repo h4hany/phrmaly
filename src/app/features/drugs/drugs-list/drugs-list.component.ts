@@ -5,6 +5,7 @@ import { ButtonComponent } from '../../../shared/components/button/button.compon
 import { ModalComponent } from '../../../shared/components/modal/modal.component';
 import { AlertComponent } from '../../../shared/components/alert/alert.component';
 import { DrugsService } from '../../../core/services/drugs.service';
+import { InvoiceCartService } from '../../../core/services/invoice-cart.service';
 import { PharmacyDrug } from '../../../core/models/drug.model';
 import { TranslatePipe } from '../../../core/pipes/translate.pipe';
 import { DrugCardComponent } from '../drug-card/drug-card.component';
@@ -37,6 +38,15 @@ import type { DrugBadge } from '../drug-card/drug-card.component';
           </div>
         </div>
         <div class="flex gap-3">
+          <app-button 
+            [variant]="selectionMode ? 'primary' : 'outline'" 
+            (onClick)="toggleSelectionMode()"
+          >
+            <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            {{ selectionMode ? ('button.cancelSelection' | translate) : ('button.selectForInvoice' | translate) }}
+          </app-button>
           <app-button variant="outline">{{ 'common.filters' | translate }}</app-button>
           <app-button variant="outline" (onClick)="openImportModal()">
             <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -53,6 +63,31 @@ import type { DrugBadge } from '../drug-card/drug-card.component';
           </app-button>
         </div>
       </div>
+
+      <!-- Selection Mode Bar -->
+      @if (selectionMode && selectedDrugIds.size > 0) {
+        <div class="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 bg-white shadow-lg rounded-lg px-6 py-4 border-2 border-[#166534] flex items-center gap-4">
+          <span class="text-gray-700 font-medium">
+            {{ selectedDrugIds.size }} {{ 'invoice.drugsSelected' | translate }}
+          </span>
+          <app-button variant="primary" (onClick)="createInvoiceFromSelection()">
+            <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+            {{ 'invoice.createInvoice' | translate }} ({{ selectedDrugIds.size }})
+          </app-button>
+          <button
+            type="button"
+            (click)="clearSelection()"
+            class="text-gray-500 hover:text-gray-700"
+            [title]="'common.clear' | translate"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      }
 
       <!-- Alerts for Low Stock and Expiring Drugs -->
       @if (lowStockCount > 0) {
@@ -84,9 +119,12 @@ import type { DrugBadge } from '../drug-card/drug-card.component';
             <app-drug-card
               [drug]="drug"
               [badges]="getBadges(drug)"
+              [selectionMode]="selectionMode"
+              [selected]="selectedDrugIds.has(drug.id)"
               (view)="viewDrug(drug.id)"
               (edit)="editDrug(drug.id)"
               (delete)="confirmDelete(drug)"
+              (selectionToggle)="onDrugSelectionToggle(drug.id, $event)"
             ></app-drug-card>
           }
         </div>
@@ -149,6 +187,7 @@ import type { DrugBadge } from '../drug-card/drug-card.component';
 export class DrugsListComponent implements OnInit {
   private router = inject(Router);
   private drugsService = inject(DrugsService);
+  private invoiceCartService = inject(InvoiceCartService);
 
   drugs: PharmacyDrug[] = [];
   searchQuery = '';
@@ -162,6 +201,8 @@ export class DrugsListComponent implements OnInit {
   selectedFile: File | null = null;
   importError = '';
   importSuccess = '';
+  selectionMode = false;
+  selectedDrugIds = new Set<string>();
   @ViewChild('deleteModal') deleteModal!: ModalComponent;
   @ViewChild('importModal') importModal!: ModalComponent;
 
@@ -350,6 +391,44 @@ export class DrugsListComponent implements OnInit {
     }
     
     return badges;
+  }
+
+  toggleSelectionMode(): void {
+    this.selectionMode = !this.selectionMode;
+    if (!this.selectionMode) {
+      this.selectedDrugIds.clear();
+    }
+  }
+
+  onDrugSelectionToggle(drugId: string, selected: boolean): void {
+    if (selected) {
+      this.selectedDrugIds.add(drugId);
+    } else {
+      this.selectedDrugIds.delete(drugId);
+    }
+  }
+
+  clearSelection(): void {
+    this.selectedDrugIds.clear();
+  }
+
+  createInvoiceFromSelection(): void {
+    if (this.selectedDrugIds.size === 0) return;
+
+    // Get selected drugs
+    const selectedDrugs = this.drugs.filter(drug => this.selectedDrugIds.has(drug.id));
+    
+    // Add all selected drugs to cart
+    selectedDrugs.forEach(drug => {
+      this.invoiceCartService.addDrug(drug);
+    });
+
+    // Clear selection and exit selection mode
+    this.selectedDrugIds.clear();
+    this.selectionMode = false;
+
+    // Navigate to invoice form
+    this.router.navigate(['/invoices/new']);
   }
 
   private formatDate(date: Date): string {

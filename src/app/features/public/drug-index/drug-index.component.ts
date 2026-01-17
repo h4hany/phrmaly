@@ -3,11 +3,13 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { PublicDrugService, PublicDrug } from '../../../core/services/public-drug.service';
+import { TranslationService } from '../../../core/services/translation.service';
+import { TranslatePipe } from '../../../core/pipes/translate.pipe';
 
 @Component({
   selector: 'app-drug-index',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, TranslatePipe],
   templateUrl: './drug-index.component.html',
   styleUrls: ['./drug-index.component.css'],
   encapsulation: ViewEncapsulation.None
@@ -15,6 +17,7 @@ import { PublicDrugService, PublicDrug } from '../../../core/services/public-dru
 export class DrugIndexComponent implements OnInit, AfterViewInit, OnDestroy {
   private drugService = inject(PublicDrugService);
   private router = inject(Router);
+  private translationService = inject(TranslationService);
   @ViewChild('particleCanvas', { static: false }) particleCanvas!: ElementRef<HTMLCanvasElement>;
   
   drugs: PublicDrug[] = [];
@@ -27,6 +30,7 @@ export class DrugIndexComponent implements OnInit, AfterViewInit, OnDestroy {
   sortFilter = 'name-asc';
   manufacturers: string[] = [];
   viewMode: 'grid' | 'list' = 'grid';
+  currentLanguage: 'en' | 'ar' = 'en';
   
   private animationFrameId?: number;
   private pills: any[] = [];
@@ -35,6 +39,14 @@ export class DrugIndexComponent implements OnInit, AfterViewInit, OnDestroy {
     this.loadGoogleFonts();
     this.loadDrugs();
     this.loadManufacturers();
+    // Initialize language
+    this.currentLanguage = this.translationService.getCurrentLanguage();
+    this.translationService.currentLang$.subscribe(lang => {
+      this.currentLanguage = lang;
+      // Apply RTL/LTR
+      document.documentElement.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
+      document.documentElement.setAttribute('lang', lang);
+    });
   }
 
   ngAfterViewInit(): void {
@@ -222,6 +234,10 @@ export class DrugIndexComponent implements OnInit, AfterViewInit, OnDestroy {
 
   navigateToLogin(): void {
     this.router.navigate(['/login']);
+  }
+
+  toggleLanguage(): void {
+    this.translationService.toggleLanguage();
   }
 }
 

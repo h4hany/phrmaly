@@ -138,6 +138,43 @@ body {
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(0, 212, 170, 0.4);
 }
+.btn-language-toggle {
+    padding: 10px 16px;
+    background: rgba(0, 212, 170, 0.1);
+    backdrop-filter: blur(10px);
+    color: var(--accent);
+    border: 2px solid var(--accent);
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.btn-language-toggle:hover {
+    background: var(--accent);
+    color: #000;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 212, 170, 0.4);
+}
+/* RTL Support */
+[dir="rtl"] .nav-actions {
+    flex-direction: row-reverse;
+}
+[dir="rtl"] .filters {
+    flex-direction: row-reverse;
+}
+[dir="rtl"] .results-header {
+    flex-direction: row-reverse;
+}
+[dir="rtl"] .drugs-grid {
+    direction: rtl;
+}
+[dir="rtl"] .detail-grid {
+    direction: rtl;
+}
 /* Main Container */
 .container {
     position: relative;
@@ -749,6 +786,18 @@ body {
     }
     .navbar {
         padding: 16px 20px;
+    }
+    .nav-actions {
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    .btn-language-toggle {
+        padding: 8px 12px;
+        font-size: 12px;
+    }
+    .btn-nav {
+        padding: 10px 20px;
+        font-size: 14px;
     }
 }
 /* Scrollbar */

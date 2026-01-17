@@ -137,6 +137,25 @@ body {
     transform: translateY(-2px);
     box-shadow: 0 6px 25px rgba(0, 212, 170, 0.5);
 }
+.btn-language-toggle {
+    padding: 10px 16px;
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--white);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.btn-language-toggle:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: var(--accent);
+    transform: translateY(-2px);
+}
 .mobile-menu-toggle {
     display: none;
     background: transparent;
@@ -145,6 +164,22 @@ body {
     font-size: 28px;
     cursor: pointer;
     padding: 8px;
+}
+/* RTL Support */
+[dir="rtl"] .nav-menu {
+    flex-direction: row-reverse;
+}
+[dir="rtl"] .nav-actions {
+    flex-direction: row-reverse;
+}
+[dir="rtl"] .hero-cta {
+    flex-direction: row-reverse;
+}
+[dir="rtl"] .stats-grid,
+[dir="rtl"] .features-grid,
+[dir="rtl"] .capabilities-grid,
+[dir="rtl"] .pricing-grid {
+    direction: rtl;
 }
 @media (max-width: 968px) {
     .nav-menu {
@@ -159,6 +194,10 @@ body {
         padding: 20px 0;
         transition: left 0.3s ease;
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+    .btn-language-toggle {
+        padding: 8px 12px;
+        font-size: 12px;
     }
     .nav-menu.active {
         left: 0;

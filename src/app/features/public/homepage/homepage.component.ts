@@ -1,26 +1,38 @@
 import { Component, OnInit, AfterViewInit, ViewChild, ElementRef, inject, OnDestroy, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
+import { TranslationService } from '../../../core/services/translation.service';
+import { TranslatePipe } from '../../../core/pipes/translate.pipe';
 
 @Component({
   selector: 'app-homepage',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, TranslatePipe],
   templateUrl: './homepage.component.html',
   styleUrls: ['./homepage.component.css'],
   encapsulation: ViewEncapsulation.None
 })
 export class HomepageComponent implements OnInit, AfterViewInit, OnDestroy {
   private router = inject(Router);
+  private translationService = inject(TranslationService);
   @ViewChild('particleCanvas', { static: false }) particleCanvas!: ElementRef<HTMLCanvasElement>;
   
   private particles: any[] = [];
   private animationFrameId?: number;
   private mobileMenuOpen = false;
+  currentLanguage: 'en' | 'ar' = 'en';
 
   ngOnInit(): void {
     // Add Google Fonts
     this.loadGoogleFonts();
+    // Initialize language
+    this.currentLanguage = this.translationService.getCurrentLanguage();
+    this.translationService.currentLang$.subscribe(lang => {
+      this.currentLanguage = lang;
+      // Apply RTL/LTR
+      document.documentElement.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
+      document.documentElement.setAttribute('lang', lang);
+    });
   }
 
   ngAfterViewInit(): void {
@@ -293,6 +305,10 @@ export class HomepageComponent implements OnInit, AfterViewInit, OnDestroy {
 
   navigateToLogin(): void {
     this.router.navigate(['/login']);
+  }
+
+  toggleLanguage(): void {
+    this.translationService.toggleLanguage();
   }
 }
 
