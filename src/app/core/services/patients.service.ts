@@ -13,7 +13,7 @@ export class PatientsService {
       fullName: 'John Smith',
       dateOfBirth: new Date('1985-05-15'),
       gender: 'male',
-      phone: '123-456-7890',
+      phone: '+201116811410',
       email: 'john.smith@example.com',
       address: {
         city: 'New York',
@@ -34,7 +34,7 @@ export class PatientsService {
       fullName: 'Jane Doe',
       dateOfBirth: new Date('1990-08-22'),
       gender: 'female',
-      phone: '123-456-7891',
+      phone: '+201116811410',
       email: 'jane.doe@example.com',
       address: {
         city: 'Los Angeles',
@@ -55,7 +55,7 @@ export class PatientsService {
       fullName: 'Michael Johnson',
       dateOfBirth: new Date('1978-12-03'),
       gender: 'male',
-      phone: '123-456-7892',
+      phone: '+201116811410',
       email: 'michael.j@example.com',
       address: {
         city: 'Chicago',

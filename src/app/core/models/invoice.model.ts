@@ -25,6 +25,8 @@ export interface Invoice {
   createdAt: Date;
   updatedAt: Date;
   pharmacyId: string;
+  voucherCode?: string;
+  voucherName?: string;
 }
 
 
