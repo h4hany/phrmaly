@@ -6,15 +6,19 @@ import {ModalComponent} from '../../../shared/components/modal/modal.component';
 import {AlertComponent} from '../../../shared/components/alert/alert.component';
 import {DrugsService} from '../../../core/services/drugs.service';
 import {InvoiceCartService} from '../../../core/services/invoice-cart.service';
+import {RequestedProductsService} from '../../../core/services/requested-products.service';
+import {ToastService} from '../../../core/services/toast.service';
+import {TranslationService} from '../../../core/services/translation.service';
 import {PharmacyDrug} from '../../../core/models/drug.model';
 import {TranslatePipe} from '../../../core/pipes/translate.pipe';
 import type {DrugBadge} from '../drug-card/drug-card.component';
 import {DrugCardComponent} from '../drug-card/drug-card.component';
+import {ReactiveFormsModule, FormBuilder, FormGroup, Validators} from '@angular/forms';
 
 @Component({
   selector: 'app-drugs-list',
   standalone: true,
-  imports: [CommonModule, ButtonComponent, ModalComponent, AlertComponent, TranslatePipe, DrugCardComponent],
+  imports: [CommonModule, ButtonComponent, ModalComponent, AlertComponent, TranslatePipe, DrugCardComponent, ReactiveFormsModule],
   template: `
     <div class="space-y-6">
       @if (errorMessage) {
@@ -165,7 +169,15 @@ import {DrugCardComponent} from '../drug-card/drug-card.component';
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
           </svg>
-          <p class="text-lg font-medium">{{ 'empty.noDrugs' | translate }}</p>
+          <p class="text-lg font-medium mb-4">{{ 'empty.noDrugs' | translate }}</p>
+          @if (searchQuery.trim()) {
+            <app-button variant="primary" (onClick)="openRequestProductModal()">
+              <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+              </svg>
+              {{ 'button.requestProduct' | translate }}
+            </app-button>
+          }
         </div>
       } @else {
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -233,6 +245,44 @@ import {DrugCardComponent} from '../drug-card/drug-card.component';
             <app-alert type="success" [title]="importSuccess"></app-alert>
           }
         </div>
+      </app-modal>
+
+      <!-- Request Product Modal -->
+      <app-modal
+        #requestProductModal
+        [title]="'button.requestProduct' | translate"
+        [showFooter]="true"
+        [confirmText]="'common.submit' | translate"
+        [confirmLoading]="requestingProduct"
+        (confirmed)="submitProductRequest()"
+      >
+        <form [formGroup]="requestProductForm" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              {{ 'requestedProduct.productName' | translate }} <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              formControlName="productName"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#166534] focus:border-[#166534]"
+              [class.border-red-500]="requestProductForm.get('productName')?.invalid && requestProductForm.get('productName')?.touched"
+            />
+            @if (requestProductForm.get('productName')?.invalid && requestProductForm.get('productName')?.touched) {
+              <p class="mt-1 text-sm text-red-600">{{ 'validation.nameRequired' | translate }}</p>
+            }
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              {{ 'requestedProduct.notes' | translate }}
+            </label>
+            <textarea
+              formControlName="notes"
+              rows="3"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#166534] focus:border-[#166534]"
+              [placeholder]="'requestedProduct.notesPlaceholder' | translate"
+            ></textarea>
+          </div>
+        </form>
       </app-modal>
     </div>
   `,
@@ -652,6 +702,10 @@ export class DrugsListComponent implements OnInit {
   private router = inject(Router);
   private drugsService = inject(DrugsService);
   private invoiceCartService = inject(InvoiceCartService);
+  private requestedProductsService = inject(RequestedProductsService);
+  private toastService = inject(ToastService);
+  private translationService = inject(TranslationService);
+  private fb = inject(FormBuilder);
 
   drugs: PharmacyDrug[] = [];
   searchQuery = '';
@@ -667,8 +721,11 @@ export class DrugsListComponent implements OnInit {
   importSuccess = '';
   selectionMode = false;
   selectedDrugIds = new Set<string>();
+  requestingProduct = false;
+  requestProductForm!: FormGroup;
   @ViewChild('deleteModal') deleteModal!: ModalComponent;
   @ViewChild('importModal') importModal!: ModalComponent;
+  @ViewChild('requestProductModal') requestProductModal!: ModalComponent;
 
   pagination = {
     page: 1,
@@ -680,6 +737,14 @@ export class DrugsListComponent implements OnInit {
   ngOnInit(): void {
     this.loadDrugs();
     this.checkAlerts();
+    this.initRequestProductForm();
+  }
+
+  initRequestProductForm(): void {
+    this.requestProductForm = this.fb.group({
+      productName: ['', [Validators.required]],
+      notes: ['']
+    });
   }
 
   loadDrugs(): void {
@@ -915,6 +980,41 @@ export class DrugsListComponent implements OnInit {
 
     // Navigate to invoice form
     this.router.navigate(['/invoices/new']);
+  }
+
+  openRequestProductModal(): void {
+    const productName = this.searchQuery.trim();
+    this.requestProductForm.patchValue({
+      productName: productName,
+      notes: ''
+    });
+    this.requestProductModal.open();
+  }
+
+  submitProductRequest(): void {
+    if (this.requestProductForm.valid) {
+      this.requestingProduct = true;
+      const { productName, notes } = this.requestProductForm.value;
+
+      this.requestedProductsService.createRequest(productName, notes).subscribe({
+        next: () => {
+          this.requestingProduct = false;
+          this.requestProductModal.close();
+          this.requestProductForm.reset();
+          // Get translated message
+          const message = this.translationService.translate('requestedProduct.successMessage');
+          this.toastService.success(message);
+        },
+        error: () => {
+          this.requestingProduct = false;
+          this.errorMessage = 'Failed to submit product request';
+        }
+      });
+    } else {
+      Object.keys(this.requestProductForm.controls).forEach(key => {
+        this.requestProductForm.get(key)?.markAsTouched();
+      });
+    }
   }
 
   private formatDate(date: Date): string {

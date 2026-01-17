@@ -25,6 +25,10 @@ export const routes: Routes = [
   {
     path: 'alerts',
     loadComponent: loadInventoryAlertsComponent
+  },
+  {
+    path: 'requested-products',
+    loadComponent: () => import('./requested-products/requested-products-list.component').then(m => m.RequestedProductsListComponent)
   }
 ];
 

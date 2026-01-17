@@ -122,6 +122,11 @@ export const SIDEBAR_GROUPS: SidebarGroup[] = [
         icon: 'bell-warning'
       },
       {
+        path: '/inventory/requested-products',
+        label: 'nav.requestedProducts',
+        icon: 'file-question'
+      },
+      {
         path: '/inventory/transfers',
         label: 'nav.transfers',
         icon: 'arrows-left-right'

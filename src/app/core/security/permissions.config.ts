@@ -55,6 +55,7 @@ export const PERMISSIONS: PermissionsConfig = {
     '/inventory/map': ['account_owner', 'pharmacy_staff','pharmacy_manager'],
     '/inventory/transfers': ['account_owner', 'pharmacy_staff','pharmacy_manager'],
     '/inventory/alerts': ['account_owner', 'pharmacy_manager', 'pharmacy_inventory_manager'],
+    '/inventory/requested-products': ['account_owner', 'pharmacy_manager', 'pharmacy_staff', 'pharmacy_inventory_manager'],
     '/payments/methods': ['account_owner', 'pharmacy_inventory_manager'],
   },
 
@@ -89,6 +90,7 @@ export const PERMISSIONS: PermissionsConfig = {
     '/drugs': ['account_owner', 'pharmacy_manager', 'pharmacy_staff'], // Home screen for PHARMACY_MANAGER
     '/bundles': ['account_owner', 'pharmacy_staff', 'pharmacy_manager'], // PHARMACY_MANAGER should NOT see
     '/inventory/alerts': ['account_owner', 'pharmacy_inventory_manager', 'pharmacy_manager'], // PHARMACY_MANAGER should NOT see
+    '/inventory/requested-products': ['account_owner', 'pharmacy_manager', 'pharmacy_staff', 'pharmacy_inventory_manager'],
     '/inventory/transfers': ['account_owner', 'pharmacy_staff', 'pharmacy_manager'], // PHARMACY_MANAGER should NOT see
     '/inventory/map': ['account_owner', 'pharmacy_staff', 'pharmacy_manager'], // PHARMACY_MANAGER should NOT see
     '/purchases': ['account_owner', 'pharmacy_inventory_manager'], // PHARMACY_MANAGER should NOT see (procurement)
