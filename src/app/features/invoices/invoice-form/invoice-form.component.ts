@@ -746,7 +746,7 @@ interface VoucherProductGroup {
                   </div>
                   <input
                     type="text"
-                    [value]="voucherName"
+                    [value]="voucher?.voucherName"
                     readonly
                     class="flex-1 px-4 py-3 border rounded-lg text-sm bg-white/50 font-mono text-gray-900 font-semibold"
                     style="border-color: rgba(0, 48, 50, 0.4);"
@@ -929,7 +929,7 @@ interface VoucherProductGroup {
               (onSendVoucher)="sendVoucherToPatient()"
               (onBack)="goToStep(2)"
               (onClose)="onCancel()"
-              (onCardReady)="onCardReady($event)"
+              (onCardReady)="onCardReadyHandler($event)"
               (onCardCopied)="onCardCopied($event)"
             ></app-share-voucher-step>
           }
@@ -972,7 +972,7 @@ interface VoucherProductGroup {
 
                   <div class="mt-4 text-center">
                     <p class="text-xs font-semibold text-gray-600 uppercase tracking-wide">{{ 'invoice.voucher.voucherCode' | translate }}</p>
-                    <p class="text-lg font-bold font-mono" [style.color]="'var(--sidebar-active-text)'">{{ voucherCode }}</p>
+                    <p class="text-lg font-bold font-mono" [style.color]="'var(--sidebar-active-text)'">{{ voucher?.voucherCode }}</p>
                   </div>
                 </div>
               </div>
@@ -1635,6 +1635,10 @@ export class InvoiceFormComponent implements OnInit {
       this.errorMessage = 'Failed to capture card image';
       this.sendingVoucher = false;
     });
+  }
+
+  onCardReadyHandler(elementRef: ElementRef<HTMLDivElement>): void {
+    this.cardElementRef = elementRef;
   }
 
   onCardCopied(blob: Blob): void {

@@ -14,7 +14,6 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angula
   standalone: true,
   imports: [
     CommonModule,
-    DatePipe,
     ButtonComponent,
     TableComponent,
     ModalComponent,

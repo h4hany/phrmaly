@@ -12,7 +12,9 @@ import { ButtonComponent } from '../button/button.component';
         <div class="flex min-h-screen items-center justify-center p-4">
           <div class="fixed inset-0 bg-black/50 transition-opacity" (click)="closeOnBackdrop && close()"></div>
           <div 
-            class="relative bg-white rounded-[var(--radius-lg)] shadow-[var(--shadow-lg)] max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            class="relative bg-white rounded-[var(--radius-lg)] shadow-[var(--shadow-lg)] w-full max-h-[90vh] overflow-y-auto"
+            [class.max-w-2xl]="size !== 'large'"
+            [class.max-w-5xl]="size === 'large'"
             (click)="$event.stopPropagation()"
           >
             <!-- Header -->
@@ -60,6 +62,7 @@ export class ModalComponent {
   @Input() confirmText = 'Confirm';
   @Input() confirmLoading = false;
   @Input() closeOnBackdrop = true;
+  @Input() size: 'default' | 'large' = 'default';
 
   isOpen = signal(false);
   opened = output<void>();

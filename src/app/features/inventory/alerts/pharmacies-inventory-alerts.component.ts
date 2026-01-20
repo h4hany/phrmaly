@@ -3,7 +3,6 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { Router } from '@angular/router';
 import { DrugsService } from '../../../core/services/drugs.service';
 import { PharmacyDrug } from '../../../core/models/drug.model';
-import { BadgeComponent } from '../../../shared/components/badge/badge.component';
 import { TranslatePipe } from '../../../core/pipes/translate.pipe';
 import { TranslationService } from '../../../core/services/translation.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -24,7 +23,7 @@ interface PharmacyAlerts {
 @Component({
   selector: 'app-pharmacies-inventory-alerts',
   standalone: true,
-  imports: [CommonModule, BadgeComponent, DatePipe, TranslatePipe],
+  imports: [CommonModule, DatePipe, TranslatePipe],
   template: `
     <div class="alerts-container">
       @for (pharmacyAlert of pharmacyAlerts; track pharmacyAlert.pharmacy.id) {

@@ -12,7 +12,7 @@ import { AlertComponent } from '../../../../shared/components/alert/alert.compon
 @Component({
   selector: 'patient-vouchers-tab',
   standalone: true,
-  imports: [CommonModule, TableComponent, TranslatePipe, DatePipe, ModalComponent, VoucherCardComponent, AlertComponent],
+  imports: [CommonModule, TableComponent, TranslatePipe, ModalComponent, VoucherCardComponent, AlertComponent],
   template: `
     <div class="space-y-6">
       @if (errorMessage) {

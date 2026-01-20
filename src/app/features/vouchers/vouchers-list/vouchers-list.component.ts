@@ -14,7 +14,7 @@ import { Voucher } from '../../../core/models/voucher.model';
 @Component({
   selector: 'app-vouchers-list',
   standalone: true,
-  imports: [CommonModule, ButtonComponent, TableComponent, ModalComponent, AlertComponent, TranslatePipe, DatePipe, CanAccessDirective, VoucherCardComponent],
+  imports: [CommonModule, ButtonComponent, TableComponent, ModalComponent, AlertComponent, TranslatePipe, CanAccessDirective, VoucherCardComponent],
   template: `
     <div class="space-y-6">
       @if (errorMessage) {
