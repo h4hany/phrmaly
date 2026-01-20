@@ -1,5 +1,5 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { PurchasesService } from '../../../core/services/purchases.service';
 import { SuppliersService } from '../../../core/services/suppliers.service';
@@ -8,12 +8,13 @@ import { ButtonComponent } from '../../../shared/components/button/button.compon
 import { AlertComponent } from '../../../shared/components/alert/alert.component';
 import { BadgeComponent } from '../../../shared/components/badge/badge.component';
 import { TranslatePipe } from '../../../core/pipes/translate.pipe';
+import { DateFormatPipe } from '../../../core/pipes/date-format.pipe';
 import { switchMap, of } from 'rxjs';
 
 @Component({
   selector: 'app-purchase-detail',
   standalone: true,
-  imports: [CommonModule, ButtonComponent, AlertComponent, BadgeComponent, DatePipe, TranslatePipe],
+  imports: [CommonModule, ButtonComponent, AlertComponent, BadgeComponent, DateFormatPipe, TranslatePipe],
   template: `
     <div class="space-y-[var(--spacing-gap)]">
       @if (errorMessage) {
@@ -55,12 +56,12 @@ import { switchMap, of } from 'rxjs';
               </div>
               <div>
                 <label class="block text-sm font-medium text-[var(--card-text)] mb-1">{{ 'purchase.purchaseDate' | translate }}</label>
-                <p class="text-[var(--text-primary)]">{{ purchase.purchaseDate | date:'mediumDate' }}</p>
+                <p class="text-[var(--text-primary)]">{{ purchase.purchaseDate | dateFormat }}</p>
               </div>
               @if (purchase.dueDate) {
                 <div>
                   <label class="block text-sm font-medium text-[var(--card-text)] mb-1">{{ 'purchase.dueDate' | translate }}</label>
-                  <p class="text-[var(--text-primary)]">{{ purchase.dueDate | date:'mediumDate' }}</p>
+                  <p class="text-[var(--text-primary)]">{{ purchase.dueDate | dateFormat }}</p>
                 </div>
               }
               <div>
@@ -71,7 +72,7 @@ import { switchMap, of } from 'rxjs';
               </div>
               <div>
                 <label class="block text-sm font-medium text-[var(--card-text)] mb-1">{{ 'invoice.createdAt' | translate }}</label>
-                <p class="text-[var(--text-primary)]">{{ purchase.createdAt | date:'medium' }}</p>
+                <p class="text-[var(--text-primary)]">{{ purchase.createdAt | dateFormat }}</p>
               </div>
             </div>
           </div>

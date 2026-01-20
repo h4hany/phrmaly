@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ButtonComponent } from '../button/button.component';
 import { BadgeComponent } from '../badge/badge.component';
 import { TranslatePipe } from '../../../core/pipes/translate.pipe';
+import { DateFormatPipe } from '../../../core/pipes/date-format.pipe';
 import { LoadingComponent } from '../loading/loading.component';
 
 export interface TableColumn {
@@ -14,7 +15,7 @@ export interface TableColumn {
 @Component({
   selector: 'app-table',
   standalone: true,
-  imports: [CommonModule, ButtonComponent, BadgeComponent, TranslatePipe, LoadingComponent],
+  imports: [CommonModule, ButtonComponent, BadgeComponent, TranslatePipe, DateFormatPipe, LoadingComponent],
   template: `
     <div class="overflow-hidden relative mt-6" [style]="containerStyles">
       @if (loading) {
@@ -54,6 +55,8 @@ export interface TableColumn {
                       <app-badge [variant]="getStatusVariant(getCellValue(row, column.key))">
                         {{ getCellValue(row, column.key) }}
                       </app-badge>
+                    } @else if (isDate(getCellValue(row, column.key))) {
+                      {{ getCellValue(row, column.key) | dateFormat }}
                     } @else {
                       {{ getCellValue(row, column.key) }}
                     }
@@ -204,5 +207,21 @@ export class TableComponent {
     }
 
     return pages;
+  }
+
+  isDate(value: any): boolean {
+    if (value instanceof Date) {
+      return true;
+    }
+    if (typeof value === 'string') {
+      // Check if it's a date string that looks like a full date (not just a short string)
+      const dateRegex = /^\d{4}-\d{2}-\d{2}/; // ISO date format
+      const dateTimeRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:/; // ISO datetime format
+      if (dateRegex.test(value) || dateTimeRegex.test(value)) {
+        const parsed = Date.parse(value);
+        return !isNaN(parsed);
+      }
+    }
+    return false;
   }
 }

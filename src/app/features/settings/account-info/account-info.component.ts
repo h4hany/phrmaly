@@ -4,11 +4,12 @@ import { AuthService } from '../../../core/services/auth.service';
 import { PharmacyContextService } from '../../../core/services/pharmacy-context.service';
 import { PharmacyStaffService } from '../../../core/services/pharmacy-staff.service';
 import { FormWrapperComponent } from '../../../shared/components/form-wrapper/form-wrapper.component';
+import { DateFormatPipe } from '../../../core/pipes/date-format.pipe';
 
 @Component({
   selector: 'app-account-info',
   standalone: true,
-  imports: [CommonModule, FormWrapperComponent],
+  imports: [CommonModule, FormWrapperComponent, DateFormatPipe],
   template: `
     <app-form-wrapper title="Account Information" subtitle="View your account details and subscription information">
       <div class="space-y-6">
@@ -18,11 +19,11 @@ import { FormWrapperComponent } from '../../../shared/components/form-wrapper/fo
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="p-4 bg-gray-50 rounded-[var(--radius-md)]">
               <label class="block text-sm font-medium text-gray-500 mb-1">Subscription Start Date</label>
-              <p class="text-lg font-semibold text-gray-900">{{ subscriptionStartDate | date:'longDate' }}</p>
+              <p class="text-lg font-semibold text-gray-900">{{ subscriptionStartDate | dateFormat }}</p>
             </div>
             <div class="p-4 bg-gray-50 rounded-[var(--radius-md)]">
               <label class="block text-sm font-medium text-gray-500 mb-1">Subscription End Date</label>
-              <p class="text-lg font-semibold text-gray-900">{{ subscriptionEndDate | date:'longDate' }}</p>
+              <p class="text-lg font-semibold text-gray-900">{{ subscriptionEndDate | dateFormat }}</p>
             </div>
             <div class="p-4 bg-gray-50 rounded-[var(--radius-md)]" [class.bg-yellow-50]="daysRemaining <= 30" [class.bg-red-50]="daysRemaining <= 7">
               <label class="block text-sm font-medium text-gray-500 mb-1">Days Remaining</label>

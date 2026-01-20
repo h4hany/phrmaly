@@ -6,6 +6,9 @@ import { SuppliersService } from '../../../core/services/suppliers.service';
 import { FormWrapperComponent } from '../../../shared/components/form-wrapper/form-wrapper.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { AlertComponent } from '../../../shared/components/alert/alert.component';
+import { TextInputComponent } from '../../../shared/components/input/text-input.component';
+import { TextareaInputComponent } from '../../../shared/components/input/textarea-input.component';
+import { AutocompleteInputComponent, AutocompleteOption } from '../../../shared/components/input/autocomplete-input.component';
 
 @Component({
   selector: 'app-supplier-form',
@@ -15,7 +18,10 @@ import { AlertComponent } from '../../../shared/components/alert/alert.component
     ReactiveFormsModule,
     FormWrapperComponent,
     ButtonComponent,
-    AlertComponent
+    AlertComponent,
+    TextInputComponent,
+    TextareaInputComponent,
+    AutocompleteInputComponent
   ],
   template: `
     <app-form-wrapper [title]="isEdit ? 'Edit Supplier' : 'Add New Supplier'">
@@ -26,87 +32,76 @@ import { AlertComponent } from '../../../shared/components/alert/alert.component
       <form [formGroup]="supplierForm" (ngSubmit)="onSubmit()" class="space-y-6">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">
-              Name <span class="text-red-500">*</span>
-            </label>
-            <input
+            <app-text-input
               type="text"
               formControlName="name"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#166534]"
-              [class.border-red-500]="supplierForm.get('name')?.invalid && supplierForm.get('name')?.touched"
-            />
-            @if (supplierForm.get('name')?.invalid && supplierForm.get('name')?.touched) {
-              <p class="mt-1 text-sm text-red-600">Name is required</p>
-            }
+              label="Name"
+              [required]="true"
+              [hasError]="!!(supplierForm.get('name')?.invalid && supplierForm.get('name')?.touched)"
+              [errorMessage]="(supplierForm.get('name')?.invalid && supplierForm.get('name')?.touched) ? 'Name is required' : undefined"
+              prefixIcon="tag"
+            ></app-text-input>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">
-              Type <span class="text-red-500">*</span>
-            </label>
-            <select
+            <app-autocomplete-input
               formControlName="type"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#166534]"
-              [class.border-red-500]="supplierForm.get('type')?.invalid && supplierForm.get('type')?.touched"
-            >
-              <option value="">Select Type</option>
-              <option value="manufacturer">Manufacturer</option>
-              <option value="warehouse">Warehouse</option>
-            </select>
-            @if (supplierForm.get('type')?.invalid && supplierForm.get('type')?.touched) {
-              <p class="mt-1 text-sm text-red-600">Type is required</p>
-            }
+              label="Type"
+              [required]="true"
+              [options]="typeOptions"
+              placeholder="Select Type"
+              prefixIcon="factory"
+              [hasError]="!!(supplierForm.get('type')?.invalid && supplierForm.get('type')?.touched)"
+              [errorMessage]="(supplierForm.get('type')?.invalid && supplierForm.get('type')?.touched) ? 'Type is required' : undefined"
+            ></app-autocomplete-input>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-            <input
+            <app-text-input
               type="tel"
               formControlName="phone"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#166534]"
-            />
+              label="Phone"
+              prefixIcon="phone"
+            ></app-text-input>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-            <input
+            <app-text-input
               type="email"
               formControlName="email"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#166534]"
-              [class.border-red-500]="supplierForm.get('email')?.invalid && supplierForm.get('email')?.touched"
-            />
-            @if (supplierForm.get('email')?.invalid && supplierForm.get('email')?.touched) {
-              <p class="mt-1 text-sm text-red-600">Please enter a valid email</p>
-            }
+              label="Email"
+              [hasError]="!!(supplierForm.get('email')?.invalid && supplierForm.get('email')?.touched)"
+              [errorMessage]="(supplierForm.get('email')?.invalid && supplierForm.get('email')?.touched) ? 'Please enter a valid email' : undefined"
+              prefixIcon="mail"
+            ></app-text-input>
           </div>
 
           <div class="md:col-span-2">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
-            <input
+            <app-text-input
               type="text"
               formControlName="address"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#166534]"
-            />
+              label="Address"
+              prefixIcon="map-pin"
+            ></app-text-input>
           </div>
 
           <div class="md:col-span-2">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-            <select
+            <app-autocomplete-input
               formControlName="status"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#166534]"
-            >
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
+              label="Status"
+              [options]="statusOptions"
+              placeholder="Select status"
+              prefixIcon="check-circle"
+            ></app-autocomplete-input>
           </div>
 
           <div class="md:col-span-2">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-            <textarea
+            <app-textarea-input
               formControlName="notes"
-              rows="3"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#166534]"
-            ></textarea>
+              label="Notes"
+              [rows]="3"
+              prefixIcon="document-text"
+            ></app-textarea-input>
           </div>
         </div>
 
@@ -139,6 +134,14 @@ export class SupplierFormComponent implements OnInit {
   errorMessage = '';
   isEdit = false;
   supplierId: string | null = null;
+  typeOptions: AutocompleteOption[] = [
+    { value: 'manufacturer', label: 'Manufacturer' },
+    { value: 'warehouse', label: 'Warehouse' }
+  ];
+  statusOptions: AutocompleteOption[] = [
+    { value: 'active', label: 'Active' },
+    { value: 'inactive', label: 'Inactive' }
+  ];
 
   ngOnInit(): void {
     this.supplierId = this.route.snapshot.paramMap.get('id');

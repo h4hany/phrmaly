@@ -7,6 +7,9 @@ import { DrugsService } from '../../../core/services/drugs.service';
 import { FormWrapperComponent } from '../../../shared/components/form-wrapper/form-wrapper.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { AlertComponent } from '../../../shared/components/alert/alert.component';
+import { TextInputComponent } from '../../../shared/components/input/text-input.component';
+import { RadioInputComponent } from '../../../shared/components/input/radio-input.component';
+import { AutocompleteInputComponent, AutocompleteOption } from '../../../shared/components/input/autocomplete-input.component';
 
 @Component({
   selector: 'app-bundle-form',
@@ -16,7 +19,10 @@ import { AlertComponent } from '../../../shared/components/alert/alert.component
     ReactiveFormsModule,
     FormWrapperComponent,
     ButtonComponent,
-    AlertComponent
+    AlertComponent,
+    TextInputComponent,
+    RadioInputComponent,
+    AutocompleteInputComponent
   ],
   template: `
     <app-form-wrapper [title]="isEdit ? 'Edit Bundle' : 'Add New Bundle'">
@@ -27,42 +33,35 @@ import { AlertComponent } from '../../../shared/components/alert/alert.component
       <form [formGroup]="bundleForm" (ngSubmit)="onSubmit()" class="space-y-6">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">
-              Name <span class="text-red-500">*</span>
-            </label>
-            <input
+            <app-text-input
               type="text"
               formControlName="name"
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-[var(--radius-md)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]"
-              [class.border-red-500]="bundleForm.get('name')?.invalid && bundleForm.get('name')?.touched"
-            />
-            @if (bundleForm.get('name')?.invalid && bundleForm.get('name')?.touched) {
-              <p class="mt-1 text-sm text-red-600">Name is required</p>
-            }
+              label="Name"
+              [required]="true"
+              [hasError]="!!(bundleForm.get('name')?.invalid && bundleForm.get('name')?.touched)"
+              [errorMessage]="(bundleForm.get('name')?.invalid && bundleForm.get('name')?.touched) ? 'Name is required' : undefined"
+              prefixIcon="tag"
+            ></app-text-input>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">
-              Fixed Price <span class="text-red-500">*</span>
-            </label>
-            <input
+            <app-text-input
               type="number"
               formControlName="fixedPrice"
-              step="0.01"
-              min="0"
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-[var(--radius-md)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]"
-            />
+              label="Fixed Price"
+              [step]="0.01"
+              [min]="0"
+              [required]="true"
+              prefixIcon="currency-dollar"
+            ></app-text-input>
           </div>
 
           <div class="md:col-span-2">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-            <select
+            <app-radio-input
               formControlName="status"
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-[var(--radius-md)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]"
-            >
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
+              [label]="'bundle.status'"
+              [radioOptions]="statusOptions"
+            ></app-radio-input>
           </div>
         </div>
 
@@ -82,36 +81,34 @@ import { AlertComponent } from '../../../shared/components/alert/alert.component
             @for (item of itemsArray.controls; track $index; let i = $index) {
               <div [formGroupName]="i" class="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-[var(--radius-md)]">
                 <div class="md:col-span-2">
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Drug</label>
-                  <select
+                  <app-autocomplete-input
                     formControlName="drugId"
-                    class="w-full px-4 py-2.5 border border-gray-300 rounded-[var(--radius-md)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]"
-                  >
-                    <option value="">Select Drug</option>
-                    @for (drug of pharmacyDrugs; track drug.id) {
-                      <option [value]="drug.id">{{ drug.generalDrug?.name || 'Drug ' + drug.id }}</option>
-                    }
-                  </select>
+                    label="Drug"
+                    [options]="drugOptions"
+                    placeholder="Select Drug"
+                    prefixIcon="medicine"
+                  ></app-autocomplete-input>
                 </div>
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
-                  <div class="flex gap-2">
-                    <input
-                      type="number"
-                      formControlName="quantity"
-                      min="1"
-                      class="flex-1 px-4 py-2.5 border border-gray-300 rounded-[var(--radius-md)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]"
-                    />
-                    <button
-                      type="button"
-                      (click)="removeItem(i)"
-                      class="p-2 text-red-600 hover:text-red-800"
-                    >
-                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
-                  </div>
+                  <app-text-input
+                    type="number"
+                    formControlName="quantity"
+                    label="Quantity"
+                    [min]="1"
+                    prefixIcon="package"
+                  ></app-text-input>
+                </div>
+                <div class="flex items-end">
+                  <app-button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    (onClick)="removeItem(i)"
+                  >
+                    <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </app-button>
                 </div>
               </div>
             }
@@ -150,6 +147,11 @@ export class BundleFormComponent implements OnInit {
   isEdit = false;
   bundleId: string | null = null;
   pharmacyDrugs: any[] = [];
+  statusOptions: Array<{ value: any; label: string }> = [
+    { value: 'active', label: 'common.active' },
+    { value: 'inactive', label: 'common.inactive' }
+  ];
+  drugOptions: AutocompleteOption[] = [];
 
   get itemsArray(): FormArray {
     return this.bundleForm.get('items') as FormArray;
@@ -177,6 +179,10 @@ export class BundleFormComponent implements OnInit {
     this.drugsService.getPharmacyDrugs({ page: 1, pageSize: 100 }).subscribe({
       next: (response) => {
         this.pharmacyDrugs = response.data;
+        this.drugOptions = this.pharmacyDrugs.map(drug => ({
+          value: drug.id,
+          label: drug.generalDrug?.name || 'Drug ' + drug.id
+        }));
       }
     });
   }

@@ -2,6 +2,7 @@ import { Component, Input, inject } from '@angular/core';
 import { CommonModule, DatePipe, CurrencyPipe } from '@angular/common';
 import { Patient } from '../../../../core/models/patient.model';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
+import { DateFormatPipe } from '../../../../core/pipes/date-format.pipe';
 import { PharmacyContextService } from '../../../../core/services/pharmacy-context.service';
 import { StatCardComponent } from '../../../../shared/components/stat-card/stat-card.component';
 import { CanAccessDirective } from '../../../../shared/directives/can-access.directive';
@@ -9,7 +10,7 @@ import { CanAccessDirective } from '../../../../shared/directives/can-access.dir
 @Component({
   selector: 'patient-overview-tab',
   standalone: true,
-  imports: [CommonModule, DatePipe, StatCardComponent, TranslatePipe, CurrencyPipe, CanAccessDirective],
+  imports: [CommonModule, DatePipe, DateFormatPipe, StatCardComponent, TranslatePipe, CurrencyPipe, CanAccessDirective],
   template: `
     <div class="space-y-6">
       <!-- KPI Cards -->
@@ -49,7 +50,7 @@ import { CanAccessDirective } from '../../../../shared/directives/can-access.dir
               </div>
               <div>
                 <label class="block text-sm font-medium text-[var(--card-text)] mb-1">{{ 'patient.dateOfBirth' | translate }}</label>
-                <p class="text-[var(--text-primary)]">{{ patient.dateOfBirth | date:'mediumDate' }}</p>
+                <p class="text-[var(--text-primary)]">{{ patient.dateOfBirth | dateFormat }}</p>
               </div>
               <div>
                 <label class="block text-sm font-medium text-[var(--card-text)] mb-1">{{ 'patient.gender' | translate }}</label>
@@ -167,11 +168,11 @@ import { CanAccessDirective } from '../../../../shared/directives/can-access.dir
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
           <div>
             <label class="block text-sm font-medium text-[var(--card-text)] mb-1">{{ 'invoice.createdAt' | translate }}</label>
-            <p class="text-[var(--text-primary)]">{{ patient.createdAt | date:'medium' }}</p>
+            <p class="text-[var(--text-primary)]">{{ patient.createdAt | dateFormat }}</p>
           </div>
           <div>
             <label class="block text-sm font-medium text-[var(--card-text)] mb-1">{{ 'common.lastUpdated' | translate }}</label>
-            <p class="text-[var(--text-primary)]">{{ patient.updatedAt | date:'medium' }}</p>
+            <p class="text-[var(--text-primary)]">{{ patient.updatedAt | dateFormat }}</p>
           </div>
         </div>
       </div>

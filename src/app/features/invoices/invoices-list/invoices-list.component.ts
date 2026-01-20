@@ -231,9 +231,13 @@ export class InvoicesListComponent implements OnInit {
 
   private formatDate(date: Date): string {
     const d = new Date(date);
-    const day = String(d.getDate()).padStart(2, '0');
-    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const monthNames = [
+      'january', 'february', 'march', 'april', 'may', 'june',
+      'july', 'august', 'september', 'october', 'november', 'december'
+    ];
+    const day = d.getDate();
+    const month = monthNames[d.getMonth()];
     const year = d.getFullYear();
-    return `${day}-${month}-${year}`;
+    return `${day}, ${month}, ${year}`;
   }
 }

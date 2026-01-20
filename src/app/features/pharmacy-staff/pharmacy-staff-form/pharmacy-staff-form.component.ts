@@ -3,12 +3,16 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { PharmacyStaffService } from '../../../core/services/pharmacy-staff.service';
+import { PharmacyContextService } from '../../../core/services/pharmacy-context.service';
 import { FormWrapperComponent } from '../../../shared/components/form-wrapper/form-wrapper.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { AlertComponent } from '../../../shared/components/alert/alert.component';
 import { TranslatePipe } from '../../../core/pipes/translate.pipe';
+import { TextInputComponent } from '../../../shared/components/input/text-input.component';
+import { TextareaInputComponent } from '../../../shared/components/input/textarea-input.component';
+import { RadioInputComponent } from '../../../shared/components/input/radio-input.component';
+import { AutocompleteInputComponent, AutocompleteOption } from '../../../shared/components/input/autocomplete-input.component';
 import { UserRole } from '../../../core/models/user.model';
-import { PharmacyContextService } from '../../../core/services/pharmacy-context.service';
 
 @Component({
   selector: 'app-pharmacy-staff-form',
@@ -19,7 +23,11 @@ import { PharmacyContextService } from '../../../core/services/pharmacy-context.
     FormWrapperComponent,
     ButtonComponent,
     AlertComponent,
-    TranslatePipe
+    TranslatePipe,
+    TextInputComponent,
+    TextareaInputComponent,
+    RadioInputComponent,
+    AutocompleteInputComponent
   ],
   template: `
     <app-form-wrapper [title]="isEdit ? ('staff.edit' | translate) : ('staff.add' | translate)">
@@ -30,90 +38,75 @@ import { PharmacyContextService } from '../../../core/services/pharmacy-context.
       <form [formGroup]="staffForm" (ngSubmit)="onSubmit()" class="space-y-6">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">
-              Full Name <span class="text-red-500">*</span>
-            </label>
-            <input
+            <app-text-input
               type="text"
               formControlName="fullName"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#166534] focus:border-[#166534]"
-              [class.border-red-500]="staffForm.get('fullName')?.invalid && staffForm.get('fullName')?.touched"
-            />
-            @if (staffForm.get('fullName')?.invalid && staffForm.get('fullName')?.touched) {
-              <p class="mt-1 text-sm text-red-600">Full name is required</p>
-            }
+              label="Full Name"
+              [required]="true"
+              [hasError]="!!(staffForm.get('fullName')?.invalid && staffForm.get('fullName')?.touched)"
+              [errorMessage]="(staffForm.get('fullName')?.invalid && staffForm.get('fullName')?.touched) ? 'Full name is required' : undefined"
+              prefixIcon="user"
+            ></app-text-input>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">
-              Email <span class="text-red-500">*</span>
-            </label>
-            <input
+            <app-text-input
               type="email"
               formControlName="email"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#166534] focus:border-[#166534]"
-              [class.border-red-500]="staffForm.get('email')?.invalid && staffForm.get('email')?.touched"
-            />
-            @if (staffForm.get('email')?.invalid && staffForm.get('email')?.touched) {
-              <p class="mt-1 text-sm text-red-600">Valid email is required</p>
-            }
+              label="Email"
+              [required]="true"
+              [hasError]="!!(staffForm.get('email')?.invalid && staffForm.get('email')?.touched)"
+              [errorMessage]="(staffForm.get('email')?.invalid && staffForm.get('email')?.touched) ? 'Valid email is required' : undefined"
+              prefixIcon="mail"
+            ></app-text-input>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-            <input
+            <app-text-input
               type="tel"
               formControlName="phone"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#166534] focus:border-[#166534]"
-            />
+              label="Phone"
+              prefixIcon="phone"
+            ></app-text-input>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
-            <input
+            <app-text-input
               type="text"
               formControlName="username"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#166534] focus:border-[#166534]"
-            />
+              label="Username"
+              prefixIcon="user"
+            ></app-text-input>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">
-              Role <span class="text-red-500">*</span>
-            </label>
-            <select
+            <app-autocomplete-input
               formControlName="role"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#166534] focus:border-[#166534]"
-              [class.border-red-500]="staffForm.get('role')?.invalid && staffForm.get('role')?.touched"
-            >
-              <option value="">{{ 'form.selectStatus' | translate }}</option>
-              <option value="account_owner">{{ 'staff.accountOwner' | translate }}</option>
-              <option value="pharmacy_manager">{{ 'staff.pharmacyManager' | translate }}</option>
-              <option value="pharmacy_staff">{{ 'staff.pharmacyStaff' | translate }}</option>
-            </select>
-            @if (staffForm.get('role')?.invalid && staffForm.get('role')?.touched) {
-              <p class="mt-1 text-sm text-red-600">Role is required</p>
-            }
+              label="Role"
+              [required]="true"
+              [options]="roleOptions"
+              [placeholder]="'form.selectStatus'"
+              prefixIcon="id-badge"
+              [hasError]="!!(staffForm.get('role')?.invalid && staffForm.get('role')?.touched)"
+              [errorMessage]="(staffForm.get('role')?.invalid && staffForm.get('role')?.touched) ? 'Role is required' : undefined"
+            ></app-autocomplete-input>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-            <select
+            <app-radio-input
               formControlName="status"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#166534] focus:border-[#166534]"
-            >
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
+              [label]="'staff.status'"
+              [radioOptions]="statusOptions"
+            ></app-radio-input>
           </div>
 
           <div class="md:col-span-2">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-            <textarea
+            <app-textarea-input
               formControlName="notes"
-              rows="3"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#166534] focus:border-[#166534]"
-            ></textarea>
+              label="Notes"
+              [rows]="3"
+              prefixIcon="document-text"
+            ></app-textarea-input>
           </div>
         </div>
 
@@ -151,6 +144,15 @@ export class PharmacyStaffFormComponent implements OnInit {
   errorMessage = '';
   isEdit = false;
   staffId: string | null = null;
+  roleOptions: AutocompleteOption[] = [
+    { value: 'account_owner', label: 'staff.accountOwner' },
+    { value: 'pharmacy_manager', label: 'staff.pharmacyManager' },
+    { value: 'pharmacy_staff', label: 'staff.pharmacyStaff' }
+  ];
+  statusOptions: Array<{ value: any; label: string }> = [
+    { value: 'active', label: 'common.active' },
+    { value: 'inactive', label: 'common.inactive' }
+  ];
 
   ngOnInit(): void {
     this.staffId = this.route.snapshot.paramMap.get('id');

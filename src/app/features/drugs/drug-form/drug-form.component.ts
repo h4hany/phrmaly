@@ -7,6 +7,8 @@ import { FormWrapperComponent } from '../../../shared/components/form-wrapper/fo
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { AlertComponent } from '../../../shared/components/alert/alert.component';
 import { TranslatePipe } from '../../../core/pipes/translate.pipe';
+import { TextInputComponent } from '../../../shared/components/input/text-input.component';
+import { AutocompleteInputComponent, AutocompleteOption } from '../../../shared/components/input/autocomplete-input.component';
 
 @Component({
   selector: 'app-drug-form',
@@ -17,7 +19,9 @@ import { TranslatePipe } from '../../../core/pipes/translate.pipe';
     FormWrapperComponent,
     ButtonComponent,
     AlertComponent,
-    TranslatePipe
+    TranslatePipe,
+    TextInputComponent,
+    AutocompleteInputComponent
   ],
   template: `
     <app-form-wrapper [title]="isEdit ? 'Edit Pharmacy Drug' : 'Add New Pharmacy Drug'">
@@ -28,108 +32,94 @@ import { TranslatePipe } from '../../../core/pipes/translate.pipe';
       <form [formGroup]="drugForm" (ngSubmit)="onSubmit()" class="space-y-6">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">
-              General Drug <span class="text-red-500">*</span>
-            </label>
-            <select
+            <app-autocomplete-input
               formControlName="generalDrugId"
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-[var(--radius-md)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]"
-              [class.border-red-500]="drugForm.get('generalDrugId')?.invalid && drugForm.get('generalDrugId')?.touched"
-            >
-              <option value="">Select General Drug</option>
-              @for (drug of generalDrugs; track drug.id) {
-                <option [value]="drug.id">{{ drug.name }} - {{ drug.manufacturer }}</option>
-              }
-            </select>
-            @if (drugForm.get('generalDrugId')?.invalid && drugForm.get('generalDrugId')?.touched) {
-              <p class="mt-1 text-sm text-red-600">General drug is required</p>
-            }
+              label="General Drug"
+              [required]="true"
+              [options]="generalDrugOptions"
+              placeholder="Select General Drug"
+              prefixIcon="medicine"
+              [hasError]="!!(drugForm.get('generalDrugId')?.invalid && drugForm.get('generalDrugId')?.touched)"
+              [errorMessage]="(drugForm.get('generalDrugId')?.invalid && drugForm.get('generalDrugId')?.touched) ? 'General drug is required' : undefined"
+            ></app-autocomplete-input>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">
-              Internal Barcode (PLU) <span class="text-red-500">*</span>
-            </label>
-            <input
+            <app-text-input
               type="text"
               formControlName="internalBarcode"
+              label="Internal Barcode (PLU)"
               placeholder="6-8 digits"
-              maxlength="8"
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-[var(--radius-md)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]"
-              [class.border-red-500]="drugForm.get('internalBarcode')?.invalid && drugForm.get('internalBarcode')?.touched"
-            />
-            @if (drugForm.get('internalBarcode')?.invalid && drugForm.get('internalBarcode')?.touched) {
-              <p class="mt-1 text-sm text-red-600">Internal barcode is required (6-8 digits)</p>
-            }
+              [maxlength]="8"
+              [required]="true"
+              [hasError]="!!(drugForm.get('internalBarcode')?.invalid && drugForm.get('internalBarcode')?.touched)"
+              [errorMessage]="(drugForm.get('internalBarcode')?.invalid && drugForm.get('internalBarcode')?.touched) ? 'Internal barcode is required (6-8 digits)' : undefined"
+              prefixIcon="barcode"
+            ></app-text-input>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">
-              Price <span class="text-red-500">*</span>
-            </label>
-            <input
+            <app-text-input
               type="number"
               formControlName="price"
-              step="0.01"
-              min="0"
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-[var(--radius-md)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]"
-            />
+              label="Price"
+              [step]="0.01"
+              [min]="0"
+              [required]="true"
+              prefixIcon="currency-dollar"
+            ></app-text-input>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Price After Discount</label>
-            <input
+            <app-text-input
               type="number"
               formControlName="priceAfterDiscount"
-              step="0.01"
-              min="0"
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-[var(--radius-md)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]"
-            />
+              label="Price After Discount"
+              [step]="0.01"
+              [min]="0"
+              prefixIcon="currency-dollar"
+            ></app-text-input>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">
-              Stock Quantity <span class="text-red-500">*</span>
-            </label>
-            <input
+            <app-text-input
               type="number"
               formControlName="stockQuantity"
-              min="0"
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-[var(--radius-md)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]"
-            />
+              label="Stock Quantity"
+              [min]="0"
+              [required]="true"
+              prefixIcon="package"
+            ></app-text-input>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">
-              Minimum Stock <span class="text-red-500">*</span>
-            </label>
-            <input
+            <app-text-input
               type="number"
               formControlName="minimumStock"
-              min="0"
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-[var(--radius-md)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]"
-            />
+              label="Minimum Stock"
+              [min]="0"
+              [required]="true"
+              prefixIcon="package"
+            ></app-text-input>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Expiry Date</label>
-            <input
+            <app-text-input
               type="date"
               formControlName="expiryDate"
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-[var(--radius-md)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]"
-            />
+              label="Expiry Date"
+              prefixIcon="calendar"
+            ></app-text-input>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-            <select
+            <app-autocomplete-input
               formControlName="status"
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-[var(--radius-md)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]"
-            >
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-              <option value="out_of_stock">Out of Stock</option>
-            </select>
+              label="Status"
+              [options]="statusOptions"
+              placeholder="Select status"
+              prefixIcon="check-circle"
+            ></app-autocomplete-input>
           </div>
 
           <div>
@@ -216,6 +206,12 @@ export class DrugFormComponent implements OnInit {
   isEdit = false;
   drugId: string | null = null;
   generalDrugs: any[] = [];
+  generalDrugOptions: AutocompleteOption[] = [];
+  statusOptions: AutocompleteOption[] = [
+    { value: 'active', label: 'Active' },
+    { value: 'inactive', label: 'Inactive' },
+    { value: 'out_of_stock', label: 'Out of Stock' }
+  ];
 
   ngOnInit(): void {
     this.drugId = this.route.snapshot.paramMap.get('id');
@@ -245,6 +241,10 @@ export class DrugFormComponent implements OnInit {
     this.drugsService.getAllGeneralDrugs().subscribe({
       next: (drugs) => {
         this.generalDrugs = drugs;
+        this.generalDrugOptions = drugs.map(drug => ({
+          value: drug.id,
+          label: `${drug.name} - ${drug.manufacturer}`
+        }));
       }
     });
   }

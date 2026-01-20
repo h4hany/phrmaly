@@ -14,6 +14,7 @@ import { SupportTicket } from '../../../core/models/platform.model';
 import { TableComponent, TableColumn } from '../../../shared/components/table/table.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { TranslatePipe } from '../../../core/pipes/translate.pipe';
+import { DateFormatPipe } from '../../../core/pipes/date-format.pipe';
 import { TranslationService } from '../../../core/services/translation.service';
 import { ModalComponent } from '../../../shared/components/modal/modal.component';
 import { StatCardComponent } from '../../../shared/components/stat-card/stat-card.component';
@@ -28,6 +29,7 @@ import { BadgeComponent } from '../../../shared/components/badge/badge.component
     TableComponent,
     ButtonComponent,
     TranslatePipe,
+    DateFormatPipe,
     ModalComponent,
     StatCardComponent,
     BadgeComponent
@@ -158,7 +160,7 @@ import { BadgeComponent } from '../../../shared/components/badge/badge.component
             </div>
             <div>
               <label class="block text-sm font-medium text-[var(--card-text)] mb-1">{{ 'platform.support.createdAt' | translate }}</label>
-              <p class="text-[var(--text-primary)]">{{ selectedTicket.createdAt | date:'short' }}</p>
+              <p class="text-[var(--text-primary)]">{{ selectedTicket.createdAt | dateFormat }}</p>
             </div>
           </div>
 

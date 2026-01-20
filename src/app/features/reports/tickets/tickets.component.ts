@@ -6,6 +6,7 @@ import { Ticket, TicketMessage } from '../../../core/models/ticket.model';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { ModalComponent } from '../../../shared/components/modal/modal.component';
 import { BadgeComponent } from '../../../shared/components/badge/badge.component';
+import { DateFormatPipe } from '../../../core/pipes/date-format.pipe';
 
 @Component({
   selector: 'app-tickets',
@@ -15,7 +16,8 @@ import { BadgeComponent } from '../../../shared/components/badge/badge.component
     ReactiveFormsModule,
     ButtonComponent,
     ModalComponent,
-    BadgeComponent
+    BadgeComponent,
+    DateFormatPipe
   ],
   template: `
     <div class="flex h-[calc(100vh-300px)] gap-4">
@@ -50,7 +52,7 @@ import { BadgeComponent } from '../../../shared/components/badge/badge.component
                   <p class="text-xs text-gray-500 mb-2 line-clamp-2">{{ ticket.description }}</p>
                   <div class="flex items-center justify-between text-xs text-gray-400">
                     <span>{{ ticket.screen }}</span>
-                    <span>{{ ticket.updatedAt | date:'short' }}</span>
+                    <span>{{ ticket.updatedAt | dateFormat }}</span>
                   </div>
                 </div>
               }
@@ -82,7 +84,7 @@ import { BadgeComponent } from '../../../shared/components/badge/badge.component
                 <div [class.flex-row-reverse]="message.isFromSupport" class="flex gap-3">
                   <div [class.bg-blue-50]="message.isFromSupport" [class.bg-gray-100]="!message.isFromSupport" class="max-w-[70%] rounded-lg p-3">
                     <p class="text-sm text-gray-900">{{ message.message }}</p>
-                    <p class="text-xs text-gray-500 mt-1">{{ message.createdAt | date:'short' }}</p>
+                    <p class="text-xs text-gray-500 mt-1">{{ message.createdAt | dateFormat }}</p>
                   </div>
                 </div>
               }

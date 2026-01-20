@@ -55,32 +55,36 @@
 
     <div class="filters">
       <div class="filter-group">
-        <label class="filter-label">{{ 'drugIndex.filters.type' | translate }}</label>
-        <select class="filter-select" [(ngModel)]="typeFilter" (ngModelChange)="onFilterChange()">
-          <option value="all">{{ 'drugIndex.filters.allTypes' | translate }}</option>
-          <option value="tablets">{{ 'drugIndex.filters.typeTablets' | translate }}</option>
-          <option value="capsules">{{ 'drugIndex.filters.typeCapsules' | translate }}</option>
-          <option value="liquid">{{ 'drugIndex.filters.typeLiquid' | translate }}</option>
-          <option value="injection">{{ 'drugIndex.filters.typeInjection' | translate }}</option>
-        </select>
+        <app-autocomplete-input
+          [(ngModel)]="typeFilter"
+          (optionSelected)="onFilterChange()"
+          [label]="'drugIndex.filters.type'"
+          [options]="typeOptions"
+          [placeholder]="'drugIndex.filters.type'"
+          prefixIcon="medicine"
+        ></app-autocomplete-input>
       </div>
 
       <div class="filter-group">
-        <label class="filter-label">{{ 'drugIndex.filters.manufacturer' | translate }}</label>
-        <select class="filter-select" [(ngModel)]="manufacturerFilter" (ngModelChange)="onFilterChange()">
-          <option value="all">{{ 'drugIndex.filters.allManufacturers' | translate }}</option>
-          <option *ngFor="let manufacturer of manufacturers" [value]="manufacturer">{{ manufacturer }}</option>
-        </select>
+        <app-autocomplete-input
+          [(ngModel)]="manufacturerFilter"
+          (optionSelected)="onFilterChange()"
+          [label]="'drugIndex.filters.manufacturer'"
+          [options]="manufacturerOptions"
+          [placeholder]="'drugIndex.filters.manufacturer'"
+          prefixIcon="box"
+        ></app-autocomplete-input>
       </div>
 
       <div class="filter-group">
-        <label class="filter-label">{{ 'drugIndex.filters.sortBy' | translate }}</label>
-        <select class="filter-select" [(ngModel)]="sortFilter" (ngModelChange)="onSortChange()">
-          <option value="name-asc">{{ 'drugIndex.filters.sort.nameAsc' | translate }}</option>
-          <option value="name-desc">{{ 'drugIndex.filters.sort.nameDesc' | translate }}</option>
-          <option value="price-asc">{{ 'drugIndex.filters.sort.priceAsc' | translate }}</option>
-          <option value="price-desc">{{ 'drugIndex.filters.sort.priceDesc' | translate }}</option>
-        </select>
+        <app-autocomplete-input
+          [(ngModel)]="sortFilter"
+          (optionSelected)="onSortChange()"
+          [label]="'drugIndex.filters.sortBy'"
+          [options]="sortOptions"
+          [placeholder]="'drugIndex.filters.sortBy'"
+          prefixIcon="chart"
+        ></app-autocomplete-input>
       </div>
     </div>
   </div>

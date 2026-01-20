@@ -8,7 +8,10 @@ import { FormWrapperComponent } from '../../../shared/components/form-wrapper/fo
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { AlertComponent } from '../../../shared/components/alert/alert.component';
 import { TranslatePipe } from '../../../core/pipes/translate.pipe';
-import { AutocompleteComponent, AutocompleteOption } from '../../../shared/components/autocomplete/autocomplete.component';
+import { TextInputComponent } from '../../../shared/components/input/text-input.component';
+import { TextareaInputComponent } from '../../../shared/components/input/textarea-input.component';
+import { RadioInputComponent } from '../../../shared/components/input/radio-input.component';
+import { AutocompleteInputComponent, AutocompleteOption } from '../../../shared/components/input/autocomplete-input.component';
 
 @Component({
   selector: 'app-patient-form',
@@ -20,7 +23,10 @@ import { AutocompleteComponent, AutocompleteOption } from '../../../shared/compo
     ButtonComponent,
     AlertComponent,
     TranslatePipe,
-    AutocompleteComponent
+    TextInputComponent,
+    TextareaInputComponent,
+    RadioInputComponent,
+    AutocompleteInputComponent
   ],
   template: `
     <app-form-wrapper [title]="(isEdit ? 'form.editPatient' : 'form.addPatient') | translate">
@@ -32,90 +38,71 @@ import { AutocompleteComponent, AutocompleteOption } from '../../../shared/compo
         <!-- Personal Information -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">
-              {{ 'patient.fullName' | translate }} <span class="text-red-500">*</span>
-            </label>
-            <input
+            <app-text-input
               type="text"
               formControlName="fullName"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#166534] focus:border-[#166534]"
-              [class.border-red-500]="patientForm.get('fullName')?.invalid && patientForm.get('fullName')?.touched"
-            />
-            @if (patientForm.get('fullName')?.invalid && patientForm.get('fullName')?.touched) {
-              <p class="mt-1 text-sm text-red-600">{{ 'validation.fullNameRequired' | translate }}</p>
-            }
+              [label]="'patient.fullName'"
+              [required]="true"
+              [hasError]="!!(patientForm.get('fullName')?.invalid && patientForm.get('fullName')?.touched)"
+              [errorMessage]="(patientForm.get('fullName')?.invalid && patientForm.get('fullName')?.touched) ? 'validation.fullNameRequired' : undefined"
+              prefixIcon="user"
+            ></app-text-input>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">
-              {{ 'patient.dateOfBirth' | translate }} <span class="text-red-500">*</span>
-            </label>
-            <input
+            <app-text-input
               type="date"
               formControlName="dateOfBirth"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#166534] focus:border-[#166534]"
-              [class.border-red-500]="patientForm.get('dateOfBirth')?.invalid && patientForm.get('dateOfBirth')?.touched"
-            />
-            @if (patientForm.get('dateOfBirth')?.invalid && patientForm.get('dateOfBirth')?.touched) {
-              <p class="mt-1 text-sm text-red-600">{{ 'validation.dateOfBirthRequired' | translate }}</p>
-            }
+              [label]="'patient.dateOfBirth'"
+              [required]="true"
+              [hasError]="!!(patientForm.get('dateOfBirth')?.invalid && patientForm.get('dateOfBirth')?.touched)"
+              [errorMessage]="(patientForm.get('dateOfBirth')?.invalid && patientForm.get('dateOfBirth')?.touched) ? 'validation.dateOfBirthRequired' : undefined"
+              prefixIcon="calendar"
+            ></app-text-input>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">
-              {{ 'patient.gender' | translate }} <span class="text-red-500">*</span>
-            </label>
-            <select
+            <app-radio-input
               formControlName="gender"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#166534] focus:border-[#166534]"
-              [class.border-red-500]="patientForm.get('gender')?.invalid && patientForm.get('gender')?.touched"
-            >
-              <option value="">{{ 'form.selectGender' | translate }}</option>
-              <option value="male">{{ 'form.gender.male' | translate }}</option>
-              <option value="female">{{ 'form.gender.female' | translate }}</option>
-              <option value="other">{{ 'form.gender.other' | translate }}</option>
-            </select>
-            @if (patientForm.get('gender')?.invalid && patientForm.get('gender')?.touched) {
-              <p class="mt-1 text-sm text-red-600">{{ 'validation.genderRequired' | translate }}</p>
-            }
+              [label]="'patient.gender'"
+              [required]="true"
+              [radioOptions]="genderOptions"
+              [hasError]="!!(patientForm.get('gender')?.invalid && patientForm.get('gender')?.touched)"
+              [errorMessage]="(patientForm.get('gender')?.invalid && patientForm.get('gender')?.touched) ? 'validation.genderRequired' : undefined"
+            ></app-radio-input>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">
-              {{ 'patient.phone' | translate }} <span class="text-red-500">*</span>
-            </label>
-            <input
+            <app-text-input
               type="tel"
               formControlName="phone"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#166534] focus:border-[#166534]"
-              [class.border-red-500]="patientForm.get('phone')?.invalid && patientForm.get('phone')?.touched"
-            />
-            @if (patientForm.get('phone')?.invalid && patientForm.get('phone')?.touched) {
-              <p class="mt-1 text-sm text-red-600">{{ 'validation.phoneRequired' | translate }}</p>
-            }
+              [label]="'patient.phone'"
+              [required]="true"
+              [hasError]="!!(patientForm.get('phone')?.invalid && patientForm.get('phone')?.touched)"
+              [errorMessage]="(patientForm.get('phone')?.invalid && patientForm.get('phone')?.touched) ? 'validation.phoneRequired' : undefined"
+              prefixIcon="phone"
+            ></app-text-input>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">{{ 'patient.email' | translate }}</label>
-            <input
+            <app-text-input
               type="email"
               formControlName="email"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#166534] focus:border-[#166534]"
-              [class.border-red-500]="patientForm.get('email')?.invalid && patientForm.get('email')?.touched"
-            />
-            @if (patientForm.get('email')?.invalid && patientForm.get('email')?.touched) {
-              <p class="mt-1 text-sm text-red-600">{{ 'validation.emailInvalid' | translate }}</p>
-            }
+              [label]="'patient.email'"
+              [hasError]="!!(patientForm.get('email')?.invalid && patientForm.get('email')?.touched)"
+              [errorMessage]="(patientForm.get('email')?.invalid && patientForm.get('email')?.touched) ? 'validation.emailInvalid' : undefined"
+              prefixIcon="mail"
+            ></app-text-input>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">{{ 'patient.occupation' | translate }}</label>
-            <app-autocomplete
+            <app-autocomplete-input
               formControlName="occupation"
+              [label]="'patient.occupation'"
               [options]="occupationOptions"
-              [placeholder]="'form.selectOrType' | translate"
-              [allowCustom]="true"
-            ></app-autocomplete>
+              [placeholder]="'form.selectOrType'"
+              [allowAddNew]="true"
+            ></app-autocomplete-input>
           </div>
         </div>
 
@@ -124,56 +111,49 @@ import { AutocompleteComponent, AutocompleteOption } from '../../../shared/compo
           <h3 class="text-lg font-medium text-gray-900 mb-4">{{ 'patient.addressInfo' | translate }}</h3>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">
-                {{ 'patient.city' | translate }} <span class="text-red-500">*</span>
-              </label>
-              <app-autocomplete
+              <app-autocomplete-input
                 formControlName="city"
+                [label]="'patient.city'"
+                [required]="true"
                 [options]="cityOptions"
-                [placeholder]="'form.selectOrType' | translate"
-                [allowCustom]="true"
+                [placeholder]="'form.selectOrType'"
+                [allowAddNew]="true"
                 [hasError]="!!(patientForm.get('city')?.invalid && patientForm.get('city')?.touched)"
-              ></app-autocomplete>
-              @if (patientForm.get('city')?.invalid && patientForm.get('city')?.touched) {
-                <p class="mt-1 text-sm text-red-600">{{ 'validation.cityRequired' | translate }}</p>
-              }
+                [errorMessage]="(patientForm.get('city')?.invalid && patientForm.get('city')?.touched) ? 'validation.cityRequired' : undefined"
+              ></app-autocomplete-input>
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">
-                {{ 'patient.area' | translate }} <span class="text-red-500">*</span>
-              </label>
-              <app-autocomplete
+              <app-autocomplete-input
                 formControlName="area"
+                [label]="'patient.area'"
+                [required]="true"
                 [options]="areaOptions"
-                [placeholder]="'form.selectOrType' | translate"
-                [allowCustom]="true"
+                [placeholder]="'form.selectOrType'"
+                [allowAddNew]="true"
                 [hasError]="!!(patientForm.get('area')?.invalid && patientForm.get('area')?.touched)"
-              ></app-autocomplete>
-              @if (patientForm.get('area')?.invalid && patientForm.get('area')?.touched) {
-                <p class="mt-1 text-sm text-red-600">{{ 'validation.areaRequired' | translate }}</p>
-              }
+                [errorMessage]="(patientForm.get('area')?.invalid && patientForm.get('area')?.touched) ? 'validation.areaRequired' : undefined"
+              ></app-autocomplete-input>
             </div>
 
             <div class="md:col-span-2">
-              <label class="block text-sm font-medium text-gray-700 mb-1">
-                {{ 'patient.street' | translate }} <span class="text-red-500">*</span>
-              </label>
-              <input
+              <app-text-input
                 type="text"
                 formControlName="street"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#166534] focus:border-[#166534]"
-                [class.border-red-500]="patientForm.get('street')?.invalid && patientForm.get('street')?.touched"
-              />
+                [label]="'patient.street'"
+                [required]="true"
+                [hasError]="!!(patientForm.get('street')?.invalid && patientForm.get('street')?.touched)"
+                prefixIcon="map-pin"
+              ></app-text-input>
             </div>
 
             <div class="md:col-span-2">
-              <label class="block text-sm font-medium text-gray-700 mb-1">{{ 'patient.notes' | translate }}</label>
-              <textarea
+              <app-textarea-input
                 formControlName="addressNotes"
-                rows="3"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#166534] focus:border-[#166534]"
-              ></textarea>
+                [label]="'patient.notes'"
+                [rows]="3"
+                prefixIcon="document-text"
+              ></app-textarea-input>
             </div>
           </div>
         </div>
@@ -182,13 +162,13 @@ import { AutocompleteComponent, AutocompleteOption } from '../../../shared/compo
         <div class="border-t pt-6">
           <h3 class="text-lg font-medium text-gray-900 mb-4">{{ 'patient.medicalInfo' | translate }}</h3>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">{{ 'patient.medicalNotes' | translate }}</label>
-            <textarea
+            <app-textarea-input
               formControlName="medicalNotes"
-              rows="4"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#166534] focus:border-[#166534]"
-              [placeholder]="'placeholder.medicalNotes' | translate"
-            ></textarea>
+              [label]="'patient.medicalNotes'"
+              [placeholder]="'placeholder.medicalNotes'"
+              [rows]="4"
+              prefixIcon="document-text"
+            ></app-textarea-input>
           </div>
         </div>
 
@@ -232,7 +212,11 @@ export class PatientFormComponent implements OnInit {
   isEdit = false;
   patientId: string | null = null;
 
-  // Autocomplete options
+  // Radio options for gender
+  genderOptions: Array<{ value: any; label: string }> = [
+    { value: 'male', label: 'form.gender.male' },
+    { value: 'female', label: 'form.gender.female' }
+  ];
   occupationOptions: AutocompleteOption[] = [
     { value: 'doctor', label: 'Doctor' },
     { value: 'engineer', label: 'Engineer' },

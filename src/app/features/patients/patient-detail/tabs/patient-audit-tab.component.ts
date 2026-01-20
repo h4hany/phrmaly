@@ -5,7 +5,7 @@ import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
 
 interface AuditLog {
   id: string;
-  timestamp: Date;
+  timestamp: Date | string;
   user: string;
   action: string;
   entity: string;
@@ -23,7 +23,7 @@ interface AuditLog {
         <h2 class="text-lg font-semibold text-[var(--text-primary)] mb-4">{{ 'patient.audit.title' | translate }}</h2>
         <app-table
           [columns]="columns"
-          [data]="auditLogs"
+          [data]="formattedAuditLogs"
           [pagination]="pagination"
           [emptyMessage]="'patient.audit.noLogs' | translate"
         />
@@ -81,5 +81,24 @@ export class PatientAuditTabComponent {
     total: 3,
     totalPages: 1
   };
+
+  get formattedAuditLogs(): AuditLog[] {
+    return this.auditLogs.map(log => ({
+      ...log,
+      timestamp: this.formatDate(log.timestamp as Date)
+    }));
+  }
+
+  private formatDate(date: Date): string {
+    const d = new Date(date);
+    const monthNames = [
+      'january', 'february', 'march', 'april', 'may', 'june',
+      'july', 'august', 'september', 'october', 'november', 'december'
+    ];
+    const day = d.getDate();
+    const month = monthNames[d.getMonth()];
+    const year = d.getFullYear();
+    return `${day}, ${month}, ${year}`;
+  }
 }
 

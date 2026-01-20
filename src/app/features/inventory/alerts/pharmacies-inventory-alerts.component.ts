@@ -1,9 +1,10 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { DrugsService } from '../../../core/services/drugs.service';
 import { PharmacyDrug } from '../../../core/models/drug.model';
 import { TranslatePipe } from '../../../core/pipes/translate.pipe';
+import { DateFormatPipe } from '../../../core/pipes/date-format.pipe';
 import { TranslationService } from '../../../core/services/translation.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Pharmacy } from '../../../core/models/user.model';
@@ -23,7 +24,7 @@ interface PharmacyAlerts {
 @Component({
   selector: 'app-pharmacies-inventory-alerts',
   standalone: true,
-  imports: [CommonModule, DatePipe, TranslatePipe],
+  imports: [CommonModule, DateFormatPipe, TranslatePipe],
   template: `
     <div class="alerts-container">
       @for (pharmacyAlert of pharmacyAlerts; track pharmacyAlert.pharmacy.id) {
@@ -180,7 +181,7 @@ interface PharmacyAlerts {
                             <line x1="8" y1="2" x2="8" y2="6"/>
                             <line x1="3" y1="10" x2="21" y2="10"/>
                           </svg>
-                          <span>{{ drug.expiryDate | date:'mediumDate' }}</span>
+                          <span>{{ drug.expiryDate | dateFormat }}</span>
                         </div>
                         @if (drug.daysToExpiry !== undefined) {
                           <div [class]="'days-badge ' + getExpiryBadgeClass(drug.daysToExpiry)">

@@ -7,7 +7,7 @@ import { TranslatePipe } from '../../core/pipes/translate.pipe';
 
 interface AuditLog {
   id: string;
-  timestamp: Date;
+  timestamp: Date | string;
   user: string;
   action: string;
   entity: string;
@@ -222,10 +222,13 @@ export class AuditLogsComponent implements OnInit {
       filtered = filtered.filter(log => log.timestamp <= toDate);
     }
 
-    // Apply pagination
+    // Format dates and apply pagination
     const start = (this.pagination.page - 1) * this.pagination.pageSize;
     const end = start + this.pagination.pageSize;
-    this.filteredLogs = filtered.slice(start, end);
+    this.filteredLogs = filtered.slice(start, end).map(log => ({
+      ...log,
+      timestamp: this.formatDate(log.timestamp)
+    }));
 
     this.pagination.total = filtered.length;
     this.pagination.totalPages = Math.ceil(filtered.length / this.pagination.pageSize);
@@ -248,6 +251,21 @@ export class AuditLogsComponent implements OnInit {
   onPageChange(page: number): void {
     this.pagination.page = page;
     this.applyFilters();
+  }
+
+  private formatDate(date: Date | string): string {
+    const d = date instanceof Date ? date : new Date(date);
+    if (isNaN(d.getTime())) {
+      return '';
+    }
+    const monthNames = [
+      'january', 'february', 'march', 'april', 'may', 'june',
+      'july', 'august', 'september', 'october', 'november', 'december'
+    ];
+    const day = d.getDate();
+    const month = monthNames[d.getMonth()];
+    const year = d.getFullYear();
+    return `${day}, ${month}, ${year}`;
   }
 }
 

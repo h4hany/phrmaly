@@ -6,6 +6,7 @@ import { PharmacyStaff } from '../../../core/models/pharmacy-staff.model';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { AlertComponent } from '../../../shared/components/alert/alert.component';
 import { TranslatePipe } from '../../../core/pipes/translate.pipe';
+import { DateFormatPipe } from '../../../core/pipes/date-format.pipe';
 import { TranslationService } from '../../../core/services/translation.service';
 import { UserRole } from '../../../core/models/user.model';
 import { TabsComponent, TabComponent } from '../../../shared/components/tabs/tabs.component';
@@ -24,6 +25,7 @@ import { RiskBadgeComponent } from '../../../shared/components/risk-badge/risk-b
     ButtonComponent, 
     AlertComponent, 
     TranslatePipe,
+    DateFormatPipe,
     TabsComponent,
     TabComponent,
     StaffKPICardComponent,
@@ -98,11 +100,11 @@ import { RiskBadgeComponent } from '../../../shared/components/risk-badge/risk-b
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               <div>
                 <label class="block text-sm font-medium text-[var(--card-text)] mb-1">{{ 'staff.createdAt' | translate }}</label>
-                <p class="text-[var(--text-primary)]">{{ staff.createdAt | date:'medium' }}</p>
+                <p class="text-[var(--text-primary)]">{{ staff.createdAt | dateFormat }}</p>
               </div>
               <div>
                 <label class="block text-sm font-medium text-[var(--card-text)] mb-1">{{ 'staff.updatedAt' | translate }}</label>
-                <p class="text-[var(--text-primary)]">{{ staff.updatedAt | date:'medium' }}</p>
+                <p class="text-[var(--text-primary)]">{{ staff.updatedAt | dateFormat }}</p>
               </div>
             </div>
           </div>

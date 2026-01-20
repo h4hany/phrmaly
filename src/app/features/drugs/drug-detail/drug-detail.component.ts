@@ -7,11 +7,12 @@ import { ButtonComponent } from '../../../shared/components/button/button.compon
 import { AlertComponent } from '../../../shared/components/alert/alert.component';
 import { BadgeComponent } from '../../../shared/components/badge/badge.component';
 import { TranslatePipe } from '../../../core/pipes/translate.pipe';
+import { DateFormatPipe } from '../../../core/pipes/date-format.pipe';
 
 @Component({
   selector: 'app-drug-detail',
   standalone: true,
-  imports: [CommonModule, ButtonComponent, AlertComponent, BadgeComponent, TranslatePipe],
+  imports: [CommonModule, ButtonComponent, AlertComponent, BadgeComponent, TranslatePipe, DateFormatPipe],
   template: `
     <div class="space-y-[var(--spacing-gap)]">
       @if (errorMessage) {
@@ -96,7 +97,7 @@ import { TranslatePipe } from '../../../core/pipes/translate.pipe';
                 <div>
                   <label class="block text-sm font-medium text-[var(--card-text)] mb-1">Expiry Date</label>
                   <p class="text-[var(--text-primary)]" [class.text-red-600]="isExpiringSoon(drug.expiryDate)">
-                    {{ drug.expiryDate | date:'mediumDate' }}
+                    {{ drug.expiryDate | dateFormat }}
                     @if (isExpiringSoon(drug.expiryDate)) {
                       <span class="ml-2 text-xs">(Expiring Soon)</span>
                     }
@@ -131,8 +132,8 @@ import { TranslatePipe } from '../../../core/pipes/translate.pipe';
                       <tr>
                         <td class="px-4 py-3 text-sm text-[var(--text-primary)]">{{ layer.quantity }}</td>
                         <td class="px-4 py-3 text-sm text-[var(--text-primary)]">{{ layer.unitCost }}</td>
-                        <td class="px-4 py-3 text-sm text-[var(--text-primary)]">{{ layer.purchaseDate | date:'short' }}</td>
-                        <td class="px-4 py-3 text-sm text-[var(--text-primary)]">{{ layer.expiryDate | date:'short' }}</td>
+                        <td class="px-4 py-3 text-sm text-[var(--text-primary)]">{{ layer.purchaseDate | dateFormat }}</td>
+                        <td class="px-4 py-3 text-sm text-[var(--text-primary)]">{{ layer.expiryDate | dateFormat }}</td>
                       </tr>
                     }
                   </tbody>
@@ -173,11 +174,11 @@ import { TranslatePipe } from '../../../core/pipes/translate.pipe';
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               <div>
                 <label class="block text-sm font-medium text-[var(--card-text)] mb-1">Created At</label>
-                <p class="text-[var(--text-primary)]">{{ drug.createdAt | date:'medium' }}</p>
+                <p class="text-[var(--text-primary)]">{{ drug.createdAt | dateFormat }}</p>
               </div>
               <div>
                 <label class="block text-sm font-medium text-[var(--card-text)] mb-1">Last Updated</label>
-                <p class="text-[var(--text-primary)]">{{ drug.updatedAt | date:'medium' }}</p>
+                <p class="text-[var(--text-primary)]">{{ drug.updatedAt | dateFormat }}</p>
               </div>
             </div>
           </div>

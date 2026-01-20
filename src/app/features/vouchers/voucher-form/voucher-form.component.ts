@@ -11,11 +11,12 @@ import { AlertComponent } from '../../../shared/components/alert/alert.component
 import { TranslatePipe } from '../../../core/pipes/translate.pipe';
 import { CanAccessDirective } from '../../../shared/directives/can-access.directive';
 import { VoucherCardComponent } from '../../invoices/invoice-form/voucher-card.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
 
 @Component({
   selector: 'app-voucher-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, AlertComponent, TranslatePipe, VoucherCardComponent],
+  imports: [CommonModule, ReactiveFormsModule, AlertComponent, TranslatePipe, VoucherCardComponent, ButtonComponent],
   template: `
     <div class="space-y-6">
       @if (errorMessage) {
@@ -112,26 +113,21 @@ import { VoucherCardComponent } from '../../invoices/invoice-form/voucher-card.c
 
           <!-- Form Actions -->
           <div class="flex items-center justify-end gap-4 pt-6 border-t border-gray-200">
-            <button
+            <app-button
               type="button"
-              (click)="onCancel()"
-              class="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all duration-200"
+              variant="outline"
+              (onClick)="onCancel()"
             >
               {{ 'common.cancel' | translate }}
-            </button>
-            <button
+            </app-button>
+            <app-button
               type="submit"
-              [disabled]="voucherForm.invalid || loading"
-              class="px-6 py-3 rounded-xl font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-              [style.background]="'var(--primary-bg)'"
-              [style.color]="'var(--primary-text)'"
+              variant="primary"
+              [loading]="loading"
+              [disabled]="voucherForm.invalid"
             >
-              @if (loading) {
-                {{ 'common.saving' | translate }}
-              } @else {
-                {{ isEdit ? ('common.update' | translate) : ('common.create' | translate) }}
-              }
-            </button>
+              {{ isEdit ? ('common.update' | translate) : ('common.create' | translate) }}
+            </app-button>
           </div>
         </form>
       </div>

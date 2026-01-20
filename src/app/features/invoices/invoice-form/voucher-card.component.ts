@@ -1,6 +1,7 @@
 import { Component, Input, ViewChild, ElementRef, AfterViewInit, Output, EventEmitter } from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { TranslatePipe } from '../../../core/pipes/translate.pipe';
+import { DateFormatPipe } from '../../../core/pipes/date-format.pipe';
 import { Voucher } from '../../../core/models/voucher.model';
 import * as QRCode from 'qrcode';
 import html2canvas from 'html2canvas';
@@ -8,7 +9,7 @@ import html2canvas from 'html2canvas';
 @Component({
   selector: 'app-voucher-card',
   standalone: true,
-  imports: [CommonModule, DatePipe, TranslatePipe],
+  imports: [CommonModule, DateFormatPipe, TranslatePipe],
   template: `
     <div #cardElement class="voucher-card" [style.width.px]="500">
       <div class="accent-border"></div>
@@ -46,11 +47,11 @@ import html2canvas from 'html2canvas';
             </div>
             <div class="info-item">
               <label>{{ 'invoice.voucher.issueDate' | translate }}</label>
-              <span>{{ voucher.createdAt | date:'dd/MM/yyyy - HH:mm' }}</span>
+              <span>{{ voucher.createdAt | dateFormat }}</span>
             </div>
             <div class="info-item">
               <label>{{ 'invoice.voucher.validUntil' | translate }}</label>
-              <span>{{ voucher.validUntil | date:'dd/MM/yyyy - HH:mm' }}</span>
+              <span>{{ voucher.validUntil | dateFormat }}</span>
             </div>
             <div class="info-item">
               <label>{{ 'invoice.voucher.amount' | translate }}</label>
@@ -391,7 +392,7 @@ export class VoucherCardComponent implements AfterViewInit {
   @Input() averageDiscountPercentage = 0;
   @Output() onCardReady = new EventEmitter<ElementRef<HTMLDivElement>>();
   @Output() onCardCopied = new EventEmitter<Blob>();
-  
+
   copying = false;
   isCapturing = false;
 
@@ -448,6 +449,7 @@ export class VoucherCardComponent implements AfterViewInit {
     // Small delay to ensure the button is hidden before capture
     setTimeout(() => {
       html2canvas(cardElement, {
+        // @ts-ignore
         backgroundColor: '#ffffff',
         scale: 1.5, // Reduced from 2 for faster rendering
         logging: false,

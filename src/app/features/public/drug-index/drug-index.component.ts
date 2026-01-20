@@ -5,11 +5,12 @@ import { Router, RouterLink } from '@angular/router';
 import { PublicDrugService, PublicDrug } from '../../../core/services/public-drug.service';
 import { TranslationService } from '../../../core/services/translation.service';
 import { TranslatePipe } from '../../../core/pipes/translate.pipe';
+import { AutocompleteInputComponent, AutocompleteOption } from '../../../shared/components/input/autocomplete-input.component';
 
 @Component({
   selector: 'app-drug-index',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, TranslatePipe],
+  imports: [CommonModule, FormsModule, RouterLink, TranslatePipe, AutocompleteInputComponent],
   templateUrl: './drug-index.component.html',
   styleUrls: ['./drug-index.component.css'],
   encapsulation: ViewEncapsulation.None
@@ -31,6 +32,22 @@ export class DrugIndexComponent implements OnInit, AfterViewInit, OnDestroy {
   manufacturers: string[] = [];
   viewMode: 'grid' | 'list' = 'grid';
   currentLanguage: 'en' | 'ar' = 'en';
+  
+  // Autocomplete options
+  typeOptions: AutocompleteOption[] = [
+    { value: 'all', label: 'drugIndex.filters.allTypes' },
+    { value: 'tablets', label: 'drugIndex.filters.typeTablets' },
+    { value: 'capsules', label: 'drugIndex.filters.typeCapsules' },
+    { value: 'liquid', label: 'drugIndex.filters.typeLiquid' },
+    { value: 'injection', label: 'drugIndex.filters.typeInjection' }
+  ];
+  manufacturerOptions: AutocompleteOption[] = [];
+  sortOptions: AutocompleteOption[] = [
+    { value: 'name-asc', label: 'drugIndex.filters.sort.nameAsc' },
+    { value: 'name-desc', label: 'drugIndex.filters.sort.nameDesc' },
+    { value: 'price-asc', label: 'drugIndex.filters.sort.priceAsc' },
+    { value: 'price-desc', label: 'drugIndex.filters.sort.priceDesc' }
+  ];
   
   private animationFrameId?: number;
   private pills: any[] = [];
@@ -183,6 +200,10 @@ export class DrugIndexComponent implements OnInit, AfterViewInit, OnDestroy {
     this.drugService.getManufacturers().subscribe({
       next: (manufacturers) => {
         this.manufacturers = manufacturers;
+        this.manufacturerOptions = [
+          { value: 'all', label: 'drugIndex.filters.allManufacturers' },
+          ...manufacturers.map(m => ({ value: m, label: m }))
+        ];
       }
     });
   }

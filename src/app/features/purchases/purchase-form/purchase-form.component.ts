@@ -8,6 +8,8 @@ import { DrugsService } from '../../../core/services/drugs.service';
 import { FormWrapperComponent } from '../../../shared/components/form-wrapper/form-wrapper.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { AlertComponent } from '../../../shared/components/alert/alert.component';
+import { TextInputComponent } from '../../../shared/components/input/text-input.component';
+import { AutocompleteInputComponent, AutocompleteOption } from '../../../shared/components/input/autocomplete-input.component';
 
 @Component({
   selector: 'app-purchase-form',
@@ -17,7 +19,9 @@ import { AlertComponent } from '../../../shared/components/alert/alert.component
     ReactiveFormsModule,
     FormWrapperComponent,
     ButtonComponent,
-    AlertComponent
+    AlertComponent,
+    TextInputComponent,
+    AutocompleteInputComponent
   ],
   template: `
     <app-form-wrapper [title]="isEdit ? 'Edit Purchase Invoice' : 'Add New Purchase Invoice'">
@@ -28,50 +32,43 @@ import { AlertComponent } from '../../../shared/components/alert/alert.component
       <form [formGroup]="purchaseForm" (ngSubmit)="onSubmit()" class="space-y-6">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">
-              Invoice Number <span class="text-red-500">*</span>
-            </label>
-            <input
+            <app-text-input
               type="text"
               formControlName="invoiceNumber"
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-[var(--radius-md)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)] focus:border-[var(--primary-color)]"
-              [class.border-red-500]="purchaseForm.get('invoiceNumber')?.invalid && purchaseForm.get('invoiceNumber')?.touched"
-            />
+              label="Invoice Number"
+              [required]="true"
+              prefixIcon="receipt"
+            ></app-text-input>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">
-              Supplier <span class="text-red-500">*</span>
-            </label>
-            <select
+            <app-autocomplete-input
               formControlName="supplierId"
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-[var(--radius-md)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]"
-            >
-              <option value="">Select Supplier</option>
-              @for (supplier of suppliers; track supplier.id) {
-                <option [value]="supplier.id">{{ supplier.name }}</option>
-              }
-            </select>
+              label="Supplier"
+              [required]="true"
+              [options]="supplierOptions"
+              placeholder="Select Supplier"
+              prefixIcon="factory"
+            ></app-autocomplete-input>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">
-              Purchase Date <span class="text-red-500">*</span>
-            </label>
-            <input
+            <app-text-input
               type="date"
               formControlName="purchaseDate"
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-[var(--radius-md)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]"
-            />
+              label="Purchase Date"
+              [required]="true"
+              prefixIcon="calendar"
+            ></app-text-input>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
-            <input
+            <app-text-input
               type="date"
               formControlName="dueDate"
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-[var(--radius-md)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]"
-            />
+              label="Due Date"
+              prefixIcon="calendar"
+            ></app-text-input>
           </div>
         </div>
 
@@ -91,46 +88,44 @@ import { AlertComponent } from '../../../shared/components/alert/alert.component
             @for (item of itemsArray.controls; track $index; let i = $index) {
               <div [formGroupName]="i" class="grid grid-cols-1 md:grid-cols-5 gap-4 p-4 bg-gray-50 rounded-[var(--radius-md)]">
                 <div class="md:col-span-2">
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Drug</label>
-                  <select
+                  <app-autocomplete-input
                     formControlName="drugId"
-                    class="w-full px-4 py-2.5 border border-gray-300 rounded-[var(--radius-md)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]"
-                  >
-                    <option value="">Select Drug</option>
-                    @for (drug of pharmacyDrugs; track drug.id) {
-                      <option [value]="drug.id">{{ drug.generalDrug?.name || 'Drug ' + drug.id }}</option>
-                    }
-                  </select>
+                    label="Drug"
+                    [options]="drugOptions"
+                    placeholder="Select Drug"
+                    prefixIcon="medicine"
+                  ></app-autocomplete-input>
                 </div>
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
-                  <input
+                  <app-text-input
                     type="number"
                     formControlName="quantity"
-                    min="1"
-                    class="w-full px-4 py-2.5 border border-gray-300 rounded-[var(--radius-md)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]"
-                  />
+                    label="Quantity"
+                    [min]="1"
+                    prefixIcon="package"
+                  ></app-text-input>
                 </div>
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Unit Cost</label>
-                  <input
+                  <app-text-input
                     type="number"
                     formControlName="unitCost"
-                    step="0.01"
-                    min="0"
-                    class="w-full px-4 py-2.5 border border-gray-300 rounded-[var(--radius-md)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]"
-                  />
+                    label="Unit Cost"
+                    [step]="0.01"
+                    [min]="0"
+                    prefixIcon="currency-dollar"
+                  ></app-text-input>
                 </div>
                 <div class="flex items-end">
-                  <button
+                  <app-button
                     type="button"
-                    (click)="removeItem(i)"
-                    class="p-2 text-red-600 hover:text-red-800"
+                    variant="ghost"
+                    size="sm"
+                    (onClick)="removeItem(i)"
                   >
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
-                  </button>
+                  </app-button>
                 </div>
               </div>
             }
@@ -149,25 +144,23 @@ import { AlertComponent } from '../../../shared/components/alert/alert.component
           <h3 class="text-lg font-medium text-gray-900 mb-4">Payment Information</h3>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Paid Amount</label>
-              <input
+              <app-text-input
                 type="number"
                 formControlName="paidAmount"
-                step="0.01"
-                min="0"
-                class="w-full px-4 py-2.5 border border-gray-300 rounded-[var(--radius-md)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]"
-              />
+                label="Paid Amount"
+                [step]="0.01"
+                [min]="0"
+                prefixIcon="currency-dollar"
+              ></app-text-input>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Payment Status</label>
-              <select
+              <app-autocomplete-input
                 formControlName="paymentStatus"
-                class="w-full px-4 py-2.5 border border-gray-300 rounded-[var(--radius-md)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]"
-              >
-                <option value="pending">Pending</option>
-                <option value="partial">Partial</option>
-                <option value="paid">Paid</option>
-              </select>
+                label="Payment Status"
+                [options]="paymentStatusOptions"
+                placeholder="Select payment status"
+                prefixIcon="check-circle"
+              ></app-autocomplete-input>
             </div>
             <div class="flex items-end">
               <div class="w-full p-3 bg-gray-50 rounded-[var(--radius-md)]">
@@ -212,6 +205,13 @@ export class PurchaseFormComponent implements OnInit {
   purchaseId: string | null = null;
   suppliers: any[] = [];
   pharmacyDrugs: any[] = [];
+  supplierOptions: AutocompleteOption[] = [];
+  drugOptions: AutocompleteOption[] = [];
+  paymentStatusOptions: AutocompleteOption[] = [
+    { value: 'pending', label: 'Pending' },
+    { value: 'partial', label: 'Partial' },
+    { value: 'paid', label: 'Paid' }
+  ];
 
   get itemsArray(): FormArray {
     return this.purchaseForm.get('items') as FormArray;
@@ -263,6 +263,10 @@ export class PurchaseFormComponent implements OnInit {
     this.suppliersService.getAll({ page: 1, pageSize: 100 }).subscribe({
       next: (response) => {
         this.suppliers = response.data;
+        this.supplierOptions = this.suppliers.map(supplier => ({
+          value: supplier.id,
+          label: supplier.name
+        }));
       }
     });
   }
@@ -270,7 +274,11 @@ export class PurchaseFormComponent implements OnInit {
   private loadDrugs(): void {
     this.drugsService.getPharmacyDrugs().subscribe({
       next: (response) => {
-        this.pharmacyDrugs = response.data;
+        this.pharmacyDrugs = Array.isArray(response) ? response : response.data;
+        this.drugOptions = this.pharmacyDrugs.map(drug => ({
+          value: drug.id,
+          label: drug.generalDrug?.name || 'Drug ' + drug.id
+        }));
       }
     });
   }

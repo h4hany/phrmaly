@@ -1,15 +1,16 @@
 import { Component, Input, OnInit, inject } from '@angular/core';
-import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
+import { CommonModule, CurrencyPipe } from '@angular/common';
 import { InvoicesService } from '../../../../core/services/invoices.service';
 import { ChartComponent } from '../../../../shared/components/chart/chart.component';
 import { StatCardComponent } from '../../../../shared/components/stat-card/stat-card.component';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
+import { DateFormatPipe } from '../../../../core/pipes/date-format.pipe';
 import { Invoice } from '../../../../core/models/invoice.model';
 
 @Component({
   selector: 'patient-revenue-tab',
   standalone: true,
-  imports: [CommonModule, CurrencyPipe, DatePipe, ChartComponent, StatCardComponent, TranslatePipe],
+  imports: [CommonModule, CurrencyPipe, DateFormatPipe, ChartComponent, StatCardComponent, TranslatePipe],
   template: `
     <div class="space-y-6">
       <!-- Revenue Stats -->
@@ -31,7 +32,7 @@ import { Invoice } from '../../../../core/models/invoice.model';
         />
         <app-stat-card
           [label]="'patient.revenue.lastOrderDate' | translate"
-          [value]="(lastOrderDate | date:'shortDate') ?? '-'"
+          [value]="(lastOrderDate | dateFormat) ?? '-'"
           [icon]="calendarIcon"
         />
       </div>

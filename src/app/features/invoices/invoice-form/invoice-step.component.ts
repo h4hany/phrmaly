@@ -5,6 +5,8 @@ import { TranslatePipe } from '../../../core/pipes/translate.pipe';
 import { BarcodeScannerDirective } from '../../../shared/directives/barcode-scanner.directive';
 import { Patient } from '../../../core/models/patient.model';
 import { PharmacyDrug } from '../../../core/models/drug.model';
+import { RadioInputComponent } from '../../../shared/components/input/radio-input.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
 
 @Component({
   selector: 'app-invoice-step',
@@ -14,7 +16,9 @@ import { PharmacyDrug } from '../../../core/models/drug.model';
     ReactiveFormsModule,
     FormsModule,
     TranslatePipe,
-    BarcodeScannerDirective
+    BarcodeScannerDirective,
+    RadioInputComponent,
+    ButtonComponent
   ],
   template: `
     <form [formGroup]="invoiceForm" class="p-8">
@@ -431,105 +435,56 @@ import { PharmacyDrug } from '../../../core/models/drug.model';
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <!-- Payment Status -->
           <div class="group">
-            <label class="block text-sm font-semibold text-gray-700 mb-2">{{ 'invoice.paymentStatus' | translate }}</label>
-            <div class="relative">
-              <select
-                formControlName="paymentStatus"
-                class="w-full px-4 py-3.5 pl-12 border-2 border-gray-200 rounded-xl text-sm bg-white focus:outline-none transition-all appearance-none cursor-pointer hover:border-gray-300"
-                onfocus="this.style.borderColor='var(--sidebar-bg)'; this.style.boxShadow='0 0 0 4px rgba(0, 48, 50, 0.1)';"
-                onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none';"
-              >
-                <option value="pending">{{ 'invoice.status.pending' | translate }}</option>
-                <option value="partial">{{ 'invoice.status.partial' | translate }}</option>
-                <option value="paid">{{ 'invoice.status.paid' | translate }}</option>
-              </select>
-              <div class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
-            </div>
+            <app-radio-input
+              formControlName="paymentStatus"
+              [label]="'invoice.paymentStatus'"
+              [radioOptions]="paymentStatusOptions"
+            ></app-radio-input>
           </div>
 
           <!-- Payment Method -->
           <div class="group">
-            <label class="block text-sm font-semibold text-gray-700 mb-2">{{ 'invoice.paymentMethod' | translate }}</label>
-            <div class="relative">
-              <select
-                formControlName="paymentMethod"
-                class="w-full px-4 py-3.5 pl-12 border-2 border-gray-200 rounded-xl text-sm bg-white focus:outline-none transition-all appearance-none cursor-pointer hover:border-gray-300"
-                onfocus="this.style.borderColor='var(--sidebar-bg)'; this.style.boxShadow='0 0 0 4px rgba(0, 48, 50, 0.1)';"
-                onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none';"
-              >
-                <option value="">{{ 'form.selectMethod' | translate }}</option>
-                <option value="cash">{{ 'form.invoice.cash' | translate }}</option>
-                <option value="card">{{ 'form.invoice.card' | translate }}</option>
-                <option value="bank_transfer">{{ 'form.invoice.bankTransfer' | translate }}</option>
-              </select>
-              <div class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                </svg>
-              </div>
-              <div class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
-            </div>
+            <app-radio-input
+              formControlName="paymentMethod"
+              [label]="'invoice.paymentMethod'"
+              [radioOptions]="paymentMethodOptions"
+            ></app-radio-input>
           </div>
         </div>
       </div>
 
       <!-- Form Actions -->
       <div class="flex items-center justify-end gap-4 pt-8 border-t-2 border-gray-100">
-        <button
+        <app-button
           type="button"
-          (click)="onCancel.emit()"
-          class="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 hover:border-gray-400 transition-all duration-200"
+          variant="outline"
+          (onClick)="onCancel.emit()"
         >
           {{ 'common.cancel' | translate }}
-        </button>
-        <button
+        </app-button>
+        <app-button
           type="button"
-          (click)="onCreateVoucher.emit()"
+          variant="outline"
           [disabled]="invoiceForm.invalid || itemsArray.length === 0"
-          class="px-6 py-3 border-2 rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent transition-all duration-200 flex items-center gap-2"
-          [style.border-color]="'var(--primary-bg)'"
-          [style.color]="'var(--primary-text)'"
-            onmouseenter="if (!this.disabled) this.style.backgroundColor='rgba(217, 242, 117, 0.1)';"
-          onmouseleave="if (!this.disabled) this.style.backgroundColor='';"
+          (onClick)="onCreateVoucher.emit()"
         >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
           </svg>
           {{ 'invoice.wizard.createVoucher' | translate }}
-        </button>
-        <button
+        </app-button>
+        <app-button
           type="button"
-          (click)="onCreateInvoice.emit()"
-          [disabled]="invoiceForm.invalid || itemsArray.length === 0 || loading"
-          class="px-6 py-3 rounded-xl font-semibold hover:shadow-xl hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-none transition-all duration-200 flex items-center gap-2"
-          [style.background]="'var(--primary-bg)'"
-          [style.color]="'var(--primary-text)'"
+          variant="primary"
+          [loading]="loading"
+          [disabled]="invoiceForm.invalid || itemsArray.length === 0"
+          (onClick)="onCreateInvoice.emit()"
         >
-          @if (loading) {
-            <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-          } @else {
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-            </svg>
-          }
+          <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          </svg>
           {{ 'invoice.wizard.createInvoice' | translate }}
-        </button>
+        </app-button>
       </div>
     </form>
   `
@@ -574,5 +529,18 @@ export class InvoiceStepComponent {
   @Output() onCreateVoucher = new EventEmitter<void>();
   @Output() onCreateInvoice = new EventEmitter<void>();
   @Output() onCancel = new EventEmitter<void>();
+
+  // Options for radio buttons
+  paymentStatusOptions: Array<{ value: any; label: string }> = [
+    { value: 'pending', label: 'invoice.status.pending' },
+    { value: 'partial', label: 'invoice.status.partial' },
+    { value: 'paid', label: 'invoice.status.paid' }
+  ];
+
+  paymentMethodOptions: Array<{ value: any; label: string }> = [
+    { value: 'cash', label: 'form.invoice.cash' },
+    { value: 'card', label: 'form.invoice.card' },
+    { value: 'bank_transfer', label: 'form.invoice.bankTransfer' }
+  ];
 }
 

@@ -1,10 +1,11 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { DrugsService } from '../../../core/services/drugs.service';
 import { PharmacyDrug } from '../../../core/models/drug.model';
 import { BadgeComponent } from '../../../shared/components/badge/badge.component';
 import { TranslatePipe } from '../../../core/pipes/translate.pipe';
+import { DateFormatPipe } from '../../../core/pipes/date-format.pipe';
 import { TranslationService } from '../../../core/services/translation.service';
 
 interface DrugWithExpiry extends PharmacyDrug {
@@ -15,7 +16,7 @@ interface DrugWithExpiry extends PharmacyDrug {
 @Component({
   selector: 'app-inventory-alerts',
   standalone: true,
-  imports: [CommonModule, BadgeComponent, DatePipe, TranslatePipe],
+  imports: [CommonModule, BadgeComponent, DateFormatPipe, TranslatePipe],
   template: `
     <div class="space-y-[var(--spacing-gap)]">
       <!-- Low Stock Section -->
@@ -104,7 +105,7 @@ interface DrugWithExpiry extends PharmacyDrug {
                     <td class="px-6 py-4 text-sm text-[var(--text-primary)]">{{ drug.generalDrug?.name || 'N/A' }}</td>
                     <td class="px-6 py-4 text-sm text-[var(--text-primary)] font-mono">{{ drug.internalBarcode }}</td>
                     <td class="px-6 py-4 text-sm text-[var(--text-primary)]">
-                      {{ drug.expiryDate | date:'mediumDate' }}
+                      {{ drug.expiryDate | dateFormat }}
                     </td>
                     <td class="px-6 py-4 text-sm">
                       @if (drug.daysToExpiry !== undefined) {
