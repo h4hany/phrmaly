@@ -51,12 +51,15 @@ export const PERMISSIONS: PermissionsConfig = {
     '/invoices/:id/edit': ['account_owner', 'pharmacy_manager', 'pharmacy_staff'],
     '/drugs': ['account_owner', 'pharmacy_manager', 'pharmacy_staff'],
     '/drugs/new': ['account_owner', 'pharmacy_manager', 'pharmacy_staff'],
-    '/bundles': ['account_owner', 'pharmacy_staff'],
+    '/bundles': ['account_owner', 'pharmacy_staff','pharmacy_manager'],
     '/inventory/map': ['account_owner', 'pharmacy_staff','pharmacy_manager'],
     '/inventory/transfers': ['account_owner', 'pharmacy_staff','pharmacy_manager'],
     '/inventory/alerts': ['account_owner', 'pharmacy_manager', 'pharmacy_inventory_manager'],
     '/inventory/requested-products': ['account_owner', 'pharmacy_manager', 'pharmacy_staff', 'pharmacy_inventory_manager'],
     '/payments/methods': ['account_owner', 'pharmacy_inventory_manager'],
+    '/vouchers': ['account_owner', 'pharmacy_manager', 'pharmacy_staff'],
+    '/vouchers/new': ['account_owner', 'pharmacy_manager', 'pharmacy_staff'],
+    '/vouchers/:id/edit': ['account_owner', 'pharmacy_manager', 'pharmacy_staff'],
   },
 
   // Sidebar group permissions
@@ -106,6 +109,7 @@ export const PERMISSIONS: PermissionsConfig = {
     '/system/features': ['account_owner'], // PHARMACY_MANAGER should NOT see
     '/settings': ['account_owner', 'pharmacy_manager'],
     '/reports': ['account_owner'], // PHARMACY_MANAGER should NOT see
+    '/vouchers': ['account_owner', 'pharmacy_manager', 'pharmacy_staff'],
   },
 
   // Feature-level permissions (for tabs, buttons, KPI cards, table actions)
@@ -128,6 +132,15 @@ export const PERMISSIONS: PermissionsConfig = {
 
     // Settings page features
     'settings.tabs.account': ['account_owner'],
+
+    // Voucher page features
+    'voucher.view': ['account_owner', 'pharmacy_manager', 'pharmacy_staff'],
+    'voucher.create': ['account_owner', 'pharmacy_manager', 'pharmacy_staff'],
+    'voucher.edit': ['account_owner', 'pharmacy_manager', 'pharmacy_staff'],
+    'voucher.actions': ['account_owner', 'pharmacy_manager', 'pharmacy_staff'],
+
+    // Patient page features
+    'patient.tabs.vouchers': ['account_owner', 'pharmacy_manager', 'pharmacy_staff'],
   },
 };
 

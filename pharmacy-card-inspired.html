@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pharmacy Subscriber Card</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .card {
+            width: 500px;
+            background: white;
+            border-radius: 30px;
+            box-shadow: 0 20px 60px rgba(0, 48, 50, 0.2);
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* WRAPPERS WITH OPPOSITE COLORS */
+        .top-wrap {
+            background: #003032;  /* Shows through bottom curve */
+        }
+
+        .bottom-wrap {
+            background: white;  /* Shows through top curve */
+        }
+
+        /* Top Section - White with Info */
+        .content-section {
+            background: white;
+            padding: 40px 40px 30px 40px;
+            position: relative;
+            border-bottom-left-radius: 120px;
+        }
+
+        /* Logo Header */
+        .logo-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .logo-wellnest h1 {
+            font-size: 28px;
+            font-weight: 900;
+            color: #003032;
+            letter-spacing: -0.5px;
+        }
+
+        .logo-wellnest p {
+            font-size: 9px;
+            color: #003032;
+            opacity: 0.7;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+            margin-top: 2px;
+        }
+
+        .logo-apple {
+            font-size: 24px;
+            font-weight: 800;
+            color: #003032;
+            letter-spacing: 0.5px;
+        }
+
+        /* Banner Text */
+        .banner-text {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .banner-text h2 {
+            font-size: 16px;
+            font-weight: 800;
+            color: #003032;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+
+        .banner-text p {
+            font-size: 12px;
+            color: #003032;
+            opacity: 0.6;
+            line-height: 1.6;
+        }
+
+        /* Discount Badge */
+        .discount-badge {
+            background: linear-gradient(135deg, #D9F275 0%, #b8d959 100%);
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 25px rgba(217, 242, 117, 0.3);
+        }
+
+        .discount-badge h3 {
+            font-size: 52px;
+            font-weight: 900;
+            color: #003032;
+            line-height: 1;
+            margin-bottom: 5px;
+        }
+
+        .discount-badge p {
+            font-size: 18px;
+            font-weight: 800;
+            color: #003032;
+            letter-spacing: 1px;
+        }
+
+        /* Info Grid */
+        .info-grid {
+            display: grid;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .info-item {
+            background: #E3F4F5;
+            border-radius: 12px;
+            padding: 12px 16px;
+            display: grid;
+            grid-template-columns: 130px 1fr;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .info-item label {
+            font-size: 10px;
+            font-weight: 700;
+            color: #003032;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            opacity: 0.7;
+        }
+
+        .info-item span {
+            font-size: 13px;
+            font-weight: 700;
+            color: #003032;
+        }
+
+        /* Bottom Section - Dark with QR Code */
+        .qr-section {
+            background: #003032;
+            padding: 60px 40px 40px 40px;
+            text-align: center;
+            border-top-right-radius: 120px;
+        }
+
+        /* QR Code Container */
+        .qr-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .qr-icon {
+            width: 180px;
+            height: 180px;
+            background: white;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        .qr-corners {
+            position: absolute;
+            inset: 12px;
+            border: 3px solid #003032;
+            border-radius: 12px;
+        }
+
+        .qr-corners::before,
+        .qr-corners::after {
+            content: '';
+            position: absolute;
+            width: 25px;
+            height: 25px;
+            border: 4px solid #003032;
+        }
+
+        .qr-corners::before {
+            top: -3px;
+            left: -3px;
+            border-right: none;
+            border-bottom: none;
+            border-radius: 8px 0 0 0;
+        }
+
+        .qr-corners::after {
+            bottom: -3px;
+            right: -3px;
+            border-left: none;
+            border-top: none;
+            border-radius: 0 0 8px 0;
+        }
+
+        .qr-label {
+            color: #E3F4F5;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        /* Wave Curve */
+        .wave-section {
+            background: white;
+            position: relative;
+            padding-top: 0;
+        }
+
+        .wave-section::before {
+            content: '';
+            position: absolute;
+            top: -80px;
+            left: 0;
+            right: 0;
+            height: 100px;
+            background: white;
+            border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+        }
+
+        /* Content Section */
+        .content-section {
+            background: white;
+            padding: 50px 40px 30px 40px;
+            position: relative;
+        }
+
+        /* Banner Text */
+        .banner-text {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .banner-text h2 {
+            font-size: 16px;
+            font-weight: 800;
+            color: #003032;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+
+        .banner-text p {
+            font-size: 12px;
+            color: #003032;
+            opacity: 0.6;
+            line-height: 1.6;
+        }
+
+        /* Discount Badge */
+        .discount-badge {
+            background: linear-gradient(135deg, #D9F275 0%, #b8d959 100%);
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 25px rgba(217, 242, 117, 0.3);
+        }
+
+        .discount-badge h3 {
+            font-size: 52px;
+            font-weight: 900;
+            color: #003032;
+            line-height: 1;
+            margin-bottom: 5px;
+        }
+
+        .discount-badge p {
+            font-size: 18px;
+            font-weight: 800;
+            color: #003032;
+            letter-spacing: 1px;
+        }
+
+        /* Info Grid */
+        .info-grid {
+            display: grid;
+            gap: 12px;
+        }
+
+        .info-item {
+            background: #E3F4F5;
+            border-radius: 12px;
+            padding: 12px 16px;
+            display: grid;
+            grid-template-columns: 130px 1fr;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .info-item label {
+            font-size: 10px;
+            font-weight: 700;
+            color: #003032;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            opacity: 0.7;
+        }
+
+        .info-item span {
+            font-size: 13px;
+            font-weight: 700;
+            color: #003032;
+        }
+
+        /* Footer */
+        .footer {
+            background: #003032;
+            padding: 0 40px 20px 40px;
+            text-align: center;
+        }
+
+        .footer p {
+            font-size: 11px;
+            font-weight: 700;
+            color: #D9F275;
+            letter-spacing: 1px;
+        }
+
+        /* Decorative accent */
+        .accent-border {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #D9F275 0%, #003032 50%, #D9F275 100%);
+        }
+
+        @media print {
+            body {
+                background: white;
+            }
+            .card {
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="accent-border"></div>
+
+        <!-- Top Wrapper (dark background shows through bottom curve) -->
+        <div class="top-wrap">
+            <!-- Top White Section with Info -->
+            <div class="content-section">
+                <!-- Logo Header -->
+                <div class="logo-header">
+                    <div class="logo-wellnest">
+                        <h1>WELLNEST</h1>
+                        <p>Health Within Reach</p>
+                    </div>
+                    <div class="logo-apple">APPLE</div>
+                </div>
+
+                <!-- Banner -->
+                <div class="banner-text">
+                    <h2>Exclusive Subscriber Offer</h2>
+                    <p>Your all-in-one solution for pharmacy discounts—fast, easy, and secure.</p>
+                </div>
+
+                <!-- Discount Badge -->
+                <div class="discount-badge">
+                    <h3>20% OFF</h3>
+                    <p>FIRST ORDER</p>
+                </div>
+
+                <!-- Info Grid -->
+                <div class="info-grid">
+                    <div class="info-item">
+                        <label>Subscriber Name</label>
+                        <span>Ahmed Hassan Mohamed</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Issue Date</label>
+                        <span>20/01/2025 - 14:35</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Valid Until</label>
+                        <span>20/02/2025 - 23:59</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Wrapper (white background shows through top curve) -->
+        <div class="bottom-wrap">
+            <!-- Bottom Dark Section with QR -->
+            <div class="qr-section">
+                <!-- QR Code -->
+                <div class="qr-container">
+                    <div class="qr-icon">
+                        <div class="qr-corners"></div>
+                        <div id="qrcode"></div>
+                    </div>
+                    <div class="qr-label">WN-SUB-2025-8473</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>تطبق الشروط والأحكام</p>
+        </div>
+    </div>
+
+    <script>
+        // Generate QR Code
+        new QRCode(document.getElementById("qrcode"), {
+            text: "WN-SUB-2025-8473|Ahmed Hassan Mohamed|REF-AP-2025-198374|20%OFF|APPLE-PHARMACY",
+            width: 150,
+            height: 150,
+            colorDark: "#003032",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H
+        });
+    </script>
+</body>
+</html>

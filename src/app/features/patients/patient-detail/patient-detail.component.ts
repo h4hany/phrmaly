@@ -14,6 +14,7 @@ import { PatientLoyaltyTabComponent } from './tabs/patient-loyalty-tab.component
 import { PatientRevenueTabComponent } from './tabs/patient-revenue-tab.component';
 import { PatientMedicalTabComponent } from './tabs/patient-medical-tab.component';
 import { PatientTimelineTabComponent } from './tabs/patient-timeline-tab.component';
+import { PatientVouchersTabComponent } from './tabs/patient-vouchers-tab.component';
 
 @Component({
   selector: 'app-patient-detail',
@@ -31,7 +32,8 @@ import { PatientTimelineTabComponent } from './tabs/patient-timeline-tab.compone
     PatientLoyaltyTabComponent,
     PatientRevenueTabComponent,
     PatientMedicalTabComponent,
-    PatientTimelineTabComponent
+    PatientTimelineTabComponent,
+    PatientVouchersTabComponent
   ],
   template: `
     <div class="space-y-[var(--spacing-gap)]">
@@ -79,6 +81,9 @@ import { PatientTimelineTabComponent } from './tabs/patient-timeline-tab.compone
             </app-tab>
             <app-tab [title]="'patient.tabs.timeline' | translate" [active]="false">
               <patient-timeline-tab [patientId]="patient!.id" />
+            </app-tab>
+            <app-tab *appCanAccess="'patient.tabs.vouchers'" [title]="'patient.tabs.vouchers' | translate" [active]="false">
+              <patient-vouchers-tab [patientId]="patient!.id" />
             </app-tab>
           </app-tabs>
         </div>

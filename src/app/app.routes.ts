@@ -144,6 +144,11 @@ export const routes: Routes = [
         loadChildren: () => import('./features/hr/hr.routes').then(m => m.routes)
       },
       {
+        path: 'vouchers',
+        canActivate: [pharmacyGuard, rbacGuard],
+        loadChildren: () => import('./features/vouchers/vouchers.routes').then(m => m.routes)
+      },
+      {
         path: 'system',
         loadChildren: () => import('./features/system/system.routes').then(m => m.routes)
       },

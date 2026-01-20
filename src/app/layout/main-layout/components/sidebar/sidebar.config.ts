@@ -54,6 +54,11 @@ export const SIDEBAR_GROUPS: SidebarGroup[] = [
         label: 'nav.customers',
         icon: 'user-heart'
       },
+      {
+        path: '/vouchers',
+        label: 'nav.vouchers',
+        icon: 'ticket'
+      },
       // {
       //   path: '/pharmacy-staff',
       //   label: 'nav.pharmacyStaff',
