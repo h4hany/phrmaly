@@ -1,0 +1,1 @@
+import"./chunk-C6Q5SG76.js";var t=[{path:"",loadComponent:()=>import("./chunk-ESQL3MQZ.js").then(o=>o.BundlesListComponent)},{path:"new",loadComponent:()=>import("./chunk-VB3GMRIP.js").then(o=>o.BundleFormComponent)},{path:":id/edit",loadComponent:()=>import("./chunk-VB3GMRIP.js").then(o=>o.BundleFormComponent)}];export{t as routes};
