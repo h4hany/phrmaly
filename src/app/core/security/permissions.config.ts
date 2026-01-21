@@ -59,6 +59,7 @@ export const PERMISSIONS: PermissionsConfig = {
     '/payments/methods': ['account_owner', 'pharmacy_inventory_manager'],
     '/vouchers': ['account_owner', 'pharmacy_manager', 'pharmacy_staff'],
     '/vouchers/new': ['account_owner', 'pharmacy_manager', 'pharmacy_staff'],
+    '/purchases/new': ['account_owner', 'pharmacy_inventory_manager'],
     '/vouchers/:id/edit': ['account_owner', 'pharmacy_manager', 'pharmacy_staff'],
   },
 
