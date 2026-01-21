@@ -17,7 +17,7 @@ export class RedirectComponent implements OnInit {
   ngOnInit(): void {
     // Redirect based on platform mode
     if (this.platformContext.isPlatformMode()) {
-      this.router.navigate(['/system/dashboard']);
+      this.router.navigate(['/super-admin/dashboard']);
       return;
     }
 

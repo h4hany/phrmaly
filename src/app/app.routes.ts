@@ -27,6 +27,13 @@ export const routes: Routes = [
     path: 'access-denied',
     loadComponent: () => import('./features/public/access-denied/access-denied.component').then(m => m.AccessDeniedComponent)
   },
+  // Super Admin routes (separate layout)
+  {
+    path: 'super-admin',
+    canActivate: [authGuard],
+    loadComponent: () => import('./super-admin/layout/super-admin-layout.component').then(m => m.SuperAdminLayoutComponent),
+    loadChildren: () => import('./super-admin/super-admin.routes').then(m => m.routes)
+  },
   // Protected routes (authentication required) - All under MainLayoutComponent
   {
     path: '',
@@ -149,12 +156,9 @@ export const routes: Routes = [
         loadChildren: () => import('./features/vouchers/vouchers.routes').then(m => m.routes)
       },
       {
-        path: 'system',
-        loadChildren: () => import('./features/system/system.routes').then(m => m.routes)
-      },
-      {
         path: '',
-        loadComponent: () => import('./features/system/redirect/redirect.component').then(m => m.RedirectComponent)
+        redirectTo: 'dashboard',
+        pathMatch: 'full'
       }
     ]
   },

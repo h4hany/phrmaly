@@ -45,7 +45,7 @@ export const createRoleGuard = (allowedRoles: PlatformRole[]): CanActivateFn => 
     }
 
     if (!platformContext.hasAnyPlatformRole(allowedRoles)) {
-      router.navigate(['/system/dashboard']);
+      router.navigate(['/super-admin/dashboard']);
       return false;
     }
 

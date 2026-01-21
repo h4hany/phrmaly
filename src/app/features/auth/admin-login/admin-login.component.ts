@@ -695,8 +695,8 @@ export class AdminLoginComponent {
           // Check if user has platform role
           const platformRoles = ['super_admin', 'support_admin', 'sales_admin', 'finance_admin'];
           if (platformRoles.includes(user.role)) {
-            // Navigate to system dashboard
-            this.router.navigate(['/system/dashboard']);
+            // Navigate to super admin dashboard
+            this.router.navigate(['/super-admin/dashboard']);
           } else {
             this.errorMessage.set('Access denied. Admin credentials required.');
             this.loading.set(false);

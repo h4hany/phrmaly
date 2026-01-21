@@ -39,7 +39,7 @@ import { StatCardComponent } from '../../../shared/components/stat-card/stat-car
       <!-- Header -->
       <div class="flex items-center justify-between">
         <h1 class="text-2xl font-bold text-[var(--text-primary)]">{{ 'platform.accounts.title' | translate }}</h1>
-        <app-button variant="primary" (onClick)="showCreateModal = true">
+        <app-button variant="primary" (onClick)="createAccount()">
           <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
           </svg>
@@ -263,6 +263,10 @@ export class AccountsComponent implements OnInit {
         this.loadAccounts();
       }
     });
+  }
+
+  createAccount(): void {
+    this.router.navigate(['/super-admin/accounts/new']);
   }
 }
 

@@ -4,30 +4,28 @@ import { AuthService } from '../services/auth.service';
 import { PlatformContextService } from '../services/platform-context.service';
 
 /**
- * Pharmacy Route Guard
+ * Super Admin Route Guard
  * 
- * Prevents platform admins from accessing pharmacy routes.
- * Redirects them to system dashboard.
+ * Protects /super-admin routes - only platform admins can access.
  */
-export const pharmacyGuard: CanActivateFn = (route, state) => {
+export const superAdminGuard: CanActivateFn = (route, state) => {
   const authService = inject(AuthService);
   const platformContext = inject(PlatformContextService);
   const router = inject(Router);
 
   // Must be authenticated
   if (!authService.isAuthenticated()) {
-    router.navigate(['/login'], { queryParams: { returnUrl: state.url } });
+    router.navigate(['/admin-login'], { queryParams: { returnUrl: state.url } });
     return false;
   }
 
-  // If platform admin, redirect to super admin dashboard
-  if (platformContext.isPlatformMode()) {
-    router.navigate(['/super-admin/dashboard']);
+  // Must have platform role
+  if (!platformContext.canAccessSystemConsole()) {
+    // Redirect to access denied or login
+    router.navigate(['/access-denied']);
     return false;
   }
 
   return true;
 };
-
-
 

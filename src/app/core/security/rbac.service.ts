@@ -160,6 +160,14 @@ export class RbacService {
       return '/login';
     }
 
+    // Platform admin roles go to super admin dashboard
+    if (role === UserRole.SUPER_ADMIN || 
+        role === UserRole.SUPPORT_ADMIN || 
+        role === UserRole.SALES_ADMIN || 
+        role === UserRole.FINANCE_ADMIN) {
+      return '/super-admin/dashboard';
+    }
+
     switch (role) {
       case UserRole.PHARMACY_MANAGER:
       case UserRole.PHARMACY_STAFF:

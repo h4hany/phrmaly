@@ -209,63 +209,6 @@ export const SIDEBAR_GROUPS: SidebarGroup[] = [
     order: 7
   },
 
-  // System Console Group (Platform Admin Only)
-  {
-    key: 'system-console',
-    label: 'nav.systemConsole',
-    icon: 'shield-check',
-    items: [
-      {
-        path: '/system/dashboard',
-        label: 'nav.platformDashboard',
-        icon: 'layout-grid'
-      },
-      {
-        path: '/system/accounts',
-        label: 'nav.accounts',
-        icon: 'users'
-      },
-      {
-        path: '/system/subscriptions',
-        label: 'nav.subscriptions',
-        icon: 'credit-card'
-      },
-      {
-        path: '/system/catalog',
-        label: 'nav.globalDrugs',
-        icon: 'pill-bottle'
-      },
-      {
-        path: '/system/support',
-        label: 'nav.supportTickets',
-        icon: 'help-circle'
-      },
-      {
-        path: '/system/feature-flags',
-        label: 'nav.platformFeatures',
-        icon: 'toggle-sliders'
-      },
-      {
-        path: '/system/risk',
-        label: 'nav.accountRisk',
-        icon: 'shield-check'
-      },
-      {
-        path: '/system/admins',
-        label: 'nav.adminUsers',
-        icon: 'id-badge'
-      },
-      {
-        path: '/system/analytics',
-        label: 'nav.platformAnalytics',
-        icon: 'chart'
-      }
-    ],
-    collapsedByDefault: true,
-    order: 7,
-    roles: ['super_admin', 'support_admin', 'sales_admin', 'finance_admin']
-  },
-
   // System Group (Pharmacy-level)
   {
     key: 'system',
