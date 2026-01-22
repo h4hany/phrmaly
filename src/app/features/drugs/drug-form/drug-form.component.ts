@@ -1,14 +1,14 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { DrugsService } from '../../../core/services/drugs.service';
-import { FormWrapperComponent } from '../../../shared/components/form-wrapper/form-wrapper.component';
-import { ButtonComponent } from '../../../shared/components/button/button.component';
-import { AlertComponent } from '../../../shared/components/alert/alert.component';
-import { TranslatePipe } from '../../../core/pipes/translate.pipe';
+import { ModernFormWrapperComponent } from '../../../shared/components/modern-form-wrapper/modern-form-wrapper.component';
+import { FormSectionComponent } from '../../../shared/components/form-section/form-section.component';
+import { RadioInputComponent } from '../../../shared/components/input/radio-input.component';
 import { TextInputComponent } from '../../../shared/components/input/text-input.component';
 import { AutocompleteInputComponent, AutocompleteOption } from '../../../shared/components/input/autocomplete-input.component';
+import { TranslatePipe } from '../../../core/pipes/translate.pipe';
 
 @Component({
   selector: 'app-drug-form',
@@ -16,181 +16,174 @@ import { AutocompleteInputComponent, AutocompleteOption } from '../../../shared/
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    FormWrapperComponent,
-    ButtonComponent,
-    AlertComponent,
-    TranslatePipe,
+    FormsModule,
+    ModernFormWrapperComponent,
+    FormSectionComponent,
+    RadioInputComponent,
     TextInputComponent,
-    AutocompleteInputComponent
+    AutocompleteInputComponent,
+    TranslatePipe
   ],
   template: `
-    <app-form-wrapper [title]="isEdit ? 'Edit Pharmacy Drug' : 'Add New Pharmacy Drug'">
-      @if (errorMessage) {
-        <app-alert type="error" [title]="errorMessage" />
-      }
+    <app-modern-form-wrapper
+      [title]="(isEdit ? 'form.editDrug' : 'form.addDrug')"
+      [description]="(isEdit ? 'form.editDrugDescription' : 'form.addDrugDescription')"
+      [errorMessage]="errorMessage"
+    >
+      <form [formGroup]="drugForm" (ngSubmit)="onSubmit()" class="p-8">
+        <!-- General Information Section -->
+        <app-form-section [title]="'drug.generalInfo'">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <app-autocomplete-input
+                formControlName="generalDrugId"
+                label="form.drug.generalDrug"
+                [required]="true"
+                [options]="generalDrugOptions"
+                [placeholder]="'form.selectGeneralDrug'"
+                prefixIcon="medicine"
+                [hasError]="!!(drugForm.get('generalDrugId')?.invalid && drugForm.get('generalDrugId')?.touched)"
+                [errorMessage]="(drugForm.get('generalDrugId')?.invalid && drugForm.get('generalDrugId')?.touched) ? 'validation.generalDrugRequired' : undefined"
+              ></app-autocomplete-input>
+            </div>
 
-      <form [formGroup]="drugForm" (ngSubmit)="onSubmit()" class="space-y-6">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <app-autocomplete-input
-              formControlName="generalDrugId"
-              label="General Drug"
-              [required]="true"
-              [options]="generalDrugOptions"
-              placeholder="Select General Drug"
-              prefixIcon="medicine"
-              [hasError]="!!(drugForm.get('generalDrugId')?.invalid && drugForm.get('generalDrugId')?.touched)"
-              [errorMessage]="(drugForm.get('generalDrugId')?.invalid && drugForm.get('generalDrugId')?.touched) ? 'General drug is required' : undefined"
-            ></app-autocomplete-input>
-          </div>
+            <div>
+              <app-text-input
+                type="text"
+                formControlName="internalBarcode"
+                [label]="'form.drug.internalBarcode'"
+                [placeholder]="'placeholder.barcode'"
+                [maxlength]="8"
+                [required]="true"
+                [hasError]="!!(drugForm.get('internalBarcode')?.invalid && drugForm.get('internalBarcode')?.touched)"
+                [errorMessage]="(drugForm.get('internalBarcode')?.invalid && drugForm.get('internalBarcode')?.touched) ? 'validation.barcodeRequired' : undefined"
+                prefixIcon="barcode"
+              ></app-text-input>
+            </div>
 
-          <div>
-            <app-text-input
-              type="text"
-              formControlName="internalBarcode"
-              label="Internal Barcode (PLU)"
-              placeholder="6-8 digits"
-              [maxlength]="8"
-              [required]="true"
-              [hasError]="!!(drugForm.get('internalBarcode')?.invalid && drugForm.get('internalBarcode')?.touched)"
-              [errorMessage]="(drugForm.get('internalBarcode')?.invalid && drugForm.get('internalBarcode')?.touched) ? 'Internal barcode is required (6-8 digits)' : undefined"
-              prefixIcon="barcode"
-            ></app-text-input>
-          </div>
+            <div>
+              <app-text-input
+                type="number"
+                formControlName="price"
+                [label]="'drug.price'"
+                [step]="0.01"
+                [min]="0"
+                [required]="true"
+                prefixIcon="currency-dollar"
+              ></app-text-input>
+            </div>
 
-          <div>
-            <app-text-input
-              type="number"
-              formControlName="price"
-              label="Price"
-              [step]="0.01"
-              [min]="0"
-              [required]="true"
-              prefixIcon="currency-dollar"
-            ></app-text-input>
-          </div>
+            <div>
+              <app-text-input
+                type="number"
+                formControlName="priceAfterDiscount"
+                [label]="'form.drug.priceAfterDiscount'"
+                [step]="0.01"
+                [min]="0"
+                prefixIcon="currency-dollar"
+              ></app-text-input>
+            </div>
 
-          <div>
-            <app-text-input
-              type="number"
-              formControlName="priceAfterDiscount"
-              label="Price After Discount"
-              [step]="0.01"
-              [min]="0"
-              prefixIcon="currency-dollar"
-            ></app-text-input>
-          </div>
+            <div>
+              <app-text-input
+                type="date"
+                formControlName="expiryDate"
+                [label]="'drug.expiryDate'"
+                prefixIcon="calendar"
+              ></app-text-input>
+            </div>
 
-          <div>
-            <app-text-input
-              type="number"
-              formControlName="stockQuantity"
-              label="Stock Quantity"
-              [min]="0"
-              [required]="true"
-              prefixIcon="package"
-            ></app-text-input>
-          </div>
-
-          <div>
-            <app-text-input
-              type="number"
-              formControlName="minimumStock"
-              label="Minimum Stock"
-              [min]="0"
-              [required]="true"
-              prefixIcon="package"
-            ></app-text-input>
-          </div>
-
-          <div>
-            <app-text-input
-              type="date"
-              formControlName="expiryDate"
-              label="Expiry Date"
-              prefixIcon="calendar"
-            ></app-text-input>
-          </div>
-
-          <div>
-            <app-autocomplete-input
-              formControlName="status"
-              label="Status"
-              [options]="statusOptions"
-              placeholder="Select status"
-              prefixIcon="check-circle"
-            ></app-autocomplete-input>
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">
-              {{ 'drug.classification' | translate }}
-            </label>
-            <div class="flex gap-4">
-              <label class="flex items-center cursor-pointer">
-                <input
-                  type="radio"
-                  formControlName="classification"
-                  value="medicinal"
-                  class="w-4 h-4 text-[var(--primary-color)] focus:ring-[var(--primary-color)] border-gray-300"
-                />
-                <span class="ml-2 text-sm text-gray-700">{{ 'drug.classification.medicinal' | translate }}</span>
-              </label>
-              <label class="flex items-center cursor-pointer">
-                <input
-                  type="radio"
-                  formControlName="classification"
-                  value="cosmetic"
-                  class="w-4 h-4 text-[var(--primary-color)] focus:ring-[var(--primary-color)] border-gray-300"
-                />
-                <span class="ml-2 text-sm text-gray-700">{{ 'drug.classification.cosmetic' | translate }}</span>
-              </label>
+            <div>
+              <app-autocomplete-input
+                formControlName="status"
+                [label]="'form.drug.status'"
+                [options]="statusOptions"
+                [placeholder]="'form.selectStatus'"
+                prefixIcon="check-circle"
+              ></app-autocomplete-input>
             </div>
           </div>
+        </app-form-section>
 
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">
-              {{ 'drug.origin' | translate }}
-            </label>
-            <div class="flex gap-4">
-              <label class="flex items-center cursor-pointer">
-                <input
-                  type="radio"
-                  formControlName="origin"
-                  value="local"
-                  class="w-4 h-4 text-[var(--primary-color)] focus:ring-[var(--primary-color)] border-gray-300"
-                />
-                <span class="ml-2 text-sm text-gray-700">{{ 'drug.origin.local' | translate }}</span>
-              </label>
-              <label class="flex items-center cursor-pointer">
-                <input
-                  type="radio"
-                  formControlName="origin"
-                  value="imported"
-                  class="w-4 h-4 text-[var(--primary-color)] focus:ring-[var(--primary-color)] border-gray-300"
-                />
-                <span class="ml-2 text-sm text-gray-700">{{ 'drug.origin.imported' | translate }}</span>
-              </label>
+        <!-- Stock Information Section -->
+        <app-form-section [title]="'drug.stockInfo'">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <app-text-input
+                type="number"
+                formControlName="stockQuantity"
+                [label]="'form.drug.stockQuantity'"
+                [min]="0"
+                [required]="true"
+                prefixIcon="package"
+              ></app-text-input>
+            </div>
+
+            <div>
+              <app-text-input
+                type="number"
+                formControlName="minimumStock"
+                [label]="'form.drug.minimumStock'"
+                [min]="0"
+                [required]="true"
+                prefixIcon="package"
+              ></app-text-input>
             </div>
           </div>
-        </div>
+        </app-form-section>
+
+        <!-- Classification & Origin Section -->
+        <app-form-section [title]="'drug.classificationAndOrigin'">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <app-radio-input
+                formControlName="classification"
+                [label]="'drug.classification'"
+                [radioOptions]="classificationOptions"
+              ></app-radio-input>
+            </div>
+
+            <div>
+              <app-radio-input
+                formControlName="origin"
+                [label]="'drug.origin'"
+                [radioOptions]="originOptions"
+              ></app-radio-input>
+            </div>
+          </div>
+        </app-form-section>
 
         <!-- Form Actions -->
-        <div class="flex items-center justify-end gap-4 pt-6 border-t">
-          <app-button type="button" variant="outline" (onClick)="onCancel()">
-            Cancel
-          </app-button>
-          <app-button
-            type="submit"
-            variant="primary"
-            [loading]="loading"
-            [disabled]="drugForm.invalid"
+        <div class="flex items-center justify-end gap-4 pt-8 border-t-2 border-gray-100">
+          <button
+            type="button"
+            (click)="onCancel()"
+            class="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 hover:border-gray-400 transition-all duration-200"
           >
-            {{ isEdit ? 'Update' : 'Create' }} Drug
-          </app-button>
+            {{ 'common.cancel' | translate }}
+          </button>
+          <button
+            type="submit"
+            [disabled]="drugForm.invalid || loading"
+            class="px-6 py-3 rounded-xl font-semibold hover:shadow-xl hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-none transition-all duration-200 flex items-center gap-2"
+            [style.background]="'var(--primary-bg)'"
+            [style.color]="'var(--primary-text)'"
+          >
+            @if (loading) {
+              <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            } @else {
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+            }
+            {{ (isEdit ? 'form.updateDrug' : 'form.createDrug') | translate }}
+          </button>
         </div>
       </form>
-    </app-form-wrapper>
+    </app-modern-form-wrapper>
   `,
   styles: []
 })
@@ -208,9 +201,17 @@ export class DrugFormComponent implements OnInit {
   generalDrugs: any[] = [];
   generalDrugOptions: AutocompleteOption[] = [];
   statusOptions: AutocompleteOption[] = [
-    { value: 'active', label: 'Active' },
-    { value: 'inactive', label: 'Inactive' },
-    { value: 'out_of_stock', label: 'Out of Stock' }
+    { value: 'active', label: 'common.active' },
+    { value: 'inactive', label: 'common.inactive' },
+    { value: 'out_of_stock', label: 'form.drug.outOfStock' }
+  ];
+  classificationOptions: Array<{ value: any; label: string }> = [
+    { value: 'medicinal', label: 'drug.classification.medicinal' },
+    { value: 'cosmetic', label: 'drug.classification.cosmetic' }
+  ];
+  originOptions: Array<{ value: any; label: string }> = [
+    { value: 'local', label: 'drug.origin.local' },
+    { value: 'imported', label: 'drug.origin.imported' }
   ];
 
   ngOnInit(): void {
@@ -268,7 +269,7 @@ export class DrugFormComponent implements OnInit {
         }
       },
       error: () => {
-        this.errorMessage = 'Failed to load drug data';
+        this.errorMessage = 'error.loadDrug';
       }
     });
   }
@@ -302,7 +303,7 @@ export class DrugFormComponent implements OnInit {
           this.router.navigate(['/drugs']);
         },
         error: (error) => {
-          this.errorMessage = error.message || 'An error occurred while saving the drug';
+          this.errorMessage = error.message || 'error.saveDrug';
           this.loading = false;
         }
       });

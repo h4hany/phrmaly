@@ -32,10 +32,18 @@ export class RbacService {
   private permissionContext$ = this.permissionContextSubject.asObservable();
 
   constructor() {
-    // Load permission context on initialization
-    this.loadPermissionContext();
+    // Load permission context immediately if user is already logged in
+    // This prevents race conditions with route guards
+    const currentUser = this.authService.getCurrentUser();
+    if (currentUser) {
+      // Load synchronously for already-logged-in users (mock data only)
+      const context = this.authService.getPermissionContextSync();
+      if (context) {
+        this.permissionContextSubject.next(context);
+      }
+    }
     
-    // Reload when user changes (for role switching)
+    // Reload when user changes (for role switching or new logins)
     this.authService.currentUser$.subscribe(() => {
       this.loadPermissionContext();
     });
@@ -84,9 +92,20 @@ export class RbacService {
    * Supports wildcard routes (e.g., /patients/:id)
    */
   canAccessRoute(path: string): boolean {
-    const context = this.getPermissionContext();
+    let context = this.getPermissionContext();
+    
+    // If context not loaded yet, try to load it synchronously (for mock data)
+    // This prevents race conditions where guard checks before async load completes
     if (!context) {
-      return false;
+      const syncContext = this.authService.getPermissionContextSync();
+      if (syncContext) {
+        // Update the subject so future checks use it
+        this.permissionContextSubject.next(syncContext);
+        context = syncContext;
+      } else {
+        // If still no context, deny access (shouldn't happen with mock data)
+        return false;
+      }
     }
 
     // Normalize path (remove query params and trailing slashes)

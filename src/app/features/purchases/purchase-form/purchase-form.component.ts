@@ -1,15 +1,15 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { PurchasesService } from '../../../core/services/purchases.service';
 import { SuppliersService } from '../../../core/services/suppliers.service';
 import { DrugsService } from '../../../core/services/drugs.service';
-import { FormWrapperComponent } from '../../../shared/components/form-wrapper/form-wrapper.component';
-import { ButtonComponent } from '../../../shared/components/button/button.component';
-import { AlertComponent } from '../../../shared/components/alert/alert.component';
+import { ModernFormWrapperComponent } from '../../../shared/components/modern-form-wrapper/modern-form-wrapper.component';
+import { FormSectionComponent } from '../../../shared/components/form-section/form-section.component';
 import { TextInputComponent } from '../../../shared/components/input/text-input.component';
 import { AutocompleteInputComponent, AutocompleteOption } from '../../../shared/components/input/autocomplete-input.component';
+import { TranslatePipe } from '../../../core/pipes/translate.pipe';
 
 @Component({
   selector: 'app-purchase-form',
@@ -17,82 +17,90 @@ import { AutocompleteInputComponent, AutocompleteOption } from '../../../shared/
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    FormWrapperComponent,
-    ButtonComponent,
-    AlertComponent,
+    FormsModule,
+    ModernFormWrapperComponent,
+    FormSectionComponent,
     TextInputComponent,
-    AutocompleteInputComponent
+    AutocompleteInputComponent,
+    TranslatePipe
   ],
   template: `
-    <app-form-wrapper [title]="isEdit ? 'Edit Purchase Invoice' : 'Add New Purchase Invoice'">
-      @if (errorMessage) {
-        <app-alert type="error" [title]="errorMessage" />
-      }
+    <app-modern-form-wrapper
+      [title]="(isEdit ? 'form.editPurchase' : 'form.addPurchase')"
+      [description]="(isEdit ? 'form.editPurchaseDescription' : 'form.addPurchaseDescription')"
+      [errorMessage]="errorMessage"
+    >
+      <form [formGroup]="purchaseForm" (ngSubmit)="onSubmit()" class="p-8">
+        <!-- Purchase Information Section -->
+        <app-form-section [title]="'purchase.basicInfo'">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <app-text-input
+                type="text"
+                formControlName="invoiceNumber"
+                [label]="'form.purchase.invoiceNumber'"
+                [required]="true"
+                prefixIcon="receipt"
+              ></app-text-input>
+            </div>
 
-      <form [formGroup]="purchaseForm" (ngSubmit)="onSubmit()" class="space-y-6">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <app-text-input
-              type="text"
-              formControlName="invoiceNumber"
-              label="Invoice Number"
-              [required]="true"
-              prefixIcon="receipt"
-            ></app-text-input>
+            <div>
+              <app-autocomplete-input
+                formControlName="supplierId"
+                [label]="'form.purchase.supplier'"
+                [required]="true"
+                [options]="supplierOptions"
+                [placeholder]="'form.selectSupplier'"
+                prefixIcon="factory"
+              ></app-autocomplete-input>
+            </div>
+
+            <div>
+              <app-text-input
+                type="date"
+                formControlName="purchaseDate"
+                [label]="'form.purchase.purchaseDate'"
+                [required]="true"
+                prefixIcon="calendar"
+              ></app-text-input>
+            </div>
+
+            <div>
+              <app-text-input
+                type="date"
+                formControlName="dueDate"
+                [label]="'form.purchase.dueDate'"
+                prefixIcon="calendar"
+              ></app-text-input>
+            </div>
           </div>
+        </app-form-section>
 
-          <div>
-            <app-autocomplete-input
-              formControlName="supplierId"
-              label="Supplier"
-              [required]="true"
-              [options]="supplierOptions"
-              placeholder="Select Supplier"
-              prefixIcon="factory"
-            ></app-autocomplete-input>
-          </div>
-
-          <div>
-            <app-text-input
-              type="date"
-              formControlName="purchaseDate"
-              label="Purchase Date"
-              [required]="true"
-              prefixIcon="calendar"
-            ></app-text-input>
-          </div>
-
-          <div>
-            <app-text-input
-              type="date"
-              formControlName="dueDate"
-              label="Due Date"
-              prefixIcon="calendar"
-            ></app-text-input>
-          </div>
-        </div>
-
-        <!-- Items -->
-        <div class="border-t pt-6">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-medium text-gray-900">Items</h3>
-            <app-button type="button" variant="outline" size="sm" (onClick)="addItem()">
-              <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <!-- Items Section -->
+        <app-form-section [title]="'purchase.items'">
+          <div class="flex items-center justify-between mb-6">
+            <h4 class="text-lg font-semibold text-gray-700">{{ 'form.purchase.addItems' | translate }}</h4>
+            <button
+              type="button"
+              (click)="addItem()"
+              class="px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 flex items-center gap-2"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
               </svg>
-              Add Item
-            </app-button>
+              {{ 'form.purchase.addItem' | translate }}
+            </button>
           </div>
 
           <div formArrayName="items" class="space-y-4">
             @for (item of itemsArray.controls; track $index; let i = $index) {
-              <div [formGroupName]="i" class="grid grid-cols-1 md:grid-cols-5 gap-4 p-4 bg-gray-50 rounded-[var(--radius-md)]">
+              <div [formGroupName]="i" class="grid grid-cols-1 md:grid-cols-5 gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
                 <div class="md:col-span-2">
                   <app-autocomplete-input
                     formControlName="drugId"
-                    label="Drug"
+                    [label]="'form.purchase.drug'"
                     [options]="drugOptions"
-                    placeholder="Select Drug"
+                    [placeholder]="'form.selectDrug'"
                     prefixIcon="medicine"
                   ></app-autocomplete-input>
                 </div>
@@ -100,7 +108,7 @@ import { AutocompleteInputComponent, AutocompleteOption } from '../../../shared/
                   <app-text-input
                     type="number"
                     formControlName="quantity"
-                    label="Quantity"
+                    [label]="'form.purchase.quantity'"
                     [min]="1"
                     prefixIcon="package"
                   ></app-text-input>
@@ -109,45 +117,43 @@ import { AutocompleteInputComponent, AutocompleteOption } from '../../../shared/
                   <app-text-input
                     type="number"
                     formControlName="unitCost"
-                    label="Unit Cost"
+                    [label]="'form.purchase.unitCost'"
                     [step]="0.01"
                     [min]="0"
                     prefixIcon="currency-dollar"
                   ></app-text-input>
                 </div>
                 <div class="flex items-end">
-                  <app-button
+                  <button
                     type="button"
-                    variant="ghost"
-                    size="sm"
-                    (onClick)="removeItem(i)"
+                    (click)="removeItem(i)"
+                    class="w-full px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
                   >
-                    <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
-                  </app-button>
+                  </button>
                 </div>
               </div>
             }
           </div>
 
-          <div class="mt-4 p-4 bg-gray-50 rounded-[var(--radius-md)]">
+          <div class="mt-6 p-4 bg-gray-50 rounded-xl border border-gray-200">
             <div class="flex justify-between items-center">
-              <span class="text-lg font-semibold text-gray-900">Total Amount:</span>
+              <span class="text-lg font-semibold text-gray-900">{{ 'form.purchase.totalAmount' | translate }}:</span>
               <span class="text-lg font-bold text-gray-900">{{ formattedTotalAmount }}</span>
             </div>
           </div>
-        </div>
+        </app-form-section>
 
-        <!-- Payment Info -->
-        <div class="border-t pt-6">
-          <h3 class="text-lg font-medium text-gray-900 mb-4">Payment Information</h3>
+        <!-- Payment Information Section -->
+        <app-form-section [title]="'purchase.paymentInfo'">
           <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
               <app-text-input
                 type="number"
                 formControlName="paidAmount"
-                label="Paid Amount"
+                [label]="'form.purchase.paidAmount'"
                 [step]="0.01"
                 [min]="0"
                 prefixIcon="currency-dollar"
@@ -156,37 +162,52 @@ import { AutocompleteInputComponent, AutocompleteOption } from '../../../shared/
             <div>
               <app-autocomplete-input
                 formControlName="paymentStatus"
-                label="Payment Status"
+                [label]="'form.purchase.paymentStatus'"
                 [options]="paymentStatusOptions"
-                placeholder="Select payment status"
+                [placeholder]="'form.selectPaymentStatus'"
                 prefixIcon="check-circle"
               ></app-autocomplete-input>
             </div>
-            <div class="flex items-end">
-              <div class="w-full p-3 bg-gray-50 rounded-[var(--radius-md)]">
-                <div class="text-sm text-gray-600">Remaining Amount</div>
+            <div>
+              <div class="w-full p-4 bg-gray-50 rounded-xl border border-gray-200">
+                <div class="text-sm text-gray-600 mb-1">{{ 'form.purchase.remainingAmount' | translate }}</div>
                 <div class="text-lg font-semibold text-gray-900">{{ formattedRemainingAmount }}</div>
               </div>
             </div>
           </div>
-        </div>
+        </app-form-section>
 
         <!-- Form Actions -->
-        <div class="flex items-center justify-end gap-4 pt-6 border-t">
-          <app-button type="button" variant="outline" (onClick)="onCancel()">
-            Cancel
-          </app-button>
-          <app-button
-            type="submit"
-            variant="primary"
-            [loading]="loading"
-            [disabled]="purchaseForm.invalid || itemsArray.length === 0"
+        <div class="flex items-center justify-end gap-4 pt-8 border-t-2 border-gray-100">
+          <button
+            type="button"
+            (click)="onCancel()"
+            class="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 hover:border-gray-400 transition-all duration-200"
           >
-            {{ isEdit ? 'Update' : 'Create' }} Purchase
-          </app-button>
+            {{ 'common.cancel' | translate }}
+          </button>
+          <button
+            type="submit"
+            [disabled]="purchaseForm.invalid || itemsArray.length === 0 || loading"
+            class="px-6 py-3 rounded-xl font-semibold hover:shadow-xl hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-none transition-all duration-200 flex items-center gap-2"
+            [style.background]="'var(--primary-bg)'"
+            [style.color]="'var(--primary-text)'"
+          >
+            @if (loading) {
+              <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            } @else {
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+            }
+            {{ (isEdit ? 'form.updatePurchase' : 'form.createPurchase') | translate }}
+          </button>
         </div>
       </form>
-    </app-form-wrapper>
+    </app-modern-form-wrapper>
   `,
   styles: []
 })
@@ -208,9 +229,9 @@ export class PurchaseFormComponent implements OnInit {
   supplierOptions: AutocompleteOption[] = [];
   drugOptions: AutocompleteOption[] = [];
   paymentStatusOptions: AutocompleteOption[] = [
-    { value: 'pending', label: 'Pending' },
-    { value: 'partial', label: 'Partial' },
-    { value: 'paid', label: 'Paid' }
+    { value: 'pending', label: 'payment.pending' },
+    { value: 'partial', label: 'payment.partial' },
+    { value: 'paid', label: 'payment.paid' }
   ];
 
   get itemsArray(): FormArray {
@@ -302,7 +323,7 @@ export class PurchaseFormComponent implements OnInit {
         }
       },
       error: () => {
-        this.errorMessage = 'Failed to load purchase invoice';
+        this.errorMessage = 'error.loadPurchase';
       }
     });
   }
@@ -364,7 +385,7 @@ export class PurchaseFormComponent implements OnInit {
           this.router.navigate(['/purchases']);
         },
         error: (error) => {
-          this.errorMessage = error.message || 'An error occurred while saving';
+          this.errorMessage = error.message || 'error.savePurchase';
           this.loading = false;
         }
       });

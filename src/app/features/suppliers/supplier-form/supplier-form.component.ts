@@ -1,14 +1,14 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { SuppliersService } from '../../../core/services/suppliers.service';
-import { FormWrapperComponent } from '../../../shared/components/form-wrapper/form-wrapper.component';
-import { ButtonComponent } from '../../../shared/components/button/button.component';
-import { AlertComponent } from '../../../shared/components/alert/alert.component';
+import { ModernFormWrapperComponent } from '../../../shared/components/modern-form-wrapper/modern-form-wrapper.component';
+import { FormSectionComponent } from '../../../shared/components/form-section/form-section.component';
 import { TextInputComponent } from '../../../shared/components/input/text-input.component';
 import { TextareaInputComponent } from '../../../shared/components/input/textarea-input.component';
 import { AutocompleteInputComponent, AutocompleteOption } from '../../../shared/components/input/autocomplete-input.component';
+import { TranslatePipe } from '../../../core/pipes/translate.pipe';
 
 @Component({
   selector: 'app-supplier-form',
@@ -16,110 +16,133 @@ import { AutocompleteInputComponent, AutocompleteOption } from '../../../shared/
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    FormWrapperComponent,
-    ButtonComponent,
-    AlertComponent,
+    FormsModule,
+    ModernFormWrapperComponent,
+    FormSectionComponent,
     TextInputComponent,
     TextareaInputComponent,
-    AutocompleteInputComponent
+    AutocompleteInputComponent,
+    TranslatePipe
   ],
   template: `
-    <app-form-wrapper [title]="isEdit ? 'Edit Supplier' : 'Add New Supplier'">
-      @if (errorMessage) {
-        <app-alert type="error" [title]="errorMessage" />
-      }
+    <app-modern-form-wrapper
+      [title]="(isEdit ? 'form.editSupplier' : 'form.addSupplier')"
+      [description]="(isEdit ? 'form.editSupplierDescription' : 'form.addSupplierDescription')"
+      [errorMessage]="errorMessage"
+    >
+      <form [formGroup]="supplierForm" (ngSubmit)="onSubmit()" class="p-8">
+        <!-- Basic Information Section -->
+        <app-form-section [title]="'supplier.basicInfo'">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <app-text-input
+                type="text"
+                formControlName="name"
+                [label]="'form.supplier.name'"
+                [required]="true"
+                [hasError]="!!(supplierForm.get('name')?.invalid && supplierForm.get('name')?.touched)"
+                [errorMessage]="(supplierForm.get('name')?.invalid && supplierForm.get('name')?.touched) ? 'validation.nameRequired' : undefined"
+                prefixIcon="tag"
+              ></app-text-input>
+            </div>
 
-      <form [formGroup]="supplierForm" (ngSubmit)="onSubmit()" class="space-y-6">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <app-autocomplete-input
+                formControlName="type"
+                [label]="'form.supplier.type'"
+                [required]="true"
+                [options]="typeOptions"
+                [placeholder]="'form.selectType'"
+                prefixIcon="factory"
+                [hasError]="!!(supplierForm.get('type')?.invalid && supplierForm.get('type')?.touched)"
+                [errorMessage]="(supplierForm.get('type')?.invalid && supplierForm.get('type')?.touched) ? 'validation.typeRequired' : undefined"
+              ></app-autocomplete-input>
+            </div>
+
+            <div>
+              <app-text-input
+                type="tel"
+                formControlName="phone"
+                [label]="'patient.phone'"
+                prefixIcon="phone"
+              ></app-text-input>
+            </div>
+
+            <div>
+              <app-text-input
+                type="email"
+                formControlName="email"
+                [label]="'patient.email'"
+                [hasError]="!!(supplierForm.get('email')?.invalid && supplierForm.get('email')?.touched)"
+                [errorMessage]="(supplierForm.get('email')?.invalid && supplierForm.get('email')?.touched) ? 'validation.emailInvalid' : undefined"
+                prefixIcon="mail"
+              ></app-text-input>
+            </div>
+
+            <div class="md:col-span-2">
+              <app-text-input
+                type="text"
+                formControlName="address"
+                [label]="'form.supplier.address'"
+                prefixIcon="map-pin"
+              ></app-text-input>
+            </div>
+
+            <div class="md:col-span-2">
+              <app-autocomplete-input
+                formControlName="status"
+                [label]="'drug.status'"
+                [options]="statusOptions"
+                [placeholder]="'form.selectStatus'"
+                prefixIcon="check-circle"
+              ></app-autocomplete-input>
+            </div>
+          </div>
+        </app-form-section>
+
+        <!-- Notes Section -->
+        <app-form-section [title]="'form.supplier.notes'">
           <div>
-            <app-text-input
-              type="text"
-              formControlName="name"
-              label="Name"
-              [required]="true"
-              [hasError]="!!(supplierForm.get('name')?.invalid && supplierForm.get('name')?.touched)"
-              [errorMessage]="(supplierForm.get('name')?.invalid && supplierForm.get('name')?.touched) ? 'Name is required' : undefined"
-              prefixIcon="tag"
-            ></app-text-input>
-          </div>
-
-          <div>
-            <app-autocomplete-input
-              formControlName="type"
-              label="Type"
-              [required]="true"
-              [options]="typeOptions"
-              placeholder="Select Type"
-              prefixIcon="factory"
-              [hasError]="!!(supplierForm.get('type')?.invalid && supplierForm.get('type')?.touched)"
-              [errorMessage]="(supplierForm.get('type')?.invalid && supplierForm.get('type')?.touched) ? 'Type is required' : undefined"
-            ></app-autocomplete-input>
-          </div>
-
-          <div>
-            <app-text-input
-              type="tel"
-              formControlName="phone"
-              label="Phone"
-              prefixIcon="phone"
-            ></app-text-input>
-          </div>
-
-          <div>
-            <app-text-input
-              type="email"
-              formControlName="email"
-              label="Email"
-              [hasError]="!!(supplierForm.get('email')?.invalid && supplierForm.get('email')?.touched)"
-              [errorMessage]="(supplierForm.get('email')?.invalid && supplierForm.get('email')?.touched) ? 'Please enter a valid email' : undefined"
-              prefixIcon="mail"
-            ></app-text-input>
-          </div>
-
-          <div class="md:col-span-2">
-            <app-text-input
-              type="text"
-              formControlName="address"
-              label="Address"
-              prefixIcon="map-pin"
-            ></app-text-input>
-          </div>
-
-          <div class="md:col-span-2">
-            <app-autocomplete-input
-              formControlName="status"
-              label="Status"
-              [options]="statusOptions"
-              placeholder="Select status"
-              prefixIcon="check-circle"
-            ></app-autocomplete-input>
-          </div>
-
-          <div class="md:col-span-2">
             <app-textarea-input
               formControlName="notes"
-              label="Notes"
+              [label]="'form.supplier.notes'"
               [rows]="3"
               prefixIcon="document-text"
             ></app-textarea-input>
           </div>
-        </div>
+        </app-form-section>
 
-        <div class="flex items-center justify-end gap-4 pt-6 border-t">
-          <app-button type="button" variant="outline" (onClick)="onCancel()">
-            Cancel
-          </app-button>
-          <app-button
-            type="submit"
-            variant="primary"
-            [loading]="loading"
-            [disabled]="supplierForm.invalid"
+        <!-- Form Actions -->
+        <div class="flex items-center justify-end gap-4 pt-8 border-t-2 border-gray-100">
+          <button
+            type="button"
+            (click)="onCancel()"
+            class="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 hover:border-gray-400 transition-all duration-200"
           >
-            {{ isEdit ? 'Update' : 'Create' }} Supplier
-          </app-button>
+            {{ 'common.cancel' | translate }}
+          </button>
+          <button
+            type="submit"
+            [disabled]="supplierForm.invalid || loading"
+            class="px-6 py-3 rounded-xl font-semibold hover:shadow-xl hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-none transition-all duration-200 flex items-center gap-2"
+            [style.background]="'var(--primary-bg)'"
+            [style.color]="'var(--primary-text)'"
+          >
+            @if (loading) {
+              <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            } @else {
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+            }
+            {{ (isEdit ? 'form.updateSupplier' : 'form.createSupplier') | translate }}
+          </button>
         </div>
       </form>
-    </app-form-wrapper>
+    </app-modern-form-wrapper>
   `,
   styles: []
 })
@@ -135,12 +158,12 @@ export class SupplierFormComponent implements OnInit {
   isEdit = false;
   supplierId: string | null = null;
   typeOptions: AutocompleteOption[] = [
-    { value: 'manufacturer', label: 'Manufacturer' },
-    { value: 'warehouse', label: 'Warehouse' }
+    { value: 'manufacturer', label: 'button.manufacturer' },
+    { value: 'warehouse', label: 'button.warehouse' }
   ];
   statusOptions: AutocompleteOption[] = [
-    { value: 'active', label: 'Active' },
-    { value: 'inactive', label: 'Inactive' }
+    { value: 'active', label: 'common.active' },
+    { value: 'inactive', label: 'common.inactive' }
   ];
 
   ngOnInit(): void {
@@ -170,7 +193,7 @@ export class SupplierFormComponent implements OnInit {
         }
       },
       error: () => {
-        this.errorMessage = 'Failed to load supplier data';
+        this.errorMessage = 'error.loadSupplier';
       }
     });
   }
@@ -189,7 +212,7 @@ export class SupplierFormComponent implements OnInit {
           this.router.navigate(['/suppliers']);
         },
         error: (error) => {
-          this.errorMessage = error.message || 'An error occurred while saving the supplier';
+          this.errorMessage = error.message || 'error.saveSupplier';
           this.loading = false;
         }
       });
@@ -204,12 +227,3 @@ export class SupplierFormComponent implements OnInit {
     this.router.navigate(['/suppliers']);
   }
 }
-
-
-
-
-
-
-
-
-

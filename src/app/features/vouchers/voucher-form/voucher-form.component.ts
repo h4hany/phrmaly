@@ -1,160 +1,188 @@
 import { Component, inject, OnInit, HostListener, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { VouchersService } from '../../../core/services/vouchers.service';
 import { PatientsService } from '../../../core/services/patients.service';
 import { PharmacyContextService } from '../../../core/services/pharmacy-context.service';
 import { Voucher } from '../../../core/models/voucher.model';
 import { Patient } from '../../../core/models/patient.model';
-import { AlertComponent } from '../../../shared/components/alert/alert.component';
+import { ModernFormWrapperComponent } from '../../../shared/components/modern-form-wrapper/modern-form-wrapper.component';
+import { FormSectionComponent } from '../../../shared/components/form-section/form-section.component';
 import { TranslatePipe } from '../../../core/pipes/translate.pipe';
-import { CanAccessDirective } from '../../../shared/directives/can-access.directive';
 import { VoucherCardComponent } from '../../invoices/invoice-form/voucher-card.component';
-import { ButtonComponent } from '../../../shared/components/button/button.component';
 
 @Component({
   selector: 'app-voucher-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, AlertComponent, TranslatePipe, VoucherCardComponent, ButtonComponent],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    FormsModule,
+    ModernFormWrapperComponent,
+    FormSectionComponent,
+    TranslatePipe,
+    VoucherCardComponent
+  ],
   template: `
-    <div class="space-y-6">
-      @if (errorMessage) {
-        <app-alert type="error" [title]="errorMessage" />
-      }
-
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Form Section -->
-        <div class="bg-[var(--card-bg)] rounded-[var(--radius-lg)] shadow-[var(--shadow-sm)] p-6">
-          <h1 class="text-2xl font-bold text-[var(--text-primary)] mb-6">
-            {{ isEdit ? ('voucher.edit' | translate) : ('voucher.create' | translate) }}
-          </h1>
-
-          <form [formGroup]="voucherForm" (ngSubmit)="onSubmit()" class="space-y-6">
-          <!-- Patient Selection -->
+    <app-modern-form-wrapper
+      [title]="(isEdit ? 'voucher.edit' : 'voucher.create')"
+      [description]="(isEdit ? 'form.editVoucherDescription' : 'form.addVoucherDescription')"
+      [errorMessage]="errorMessage"
+    >
+      <div class="p-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <!-- Form Section -->
           <div>
-            <label class="block text-sm font-medium text-[var(--card-text)] mb-2">
-              {{ 'voucher.patient' | translate }} <span class="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              formControlName="patientInput"
-              [placeholder]="'voucher.selectPatient' | translate"
-              (input)="onPatientInput($event)"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]"
-              [class.border-red-500]="voucherForm.get('patientId')?.invalid && voucherForm.get('patientId')?.touched"
-            />
-            @if (showPatientDropdown && filteredPatients.length > 0) {
-              <div class="patient-dropdown-container mt-2 border border-gray-300 rounded-lg bg-white shadow-lg max-h-60 overflow-y-auto">
-                @for (patient of filteredPatients; track patient.id) {
-                  <div
-                    class="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                    (click)="selectPatient(patient)"
-                  >
-                    {{ patient.fullName }} - {{ patient.phone }}
+            <form [formGroup]="voucherForm" (ngSubmit)="onSubmit()" class="space-y-6">
+              <!-- Patient Selection Section -->
+              <app-form-section [title]="'voucher.patientInfo'">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    {{ 'voucher.patient' | translate }} <span class="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    formControlName="patientInput"
+                    [placeholder]="'voucher.selectPatient' | translate"
+                    (input)="onPatientInput($event)"
+                    class="w-full px-4 py-3.5 pl-12 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)] focus:border-[var(--primary-color)] transition-all duration-200"
+                    [class.border-red-500]="voucherForm.get('patientId')?.invalid && voucherForm.get('patientId')?.touched"
+                  />
+                  @if (showPatientDropdown && filteredPatients.length > 0) {
+                    <div class="patient-dropdown-container mt-2 border-2 border-gray-200 rounded-xl bg-white shadow-xl max-h-60 overflow-y-auto">
+                      @for (patient of filteredPatients; track patient.id) {
+                        <div
+                          class="px-4 py-3 hover:bg-gray-100 cursor-pointer transition-colors duration-200"
+                          (click)="selectPatient(patient)"
+                        >
+                          {{ patient.fullName }} - {{ patient.phone }}
+                        </div>
+                      }
+                    </div>
+                  }
+                  @if (voucherForm.get('patientId')?.invalid && voucherForm.get('patientId')?.touched) {
+                    <p class="mt-1 text-sm text-red-500">{{ 'voucher.patientRequired' | translate }}</p>
+                  }
+                </div>
+              </app-form-section>
+
+              <!-- Voucher Details Section -->
+              <app-form-section [title]="'voucher.details'">
+                <div class="space-y-6">
+                  <!-- Voucher Name -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                      {{ 'voucher.name' | translate }} <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      formControlName="voucherName"
+                      [placeholder]="'voucher.namePlaceholder' | translate"
+                      [disabled]="true"
+                      class="w-full px-4 py-3.5 pl-12 border-2 border-gray-200 rounded-xl bg-gray-100 cursor-not-allowed"
+                    />
+                    <p class="mt-1 text-xs text-gray-500">{{ 'voucher.nameAutoGenerated' | translate }}</p>
+                  </div>
+
+                  <!-- Amount -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                      {{ 'voucher.amount' | translate }} <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      formControlName="amount"
+                      step="0.01"
+                      min="0"
+                      [placeholder]="'voucher.amountPlaceholder' | translate"
+                      class="w-full px-4 py-3.5 pl-12 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)] focus:border-[var(--primary-color)] transition-all duration-200"
+                      [class.border-red-500]="voucherForm.get('amount')?.invalid && voucherForm.get('amount')?.touched"
+                    />
+                    @if (voucherForm.get('amount')?.invalid && voucherForm.get('amount')?.touched) {
+                      <p class="mt-1 text-sm text-red-500">{{ 'voucher.amountRequired' | translate }}</p>
+                    }
+                  </div>
+
+                  <!-- Valid Until -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                      {{ 'voucher.validUntil' | translate }} <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="date"
+                      formControlName="validUntil"
+                      class="w-full px-4 py-3.5 pl-12 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)] focus:border-[var(--primary-color)] transition-all duration-200"
+                      [class.border-red-500]="voucherForm.get('validUntil')?.invalid && voucherForm.get('validUntil')?.touched"
+                    />
+                    @if (voucherForm.get('validUntil')?.invalid && voucherForm.get('validUntil')?.touched) {
+                      <p class="mt-1 text-sm text-red-500">{{ 'voucher.validUntilRequired' | translate }}</p>
+                    }
+                  </div>
+                </div>
+              </app-form-section>
+
+              <!-- Form Actions -->
+              <div class="flex items-center justify-end gap-4 pt-8 border-t-2 border-gray-100">
+                <button
+                  type="button"
+                  (click)="onCancel()"
+                  class="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 hover:border-gray-400 transition-all duration-200"
+                >
+                  {{ 'common.cancel' | translate }}
+                </button>
+                <button
+                  type="submit"
+                  [disabled]="voucherForm.invalid || loading"
+                  class="px-6 py-3 rounded-xl font-semibold hover:shadow-xl hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-none transition-all duration-200 flex items-center gap-2"
+                  [style.background]="'var(--primary-bg)'"
+                  [style.color]="'var(--primary-text)'"
+                >
+                  @if (loading) {
+                    <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  } @else {
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                  }
+                  {{ (isEdit ? 'common.update' : 'common.create') | translate }}
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Voucher Card Preview -->
+          <div>
+            <div class="sticky top-8">
+              <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-6">
+                <h2 class="text-xl font-bold text-gray-900 mb-6">{{ 'voucher.preview' | translate }}</h2>
+                @if (previewVoucher) {
+                  <div class="flex justify-center">
+                    <app-voucher-card
+                      [voucher]="previewVoucher"
+                      [averageDiscountPercentage]="0"
+                    ></app-voucher-card>
+                  </div>
+                } @else {
+                  <div class="flex items-center justify-center h-full min-h-[600px] text-gray-400">
+                    <div class="text-center">
+                      <svg class="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                      <p>{{ 'voucher.fillFormToPreview' | translate }}</p>
+                    </div>
                   </div>
                 }
               </div>
-            }
-            @if (voucherForm.get('patientId')?.invalid && voucherForm.get('patientId')?.touched) {
-              <p class="mt-1 text-sm text-red-500">{{ 'voucher.patientRequired' | translate }}</p>
-            }
-          </div>
-
-          <!-- Voucher Name -->
-          <div>
-            <label class="block text-sm font-medium text-[var(--card-text)] mb-2">
-              {{ 'voucher.name' | translate }} <span class="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              formControlName="voucherName"
-              [placeholder]="'voucher.namePlaceholder' | translate"
-              [disabled]="true"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
-            />
-            <p class="mt-1 text-xs text-gray-500">{{ 'voucher.nameAutoGenerated' | translate }}</p>
-          </div>
-
-          <!-- Amount -->
-          <div>
-            <label class="block text-sm font-medium text-[var(--card-text)] mb-2">
-              {{ 'voucher.amount' | translate }} <span class="text-red-500">*</span>
-            </label>
-            <input
-              type="number"
-              formControlName="amount"
-              step="0.01"
-              min="0"
-              [placeholder]="'voucher.amountPlaceholder' | translate"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]"
-              [class.border-red-500]="voucherForm.get('amount')?.invalid && voucherForm.get('amount')?.touched"
-            />
-            @if (voucherForm.get('amount')?.invalid && voucherForm.get('amount')?.touched) {
-              <p class="mt-1 text-sm text-red-500">{{ 'voucher.amountRequired' | translate }}</p>
-            }
-          </div>
-
-          <!-- Valid Until -->
-          <div>
-            <label class="block text-sm font-medium text-[var(--card-text)] mb-2">
-              {{ 'voucher.validUntil' | translate }} <span class="text-red-500">*</span>
-            </label>
-            <input
-              type="date"
-              formControlName="validUntil"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]"
-              [class.border-red-500]="voucherForm.get('validUntil')?.invalid && voucherForm.get('validUntil')?.touched"
-            />
-            @if (voucherForm.get('validUntil')?.invalid && voucherForm.get('validUntil')?.touched) {
-              <p class="mt-1 text-sm text-red-500">{{ 'voucher.validUntilRequired' | translate }}</p>
-            }
-          </div>
-
-          <!-- Form Actions -->
-          <div class="flex items-center justify-end gap-4 pt-6 border-t border-gray-200">
-            <app-button
-              type="button"
-              variant="outline"
-              (onClick)="onCancel()"
-            >
-              {{ 'common.cancel' | translate }}
-            </app-button>
-            <app-button
-              type="submit"
-              variant="primary"
-              [loading]="loading"
-              [disabled]="voucherForm.invalid"
-            >
-              {{ isEdit ? ('common.update' | translate) : ('common.create' | translate) }}
-            </app-button>
-          </div>
-        </form>
-      </div>
-
-      <!-- Voucher Card Preview -->
-      <div class="bg-[var(--card-bg)] rounded-[var(--radius-lg)] shadow-[var(--shadow-sm)] p-6">
-        <h2 class="text-xl font-bold text-[var(--text-primary)] mb-4">{{ 'voucher.preview' | translate }}</h2>
-        @if (previewVoucher) {
-          <div class="flex justify-center">
-            <app-voucher-card
-              [voucher]="previewVoucher"
-              [averageDiscountPercentage]="0"
-            ></app-voucher-card>
-          </div>
-        } @else {
-          <div class="flex items-center justify-center h-full min-h-[600px] text-gray-400">
-            <div class="text-center">
-              <svg class="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
-              <p>{{ 'voucher.fillFormToPreview' | translate }}</p>
             </div>
           </div>
-        }
+        </div>
       </div>
-    </div>
+    </app-modern-form-wrapper>
   `,
   styles: []
 })
@@ -328,7 +356,7 @@ export class VoucherFormComponent implements OnInit {
         }
       },
       error: () => {
-        this.errorMessage = 'Failed to load voucher';
+        this.errorMessage = 'error.loadVoucher';
       }
     });
   }
@@ -371,7 +399,7 @@ export class VoucherFormComponent implements OnInit {
       const patient = this.patients.find(p => p.id === formValue.patientId);
 
       if (!pharmacy || !patient) {
-        this.errorMessage = 'Pharmacy or patient not found';
+        this.errorMessage = 'error.pharmacyOrPatientNotFound';
         this.loading = false;
         return;
       }
@@ -397,7 +425,7 @@ export class VoucherFormComponent implements OnInit {
           this.router.navigate(['/vouchers']);
         },
         error: (error) => {
-          this.errorMessage = error.message || 'An error occurred while saving';
+          this.errorMessage = error.message || 'error.saveVoucher';
           this.loading = false;
         }
       });
@@ -420,4 +448,3 @@ export class VoucherFormComponent implements OnInit {
     }
   }
 }
-

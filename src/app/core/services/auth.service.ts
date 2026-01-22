@@ -54,7 +54,7 @@ export class AuthService {
       id: '2',
       email: 'manager@pharmly.com',
       username: 'manager',
-      password: 'password',
+      password: '',
       role: UserRole.PHARMACY_MANAGER,
       fullName: 'John Manager',
       pharmacyId: 'ph1'
@@ -122,9 +122,10 @@ export class AuthService {
 
   login(identifier: string, password: string): Observable<User> {
     // Mock login - check email, username, or phone
+    // For users with empty password, allow login without password check
     const user = this.mockUsers.find(u =>
       (u.email === identifier || u.username === identifier || u.phone === identifier) &&
-      u.password === password
+      (u.password === '' || u.password === password)
     );
 
     if (user) {
@@ -167,6 +168,9 @@ export class AuthService {
    * Get permission context for the current user
    * In production, this would call the backend API
    * For now, returns mock data based on user role
+   *
+   * Note: Using immediate return (no delay) to prevent race conditions
+   * with route guards checking permissions before context is loaded
    */
   getPermissionContext(): Observable<PermissionContext> {
     const user = this.getCurrentUser();
@@ -179,8 +183,25 @@ export class AuthService {
     }
 
     // Mock permission context based on role
+    // Return immediately (no delay) to ensure guards have context when checking
     const context = this.getMockPermissionContext(user.role);
-    return of(context).pipe(delay(300)); // Simulate API call
+    return of(context);
+  }
+
+  /**
+   * Get permission context synchronously (for immediate access)
+   * Used by RbacService to avoid race conditions
+   */
+  getPermissionContextSync(): PermissionContext | null {
+    const user = this.getCurrentUser();
+    if (!user) {
+      return {
+        permissions: [],
+        modules: [],
+        limits: { maxUsers: 0, maxPharmacies: 0 }
+      };
+    }
+    return this.getMockPermissionContext(user.role);
   }
 
   /**
@@ -229,17 +250,17 @@ export class AuthService {
       case UserRole.PHARMACY_MANAGER:
         return {
           permissions: [
-            // Patients (limited)
+            // Patients (limited access - can view but with restrictions on tabs/features)
             'patients.view',
-            // Staff (limited)
+            // Staff (limited access - can view details only, not performance/risk/activity)
             'staff.view', 'staff.details.view',
-            // Attendance
-            'attendance.view',
-            // Drugs
+            // Attendance (can view attendance)
+            'invoices.view', 'invoices.create', 'invoices.actions',
+            // Drugs (home screen for manager)
             'drugs.view', 'drugs.create',
-            // Inventory (limited)
-            'inventory.alerts.view',
-            // Settings (limited)
+            // Inventory (limited - only alerts and requested products)
+            'inventory.alerts.view', 'inventory.requested.view',
+            // Settings (can view but NOT Account Information tab)
             'settings.view',
             // Vouchers
             'vouchers.view', 'vouchers.create', 'vouchers.edit', 'vouchers.actions',
