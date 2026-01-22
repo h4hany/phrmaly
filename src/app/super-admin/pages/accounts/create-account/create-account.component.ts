@@ -28,6 +28,17 @@ interface PharmacyFormData {
   };
 }
 
+interface Module {
+  id: string;
+  name: string;
+  nameKey: string;
+  description: string;
+  descriptionKey: string;
+  capabilities: string[];
+  capabilitiesKey: string;
+  pricePerMonth: number;
+}
+
 @Component({
   selector: 'app-create-account',
   standalone: true,
@@ -98,8 +109,52 @@ interface PharmacyFormData {
           </div>
         }
 
-        <!-- Step 2: Account Information -->
+        <!-- Step 2: Select Modules -->
         @if (currentStep === 2) {
+          <div class="p-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+              @for (module of modules; track module.id) {
+                <app-selectable-card
+                  [selected]="isModuleSelected(module)"
+                  (cardClick)="toggleModule(module)"
+                >
+                  <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-bold text-gray-900">{{ module.nameKey | translate }}</h3>
+                  </div>
+                  <p class="text-gray-600 mb-4">{{ module.descriptionKey | translate }}</p>
+                  <div class="space-y-2 mb-4">
+                    @for (capability of module.capabilities; track capability) {
+                      <div class="flex items-center text-sm text-gray-700">
+                        <svg class="w-4 h-4 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                        {{ capability }}
+                      </div>
+                    }
+                  </div>
+                  <div class="text-2xl font-bold text-gray-900">
+                    {{ module.pricePerMonth }}<span class="text-sm font-normal text-gray-600">/{{ 'account.create.perMonth' | translate }}</span>
+                  </div>
+                </app-selectable-card>
+              }
+            </div>
+
+            <div class="flex items-center justify-end gap-4 pt-8 border-t-2 border-gray-100">
+              <app-button variant="outline" (onClick)="previousStep()">
+                {{ 'common.back' | translate }}
+              </app-button>
+              <app-button 
+                variant="primary" 
+                (onClick)="nextStep()"
+              >
+                {{ 'common.next' | translate }}
+              </app-button>
+            </div>
+          </div>
+        }
+
+        <!-- Step 3: Account Information -->
+        @if (currentStep === 3) {
           <div class="p-8">
             <form [formGroup]="accountForm" class="space-y-6">
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -174,8 +229,8 @@ interface PharmacyFormData {
           </div>
         }
 
-        <!-- Step 3: Add Pharmacies -->
-        @if (currentStep === 3) {
+        <!-- Step 4: Add Pharmacies -->
+        @if (currentStep === 4) {
           <div class="p-8">
             <div class="mb-6 flex items-center justify-between">
               <h3 class="text-xl font-bold text-gray-900">{{ 'account.create.pharmacies' | translate }}</h3>
@@ -320,8 +375,8 @@ interface PharmacyFormData {
           </div>
         }
 
-        <!-- Step 4: Preview -->
-        @if (currentStep === 4) {
+        <!-- Step 5: Preview -->
+        @if (currentStep === 5) {
           <div class="p-8">
             <div class="space-y-6">
               <!-- Plan Preview -->
@@ -339,6 +394,34 @@ interface PharmacyFormData {
                     </div>
                   </div>
                 }
+              </div>
+
+              <!-- Modules Preview -->
+              <div class="border-2 border-gray-200 rounded-xl p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">{{ 'account.create.selectedModules' | translate }} ({{ selectedModules.length }})</h3>
+                @if (selectedModules.length > 0) {
+                  <div class="space-y-3 mb-4">
+                    @for (module of selectedModules; track module.id) {
+                      <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div>
+                          <p class="font-semibold text-gray-900">{{ module.nameKey | translate }}</p>
+                          <p class="text-sm text-gray-600">{{ module.descriptionKey | translate }}</p>
+                        </div>
+                        <p class="text-lg font-bold text-gray-900">{{ module.pricePerMonth }}/{{ 'account.create.perMonth' | translate }}</p>
+                      </div>
+                    }
+                  </div>
+                } @else {
+                  <p class="text-gray-600">{{ 'account.create.noModulesSelected' | translate }}</p>
+                }
+              </div>
+
+              <!-- Total Price -->
+              <div class="border-2 border-gray-200 rounded-xl p-6 bg-gray-50">
+                <div class="flex items-center justify-between">
+                  <h3 class="text-lg font-semibold text-gray-900">{{ 'account.create.totalMonthlyPrice' | translate }}</h3>
+                  <p class="text-3xl font-bold text-gray-900">{{ getTotalMonthlyPrice() }}<span class="text-lg font-normal text-gray-600">/{{ 'account.create.perMonth' | translate }}</span></p>
+                </div>
               </div>
 
               <!-- Account Info Preview -->
@@ -422,7 +505,9 @@ export class CreateAccountComponent implements OnInit {
 
   currentStep = 1;
   selectedPlan: SubscriptionPlan | null = null;
+  selectedModules: Module[] = [];
   plans: SubscriptionPlan[] = [];
+  modules: Module[] = [];
   loading = false;
   errorMessage = '';
   contractFile: File | null = null;
@@ -440,8 +525,8 @@ export class CreateAccountComponent implements OnInit {
     },
     {
       number: 2,
-      title: 'account.create.wizard.step2',
-      subtitle: 'account.create.wizard.step2Subtitle',
+      title: 'account.create.wizard.step2Modules',
+      subtitle: 'account.create.wizard.step2ModulesSubtitle',
       completed: false
     },
     {
@@ -455,12 +540,19 @@ export class CreateAccountComponent implements OnInit {
       title: 'account.create.wizard.step4',
       subtitle: 'account.create.wizard.step4Subtitle',
       completed: false
+    },
+    {
+      number: 5,
+      title: 'account.create.wizard.step5',
+      subtitle: 'account.create.wizard.step5Subtitle',
+      completed: false
     }
   ];
 
   ngOnInit(): void {
     this.initializeForms();
     this.loadPlans();
+    this.initializeModules();
   }
 
   initializeForms(): void {
@@ -489,6 +581,198 @@ export class CreateAccountComponent implements OnInit {
         console.error('Error loading plans:', error);
       }
     });
+  }
+
+  initializeModules(): void {
+    this.modules = [
+      {
+        id: 'inventory',
+        name: 'Inventory',
+        nameKey: 'account.create.modules.inventory.name',
+        description: 'Comprehensive inventory management system with real-time tracking, stock alerts, and automated reordering.',
+        descriptionKey: 'account.create.modules.inventory.description',
+        capabilities: [
+          'Real-time stock tracking',
+          'Automated reorder points',
+          'Batch and expiry management',
+          'Multi-location inventory',
+          'Stock movement history'
+        ],
+        capabilitiesKey: 'account.create.modules.inventory.capabilities',
+        pricePerMonth: 150
+      },
+      {
+        id: 'hr',
+        name: 'HR & People',
+        nameKey: 'account.create.modules.hr.name',
+        description: 'Complete human resources management including employee records, scheduling, attendance, and payroll integration.',
+        descriptionKey: 'account.create.modules.hr.description',
+        capabilities: [
+          'Employee management',
+          'Shift scheduling',
+          'Attendance tracking',
+          'Payroll integration',
+          'Performance reviews'
+        ],
+        capabilitiesKey: 'account.create.modules.hr.capabilities',
+        pricePerMonth: 200
+      },
+      {
+        id: 'finance',
+        name: 'Finance',
+        nameKey: 'account.create.modules.finance.name',
+        description: 'Financial management tools for accounting, invoicing, payments, and comprehensive financial reporting.',
+        descriptionKey: 'account.create.modules.finance.description',
+        capabilities: [
+          'Accounting & bookkeeping',
+          'Invoice generation',
+          'Payment processing',
+          'Financial reports',
+          'Tax management'
+        ],
+        capabilitiesKey: 'account.create.modules.finance.capabilities',
+        pricePerMonth: 180
+      },
+      {
+        id: 'automation',
+        name: 'Automation',
+        nameKey: 'account.create.modules.automation.name',
+        description: 'Automate repetitive tasks, workflows, and business processes to increase efficiency and reduce manual work.',
+        descriptionKey: 'account.create.modules.automation.description',
+        capabilities: [
+          'Workflow automation',
+          'Task scheduling',
+          'Rule-based actions',
+          'Notification automation',
+          'Integration automation'
+        ],
+        capabilitiesKey: 'account.create.modules.automation.capabilities',
+        pricePerMonth: 120
+      },
+      {
+        id: 'loyalty',
+        name: 'Loyalty',
+        nameKey: 'account.create.modules.loyalty.name',
+        description: 'Customer loyalty program management with points, rewards, discounts, and customer engagement tools.',
+        descriptionKey: 'account.create.modules.loyalty.description',
+        capabilities: [
+          'Points system',
+          'Rewards management',
+          'Customer segmentation',
+          'Promotional campaigns',
+          'Loyalty analytics'
+        ],
+        capabilitiesKey: 'account.create.modules.loyalty.capabilities',
+        pricePerMonth: 100
+      },
+      {
+        id: 'api_access',
+        name: 'API Access',
+        nameKey: 'account.create.modules.apiAccess.name',
+        description: 'Full API access for custom integrations, third-party connections, and advanced system integrations.',
+        descriptionKey: 'account.create.modules.apiAccess.description',
+        capabilities: [
+          'RESTful API access',
+          'Webhook support',
+          'API documentation',
+          'Rate limiting',
+          'Custom integrations'
+        ],
+        capabilitiesKey: 'account.create.modules.apiAccess.capabilities',
+        pricePerMonth: 250
+      },
+      {
+        id: 'ai_features',
+        name: 'AI Features',
+        nameKey: 'account.create.modules.aiFeatures.name',
+        description: 'Artificial intelligence powered features including demand forecasting, smart recommendations, and predictive analytics.',
+        descriptionKey: 'account.create.modules.aiFeatures.description',
+        capabilities: [
+          'Demand forecasting',
+          'Smart recommendations',
+          'Predictive analytics',
+          'Fraud detection',
+          'Chatbot support'
+        ],
+        capabilitiesKey: 'account.create.modules.aiFeatures.capabilities',
+        pricePerMonth: 300
+      },
+      {
+        id: 'analytics',
+        name: 'Analytics',
+        nameKey: 'account.create.modules.analytics.name',
+        description: 'Advanced analytics and business intelligence with customizable dashboards, reports, and data visualization.',
+        descriptionKey: 'account.create.modules.analytics.description',
+        capabilities: [
+          'Custom dashboards',
+          'Data visualization',
+          'Trend analysis',
+          'KPI tracking',
+          'Export capabilities'
+        ],
+        capabilitiesKey: 'account.create.modules.analytics.capabilities',
+        pricePerMonth: 170
+      },
+      {
+        id: 'reports',
+        name: 'Reports',
+        nameKey: 'account.create.modules.reports.name',
+        description: 'Comprehensive reporting system with pre-built and custom reports for all aspects of your pharmacy operations.',
+        descriptionKey: 'account.create.modules.reports.description',
+        capabilities: [
+          'Pre-built reports',
+          'Custom report builder',
+          'Scheduled reports',
+          'Export to PDF/Excel',
+          'Report templates'
+        ],
+        capabilitiesKey: 'account.create.modules.reports.capabilities',
+        pricePerMonth: 90
+      },
+      {
+        id: 'multi_branch',
+        name: 'Multi-Branch',
+        nameKey: 'account.create.modules.multiBranch.name',
+        description: 'Manage multiple pharmacy branches from a single platform with centralized control and branch-specific settings.',
+        descriptionKey: 'account.create.modules.multiBranch.description',
+        capabilities: [
+          'Multi-location management',
+          'Centralized inventory',
+          'Branch-specific settings',
+          'Inter-branch transfers',
+          'Unified reporting'
+        ],
+        capabilitiesKey: 'account.create.modules.multiBranch.capabilities',
+        pricePerMonth: 220
+      }
+    ];
+  }
+
+  toggleModule(module: Module): void {
+    const index = this.selectedModules.findIndex(m => m.id === module.id);
+    if (index >= 0) {
+      this.selectedModules.splice(index, 1);
+    } else {
+      this.selectedModules.push(module);
+    }
+  }
+
+  isModuleSelected(module: Module): boolean {
+    return this.selectedModules.some(m => m.id === module.id);
+  }
+
+  getTotalMonthlyPrice(): number {
+    let planPrice = 0;
+    if (this.selectedPlan) {
+      // Convert annual price to monthly if needed
+      if (this.selectedPlan.billingCycle === 'annual') {
+        planPrice = this.selectedPlan.price / 12;
+      } else {
+        planPrice = this.selectedPlan.price;
+      }
+    }
+    const modulesPrice = this.selectedModules.reduce((sum, module) => sum + module.pricePerMonth, 0);
+    return planPrice + modulesPrice;
   }
 
   selectPlan(plan: SubscriptionPlan): void {
@@ -549,8 +833,9 @@ export class CreateAccountComponent implements OnInit {
   canNavigateToStep(step: number): boolean {
     if (step === 1) return true;
     if (step === 2) return !!this.selectedPlan;
-    if (step === 3) return this.accountForm.valid;
-    if (step === 4) return this.pharmaciesForm.valid && this.pharmaciesArray.length > 0;
+    if (step === 3) return !!this.selectedPlan; // Modules step is optional
+    if (step === 4) return this.accountForm.valid;
+    if (step === 5) return this.pharmaciesForm.valid && this.pharmaciesArray.length > 0;
     return false;
   }
 
@@ -568,12 +853,13 @@ export class CreateAccountComponent implements OnInit {
       this.errorMessage = 'account.create.validationError';
       return;
     }
-    if (this.currentStep === 2 && this.accountForm.invalid) {
+    // Step 2 (modules) is optional, no validation needed
+    if (this.currentStep === 3 && this.accountForm.invalid) {
       this.accountForm.markAllAsTouched();
       this.errorMessage = 'account.create.validationError';
       return;
     }
-    if (this.currentStep === 3 && (this.pharmaciesForm.invalid || this.pharmaciesArray.length === 0)) {
+    if (this.currentStep === 4 && (this.pharmaciesForm.invalid || this.pharmaciesArray.length === 0)) {
       this.pharmaciesForm.markAllAsTouched();
       this.errorMessage = 'account.create.validationError';
       return;
@@ -613,6 +899,7 @@ export class CreateAccountComponent implements OnInit {
       username: this.accountForm.get('username')?.value,
       password: this.accountForm.get('password')?.value,
       planId: this.selectedPlan.id,
+      moduleIds: this.selectedModules.map(m => m.id),
       pharmacies: this.pharmaciesArray.value.map((pharmacy: any) => ({
         name: pharmacy.name,
         address: pharmacy.address,

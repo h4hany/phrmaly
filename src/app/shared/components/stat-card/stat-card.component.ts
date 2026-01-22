@@ -1,11 +1,12 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslatePipe } from '../../../core/pipes/translate.pipe';
+import { IconComponent, SemanticIconName } from '../icon/icon.component';
 
 @Component({
   selector: 'app-stat-card',
   standalone: true,
-  imports: [CommonModule, TranslatePipe],
+  imports: [CommonModule, TranslatePipe, IconComponent],
   template: `
     <div [class]="cardClasses" [style]="cardStyles">
       <div class="flex items-center justify-between">
@@ -24,8 +25,8 @@ import { TranslatePipe } from '../../../core/pipes/translate.pipe';
           }
         </div>
         @if (icon) {
-          <div [class]="iconContainerClasses">
-            <span [innerHTML]="icon"></span>
+          <div [class]="iconContainerClasses" [style]="iconContainerStyles">
+            <app-icon [name]="icon" [size]="24" [color]="iconColor" />
           </div>
         }
       </div>
@@ -46,7 +47,7 @@ export class StatCardComponent {
   @Input() trend = '';
   @Input() trendUp = true;
   @Input() trendPositive = true;
-  @Input() icon = '';
+  @Input() icon: SemanticIconName | string = '';
   @Input() highlighted = false;
 
   get cardClasses(): string {
@@ -74,5 +75,13 @@ export class StatCardComponent {
   get iconContainerClasses(): string {
     const base = 'p-3 rounded-lg';
     return base;
+  }
+
+  get iconContainerStyles(): string {
+    return 'background-color: var(--sidebar-bg);';
+  }
+
+  get iconColor(): string {
+    return 'var(--sidebar-text, #ffffff)';
   }
 }

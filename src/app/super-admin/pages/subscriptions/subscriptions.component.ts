@@ -9,6 +9,7 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { PlatformSubscriptionsService } from '../../../core/services/platform-subscriptions.service';
 import { SubscriptionPlan, Subscription, Invoice } from '../../../core/models/platform.model';
 import { TableComponent, TableColumn } from '../../../shared/components/table/table.component';
@@ -40,7 +41,7 @@ import { ChartComponent } from '../../../shared/components/chart/chart.component
           <h1 class="text-2xl font-bold text-[var(--text-primary)]">{{ 'platform.subscriptions.title' | translate }}</h1>
           <p class="text-sm text-[var(--card-text)] mt-1">{{ 'platform.subscriptions.subtitle' | translate }}</p>
         </div>
-        <app-button variant="primary" (onClick)="showCreatePlanModal = true">
+        <app-button variant="primary" (onClick)="createPlan()">
           <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
           </svg>
@@ -78,28 +79,28 @@ import { ChartComponent } from '../../../shared/components/chart/chart.component
           <nav class="flex -mb-px">
             <button
               (click)="activeTab = 'plans'"
-              [class]="activeTab === 'plans' ? 'border-[var(--primary-color)] text-[var(--primary-color)]' : 'border-transparent text-[var(--card-text)] hover:text-[var(--text-primary)]'"
+              [class]="activeTab === 'plans' ? 'border-[var(--sidebar-bg)] text-[var(--sidebar-bg)]' : 'border-transparent text-[var(--card-text)] hover:text-[var(--text-primary)]'"
               class="px-6 py-4 border-b-2 font-medium text-sm transition-colors"
             >
               {{ 'platform.subscriptions.plans' | translate }}
             </button>
             <button
               (click)="activeTab = 'subscriptions'"
-              [class]="activeTab === 'subscriptions' ? 'border-[var(--primary-color)] text-[var(--primary-color)]' : 'border-transparent text-[var(--card-text)] hover:text-[var(--text-primary)]'"
+              [class]="activeTab === 'subscriptions' ? 'border-[var(--sidebar-bg)] text-[var(--sidebar-bg)]' : 'border-transparent text-[var(--card-text)] hover:text-[var(--text-primary)]'"
               class="px-6 py-4 border-b-2 font-medium text-sm transition-colors"
             >
               {{ 'platform.subscriptions.subscriptions' | translate }}
             </button>
             <button
               (click)="activeTab = 'invoices'"
-              [class]="activeTab === 'invoices' ? 'border-[var(--primary-color)] text-[var(--primary-color)]' : 'border-transparent text-[var(--card-text)] hover:text-[var(--text-primary)]'"
+              [class]="activeTab === 'invoices' ? 'border-[var(--sidebar-bg)] text-[var(--sidebar-bg)]' : 'border-transparent text-[var(--card-text)] hover:text-[var(--text-primary)]'"
               class="px-6 py-4 border-b-2 font-medium text-sm transition-colors"
             >
               {{ 'platform.subscriptions.invoices' | translate }}
             </button>
             <button
               (click)="activeTab = 'analytics'"
-              [class]="activeTab === 'analytics' ? 'border-[var(--primary-color)] text-[var(--primary-color)]' : 'border-transparent text-[var(--card-text)] hover:text-[var(--text-primary)]'"
+              [class]="activeTab === 'analytics' ? 'border-[var(--sidebar-bg)] text-[var(--sidebar-bg)]' : 'border-transparent text-[var(--card-text)] hover:text-[var(--text-primary)]'"
               class="px-6 py-4 border-b-2 font-medium text-sm transition-colors"
             >
               {{ 'platform.subscriptions.analytics' | translate }}
@@ -205,6 +206,7 @@ import { ChartComponent } from '../../../shared/components/chart/chart.component
 export class SubscriptionsComponent implements OnInit {
   private subscriptionsService = inject(PlatformSubscriptionsService);
   private translationService = inject(TranslationService);
+  private router = inject(Router);
 
   loading = false;
   activeTab: 'plans' | 'subscriptions' | 'invoices' | 'analytics' = 'plans';
@@ -239,7 +241,9 @@ export class SubscriptionsComponent implements OnInit {
     { key: 'dueDate', label: 'platform.subscriptions.dueDate', sortable: true }
   ];
 
-  showCreatePlanModal = false;
+  createPlan(): void {
+    this.router.navigate(['/super-admin/subscriptions/new']);
+  }
 
   mrrData: any = {};
   churnData: any = {};
@@ -407,9 +411,8 @@ export class SubscriptionsComponent implements OnInit {
 
   formatCurrency(amount: number): string {
     return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
     }).format(amount);
   }
 }

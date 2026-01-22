@@ -1,6 +1,7 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslatePipe } from '../../../core/pipes/translate.pipe';
+import { TranslationService } from '../../../core/services/translation.service';
 
 export interface WizardStep {
   number: number;
@@ -40,13 +41,15 @@ export interface WizardStep {
           <div class="absolute top-5 left-0 right-0 h-1 bg-gray-200 rounded-full"></div>
           <!-- Active Progress Bar -->
           <div
-            class="absolute top-5 left-0 h-1 rounded-full transition-all duration-700 ease-out"
+            class="absolute top-5 h-1 rounded-full transition-all duration-700 ease-out"
             [style.width]="getProgressWidth()"
             [style.background]="'var(--sidebar-bg)'"
+            [style.left]="isRTL() ? 'auto' : '0'"
+            [style.right]="isRTL() ? '0' : 'auto'"
           ></div>
 
-          <div class="relative flex justify-between">
-            @for (step of steps; track step.number) {
+          <div class="relative flex justify-between" [class.flex-row-reverse]="isRTL()">
+            @for (step of getStepsForDisplay(); track step.number) {
               <div 
                 class="flex flex-col items-center group"
                 [class.cursor-pointer]="canNavigateToStep(step.number)"
@@ -153,12 +156,20 @@ export interface WizardStep {
   `]
 })
 export class WizardComponent {
+  private translationService = inject(TranslationService);
+
   @Input() steps: WizardStep[] = [];
   @Input() currentStep: number = 1;
   @Input() errorMessage: string = '';
   @Input() allowStepNavigation: boolean = true;
 
   @Output() stepChange = new EventEmitter<number>();
+
+  isRTL = computed(() => this.translationService.getCurrentLanguage() === 'ar');
+
+  getStepsForDisplay(): WizardStep[] {
+    return this.isRTL() ? [...this.steps].reverse() : this.steps;
+  }
 
   getCurrentStepTitle(): string {
     const step = this.steps.find(s => s.number === this.currentStep);
@@ -174,6 +185,15 @@ export class WizardComponent {
     if (this.steps.length === 0) return '0%';
     const progress = ((this.currentStep - 1) / (this.steps.length - 1)) * 100;
     return `${progress}%`;
+  }
+
+  getProgressPosition(): string {
+    if (this.isRTL()) {
+      // In RTL, progress starts from right
+      const progress = ((this.currentStep - 1) / (this.steps.length - 1)) * 100;
+      return `${100 - progress}%`;
+    }
+    return '0';
   }
 
   canNavigateToStep(stepNumber: number): boolean {
