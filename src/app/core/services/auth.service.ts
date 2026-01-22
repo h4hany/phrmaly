@@ -4,6 +4,7 @@ import { BehaviorSubject, Observable, of } from 'rxjs';
 import { delay, map } from 'rxjs/operators';
 import { User, UserRole } from '../models/user.model';
 import { Pharmacy } from '../models/user.model';
+import { PermissionContext } from '../models/permission.model';
 
 @Injectable({
   providedIn: 'root'
@@ -160,6 +161,151 @@ export class AuthService {
   hasAnyRole(roles: UserRole[]): boolean {
     const user = this.currentUserSubject.value;
     return user ? roles.includes(user.role) : false;
+  }
+
+  /**
+   * Get permission context for the current user
+   * In production, this would call the backend API
+   * For now, returns mock data based on user role
+   */
+  getPermissionContext(): Observable<PermissionContext> {
+    const user = this.getCurrentUser();
+    if (!user) {
+      return of({
+        permissions: [],
+        modules: [],
+        limits: { maxUsers: 0, maxPharmacies: 0 }
+      });
+    }
+
+    // Mock permission context based on role
+    const context = this.getMockPermissionContext(user.role);
+    return of(context).pipe(delay(300)); // Simulate API call
+  }
+
+  /**
+   * Get mock permission context for a given role
+   * This simulates what the backend would return
+   */
+  private getMockPermissionContext(role: UserRole): PermissionContext {
+    switch (role) {
+      case UserRole.ACCOUNT_OWNER:
+        return {
+          permissions: [
+            // Dashboard
+            'dashboard.view',
+            // Patients
+            'patients.view', 'patients.kpi.view', 'patients.orders.view',
+            'patients.loyalty.view', 'patients.revenue.view', 'patients.vouchers.view',
+            // Staff
+            'staff.view', 'staff.details.view', 'staff.performance.view',
+            'staff.risk.view', 'staff.activity.view',
+            // People
+            'attendance.view', 'payroll.view', 'performance.view', 'training.view',
+            // Drugs & Inventory
+            'drugs.view', 'drugs.create',
+            'bundles.view',
+            'inventory.alerts.view', 'inventory.map.view', 'inventory.transfers.view',
+            'inventory.movements.view', 'inventory.requested.view',
+            // Procurement
+            'purchases.view', 'purchases.create', 'suppliers.view',
+            // Finance
+            'invoices.view', 'invoices.create', 'invoices.edit', 'invoices.actions',
+            'audit.view', 'payments.view', 'payments.methods.manage',
+            // Growth
+            'referrals.view',
+            // System
+            'settings.view', 'settings.account.view',
+            'system.permissions.manage', 'system.features.manage',
+            'system.automation.manage', 'system.migration.manage',
+            'reports.view',
+            // Vouchers
+            'vouchers.view', 'vouchers.create', 'vouchers.edit', 'vouchers.actions',
+          ],
+          modules: ['dashboard', 'patients', 'staff', 'inventory', 'procurement', 'finance', 'growth', 'system'],
+          limits: { maxUsers: 100, maxPharmacies: 10 }
+        };
+
+      case UserRole.PHARMACY_MANAGER:
+        return {
+          permissions: [
+            // Patients (limited)
+            'patients.view',
+            // Staff (limited)
+            'staff.view', 'staff.details.view',
+            // Attendance
+            'attendance.view',
+            // Drugs
+            'drugs.view', 'drugs.create',
+            // Inventory (limited)
+            'inventory.alerts.view',
+            // Settings (limited)
+            'settings.view',
+            // Vouchers
+            'vouchers.view', 'vouchers.create', 'vouchers.edit', 'vouchers.actions',
+          ],
+          modules: ['patients', 'staff', 'inventory', 'settings'],
+          limits: { maxUsers: 50, maxPharmacies: 5 }
+        };
+
+      case UserRole.PHARMACY_STAFF:
+        return {
+          permissions: [
+            // Invoices
+            'invoices.view', 'invoices.create', 'invoices.actions',
+            // Drugs
+            'drugs.view', 'drugs.create',
+            // Bundles
+            'bundles.view',
+            // Inventory
+            'inventory.map.view', 'inventory.transfers.view', 'inventory.requested.view',
+            // Vouchers
+            'vouchers.view', 'vouchers.create', 'vouchers.edit', 'vouchers.actions',
+            // Patients (for vouchers tab)
+            'patients.vouchers.view',
+          ],
+          modules: ['invoices', 'drugs', 'bundles', 'inventory'],
+          limits: { maxUsers: 20, maxPharmacies: 1 }
+        };
+
+      case UserRole.PHARMACY_INVENTORY_MANAGER:
+        return {
+          permissions: [
+            // Procurement
+            'purchases.view', 'purchases.create', 'suppliers.view',
+            // Inventory
+            'inventory.alerts.view', 'inventory.requested.view',
+            // Invoices (view only)
+            'invoices.view',
+            // Payments
+            'payments.methods.manage',
+            // Settings
+            'settings.view',
+          ],
+          modules: ['procurement', 'inventory', 'finance', 'settings'],
+          limits: { maxUsers: 30, maxPharmacies: 3 }
+        };
+
+      default:
+        return {
+          permissions: [],
+          modules: [],
+          limits: { maxUsers: 0, maxPharmacies: 0 }
+        };
+    }
+  }
+
+  /**
+   * Set mock role for development/testing
+   * This allows switching roles without re-login
+   */
+  setMockRole(role: UserRole): void {
+    const user = this.getCurrentUser();
+    if (user) {
+      const updatedUser = { ...user, role };
+      localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+      this.currentUserSubject.next(updatedUser);
+    }
   }
 }
 

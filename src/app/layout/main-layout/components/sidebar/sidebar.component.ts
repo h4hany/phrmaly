@@ -10,9 +10,10 @@
  * - Keyboard navigation
  */
 
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { AuthService } from '../../../../core/services/auth.service';
 import { PlatformContextService } from '../../../../core/services/platform-context.service';
 import { TranslationService } from '../../../../core/services/translation.service';
@@ -39,12 +40,13 @@ import { SIDEBAR_GROUPS, SidebarGroup, SidebarItem } from './sidebar.config';
     }
   `]
 })
-export class SidebarComponent implements OnInit {
+export class SidebarComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private authService = inject(AuthService);
   private platformContext = inject(PlatformContextService);
   private translationService = inject(TranslationService);
   private rbacService = inject(RbacService);
+  private subscriptions = new Subscription();
 
   // Navigation groups from config
   groups = SIDEBAR_GROUPS;
@@ -52,8 +54,14 @@ export class SidebarComponent implements OnInit {
   // Collapsed state for each group
   collapsedGroups = signal<{ [key: string]: boolean }>({});
 
+  // Permission context trigger - updates when permissions change
+  private permissionTrigger = signal(0);
+
   // Filtered groups based on permissions
+  // Re-evaluates when permissionTrigger changes
   visibleGroups = computed(() => {
+    // Access permissionTrigger to make this computed reactive to permission changes
+    this.permissionTrigger();
     return this.groups.filter(group => this.isGroupVisible(group));
   });
 
@@ -64,6 +72,18 @@ export class SidebarComponent implements OnInit {
       initialState[group.key] = group.collapsedByDefault ?? true;
     });
     this.collapsedGroups.set(initialState);
+
+    // Subscribe to permission context changes to trigger sidebar update
+    this.subscriptions.add(
+      this.rbacService.getPermissionContext$().subscribe(() => {
+        // Trigger computed signal to re-evaluate
+        this.permissionTrigger.update(v => v + 1);
+      })
+    );
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
   }
 
   toggleGroup(groupKey: string): void {

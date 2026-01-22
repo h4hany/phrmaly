@@ -50,7 +50,13 @@ export class CanAccessDirective implements OnInit, OnDestroy {
       return;
     }
 
+    // Initial check
     this.checkAccess();
+
+    // Subscribe to permission context changes to reactively update
+    this.subscription = this.rbacService.getPermissionContext$().subscribe(() => {
+      this.checkAccess();
+    });
   }
 
   ngOnDestroy(): void {
