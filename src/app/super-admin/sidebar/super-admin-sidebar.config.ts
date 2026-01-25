@@ -60,6 +60,11 @@ export const SUPER_ADMIN_SIDEBAR_GROUPS: SidebarGroup[] = [
         path: '/super-admin/analytics',
         label: 'nav.platformAnalytics',
         icon: 'chart'
+      },
+      {
+        path: '/super-admin/modules-permissions',
+        label: 'nav.modulesPermissions',
+        icon: 'shield-check'
       }
     ],
     collapsedByDefault: false,

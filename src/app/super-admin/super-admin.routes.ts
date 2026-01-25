@@ -53,6 +53,11 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/analytics/platform-analytics.component').then(m => m.PlatformAnalyticsComponent)
   },
   {
+    path: 'modules-permissions',
+    canActivate: [superAdminGuard],
+    loadComponent: () => import('./pages/modules-permissions/modules-permissions.component').then(m => m.ModulesPermissionsComponent)
+  },
+  {
     path: '',
     redirectTo: 'dashboard',
     pathMatch: 'full'
