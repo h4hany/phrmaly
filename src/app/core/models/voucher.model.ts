@@ -11,3 +11,5 @@ export interface Voucher {
   pharmacy: Pharmacy;
 }
 
+
+

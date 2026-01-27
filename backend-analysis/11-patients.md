@@ -187,3 +187,5 @@ interface PatientRevenue {
 - Patient search should be fast (indexed on name, phone, email, cardId)
 - Patient data should be GDPR/compliance compliant
 
+
+

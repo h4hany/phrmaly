@@ -203,3 +203,5 @@ interface Role {
 - Multi-pharmacy users can switch between pharmacies (pharmacy context service)
 - RTL (Right-to-Left) support is configurable per pharmacy
 
+
+

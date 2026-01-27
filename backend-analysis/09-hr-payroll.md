@@ -524,3 +524,5 @@ interface HRApprovalRequest {
 - Training modules support video content and quizzes
 - Approval workflow supports multi-level approvals
 
+
+

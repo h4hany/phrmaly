@@ -154,3 +154,5 @@ interface PurchaseInvoiceItem {
 - Payment tracking is separate from supplier payments (see Suppliers module)
 - Purchase invoices link to suppliers (see Suppliers module)
 
+
+

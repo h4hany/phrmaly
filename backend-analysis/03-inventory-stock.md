@@ -335,3 +335,5 @@ interface RequestedProduct {
 - Transfer variances need resolution workflow
 - Inventory alerts should support notification system (email, SMS, in-app)
 
+
+

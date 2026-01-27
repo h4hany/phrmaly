@@ -264,3 +264,5 @@ interface VoucherListItem {
 - Stock updates must be atomic (transactional) when creating invoice
 - Invoice numbering should be sequential and unique per pharmacy
 
+
+

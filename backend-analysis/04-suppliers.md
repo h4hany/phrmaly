@@ -138,3 +138,5 @@ interface SupplierPayment {
 - Supplier payments are separate from purchase invoice payments
 - Frontend uses mock data; all endpoints need implementation
 
+
+
