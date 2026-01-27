@@ -1,6 +1,7 @@
 # Platform / Super Admin - Backend Requirements
 
 ## Overview
+
 Multi-tenant platform management system for super administrators to manage accounts, subscriptions, catalogs, support tickets, and platform analytics.
 
 ---
@@ -8,6 +9,7 @@ Multi-tenant platform management system for super administrators to manage accou
 ## Features
 
 ### 1. Account Management
+
 - Platform account CRUD
 - Account status management (active, suspended, trial, closed, restricted)
 - Account limits (max pharmacies, max staff)
@@ -15,6 +17,7 @@ Multi-tenant platform management system for super administrators to manage accou
 - Account metadata and notes
 
 ### 2. Subscription Management
+
 - Subscription plan management
 - Subscription assignment to accounts
 - Subscription status tracking
@@ -22,12 +25,14 @@ Multi-tenant platform management system for super administrators to manage accou
 - Trial period management
 
 ### 3. Platform Catalog
+
 - Global drug catalog management
 - Drug approval workflow
 - Drug alternatives and relationships
 - Drug pricing reference
 
 ### 4. Support Tickets (Platform-level)
+
 - Platform-wide support ticket system
 - Ticket assignment to support staff
 - SLA tracking
@@ -35,6 +40,7 @@ Multi-tenant platform management system for super administrators to manage accou
 - Internal notes and audit trail
 
 ### 5. Platform Analytics
+
 - Platform-wide metrics
 - Account analytics
 - Feature usage statistics
@@ -42,22 +48,26 @@ Multi-tenant platform management system for super administrators to manage accou
 - System health monitoring
 
 ### 6. Risk Management
+
 - Account risk scoring
 - Risk factor tracking
 - Risk assessment and recommendations
 - Compliance monitoring
 
 ### 7. Admin User Management
+
 - Platform admin user management
 - Admin role assignment
 - Admin permission management
 
 ### 8. Feature Flags (Platform-level)
+
 - Global feature flags
 - Feature rollout management
 - Feature usage tracking
 
 ### 9. Modules & Permissions
+
 - Module definition and management
 - Permission configuration
 - Module-permission mapping
@@ -68,103 +78,104 @@ Multi-tenant platform management system for super administrators to manage accou
 
 ### Account Management Endpoints
 
-| Method | Endpoint | Description | Auth | Request Body | Response |
-|--------|----------|-------------|------|--------------|----------|
-| GET | `/api/platform/accounts` | List accounts | Super Admin | Query params | `PaginatedResponse<PlatformAccount>` |
-| GET | `/api/platform/accounts/:id` | Get account by ID | Super Admin | - | `PlatformAccount` |
-| POST | `/api/platform/accounts` | Create account | Super Admin | `Omit<PlatformAccount, 'id'\|'createdAt'\|'updatedAt'>` | `PlatformAccount` |
-| PUT | `/api/platform/accounts/:id` | Update account | Super Admin | `Partial<PlatformAccount>` | `PlatformAccount` |
-| PUT | `/api/platform/accounts/:id/suspend` | Suspend account | Super Admin | `{ reason?: string }` | `PlatformAccount` |
-| PUT | `/api/platform/accounts/:id/activate` | Activate account | Super Admin | - | `PlatformAccount` |
-| PUT | `/api/platform/accounts/:id/modules` | Update account modules | Super Admin | `{ modules: PlatformModule[] }` | `PlatformAccount` |
+| Method | Endpoint                              | Description            | Auth        | Request Body                                            | Response                             |
+|--------|---------------------------------------|------------------------|-------------|---------------------------------------------------------|--------------------------------------|
+| GET    | `/api/platform/accounts`              | List accounts          | Super Admin | Query params                                            | `PaginatedResponse<PlatformAccount>` |
+| GET    | `/api/platform/accounts/:id`          | Get account by ID      | Super Admin | -                                                       | `PlatformAccount`                    |
+| POST   | `/api/platform/accounts`              | Create account         | Super Admin | `Omit<PlatformAccount, 'id'\|'createdAt'\|'updatedAt'>` | `PlatformAccount`                    |
+| PUT    | `/api/platform/accounts/:id`          | Update account         | Super Admin | `Partial<PlatformAccount>`                              | `PlatformAccount`                    |
+| PUT    | `/api/platform/accounts/:id/suspend`  | Suspend account        | Super Admin | `{ reason?: string }`                                   | `PlatformAccount`                    |
+| PUT    | `/api/platform/accounts/:id/activate` | Activate account       | Super Admin | -                                                       | `PlatformAccount`                    |
+| PUT    | `/api/platform/accounts/:id/modules`  | Update account modules | Super Admin | `{ modules: PlatformModule[] }`                         | `PlatformAccount`                    |
 
 ### Subscription Endpoints
 
-| Method | Endpoint | Description | Auth | Request Body | Response |
-|--------|----------|-------------|------|--------------|----------|
-| GET | `/api/platform/subscriptions/plans` | List subscription plans | Super Admin | - | `SubscriptionPlan[]` |
-| GET | `/api/platform/subscriptions/plans/:id` | Get plan by ID | Super Admin | - | `SubscriptionPlan` |
-| POST | `/api/platform/subscriptions/plans` | Create plan | Super Admin | `Omit<SubscriptionPlan, 'id'\|'createdAt'\|'updatedAt'>` | `SubscriptionPlan` |
-| PUT | `/api/platform/subscriptions/plans/:id` | Update plan | Super Admin | `Partial<SubscriptionPlan>` | `SubscriptionPlan` |
-| GET | `/api/platform/subscriptions` | List subscriptions | Super Admin | Query params | `PaginatedResponse<Subscription>` |
-| GET | `/api/platform/subscriptions/:id` | Get subscription by ID | Super Admin | - | `Subscription` |
-| POST | `/api/platform/subscriptions` | Create subscription | Super Admin | `Omit<Subscription, 'id'\|'createdAt'\|'updatedAt'>` | `Subscription` |
-| PUT | `/api/platform/subscriptions/:id` | Update subscription | Super Admin | `Partial<Subscription>` | `Subscription` |
-| PUT | `/api/platform/subscriptions/:id/cancel` | Cancel subscription | Super Admin | `{ cancelAtPeriodEnd: boolean }` | `Subscription` |
+| Method | Endpoint                                 | Description             | Auth        | Request Body                                             | Response                          |
+|--------|------------------------------------------|-------------------------|-------------|----------------------------------------------------------|-----------------------------------|
+| GET    | `/api/platform/subscriptions/plans`      | List subscription plans | Super Admin | -                                                        | `SubscriptionPlan[]`              |
+| GET    | `/api/platform/subscriptions/plans/:id`  | Get plan by ID          | Super Admin | -                                                        | `SubscriptionPlan`                |
+| POST   | `/api/platform/subscriptions/plans`      | Create plan             | Super Admin | `Omit<SubscriptionPlan, 'id'\|'createdAt'\|'updatedAt'>` | `SubscriptionPlan`                |
+| PUT    | `/api/platform/subscriptions/plans/:id`  | Update plan             | Super Admin | `Partial<SubscriptionPlan>`                              | `SubscriptionPlan`                |
+| GET    | `/api/platform/subscriptions`            | List subscriptions      | Super Admin | Query params                                             | `PaginatedResponse<Subscription>` |
+| GET    | `/api/platform/subscriptions/:id`        | Get subscription by ID  | Super Admin | -                                                        | `Subscription`                    |
+| POST   | `/api/platform/subscriptions`            | Create subscription     | Super Admin | `Omit<Subscription, 'id'\|'createdAt'\|'updatedAt'>`     | `Subscription`                    |
+| PUT    | `/api/platform/subscriptions/:id`        | Update subscription     | Super Admin | `Partial<Subscription>`                                  | `Subscription`                    |
+| PUT    | `/api/platform/subscriptions/:id/cancel` | Cancel subscription     | Super Admin | `{ cancelAtPeriodEnd: boolean }`                         | `Subscription`                    |
 
 ### Catalog Endpoints
 
-| Method | Endpoint | Description | Auth | Request Body | Response |
-|--------|----------|-------------|------|--------------|----------|
-| GET | `/api/platform/catalog/drugs` | List global drugs | Super Admin | Query params | `PaginatedResponse<GlobalDrug>` |
-| GET | `/api/platform/catalog/drugs/:id` | Get global drug | Super Admin | - | `GlobalDrug` |
-| POST | `/api/platform/catalog/drugs` | Create global drug | Super Admin | `Omit<GlobalDrug, 'id'\|'createdAt'\|'updatedAt'>` | `GlobalDrug` |
-| PUT | `/api/platform/catalog/drugs/:id` | Update global drug | Super Admin | `Partial<GlobalDrug>` | `GlobalDrug` |
-| DELETE | `/api/platform/catalog/drugs/:id` | Delete global drug | Super Admin | - | `{ success: boolean }` |
-| PUT | `/api/platform/catalog/drugs/:id/approve` | Approve drug | Super Admin | - | `GlobalDrug` |
-| GET | `/api/platform/catalog/drugs/:id/pharmacies` | Get pharmacies using drug | Super Admin | - | `{ count: number, pharmacies: Pharmacy[] }` |
+| Method | Endpoint                                     | Description               | Auth        | Request Body                                       | Response                                    |
+|--------|----------------------------------------------|---------------------------|-------------|----------------------------------------------------|---------------------------------------------|
+| GET    | `/api/platform/catalog/drugs`                | List global drugs         | Super Admin | Query params                                       | `PaginatedResponse<GlobalDrug>`             |
+| GET    | `/api/platform/catalog/drugs/:id`            | Get global drug           | Super Admin | -                                                  | `GlobalDrug`                                |
+| POST   | `/api/platform/catalog/drugs`                | Create global drug        | Super Admin | `Omit<GlobalDrug, 'id'\|'createdAt'\|'updatedAt'>` | `GlobalDrug`                                |
+| PUT    | `/api/platform/catalog/drugs/:id`            | Update global drug        | Super Admin | `Partial<GlobalDrug>`                              | `GlobalDrug`                                |
+| DELETE | `/api/platform/catalog/drugs/:id`            | Delete global drug        | Super Admin | -                                                  | `{ success: boolean }`                      |
+| PUT    | `/api/platform/catalog/drugs/:id/approve`    | Approve drug              | Super Admin | -                                                  | `GlobalDrug`                                |
+| GET    | `/api/platform/catalog/drugs/:id/pharmacies` | Get pharmacies using drug | Super Admin | -                                                  | `{ count: number, pharmacies: Pharmacy[] }` |
 
 ### Support Ticket Endpoints (Platform)
 
-| Method | Endpoint | Description | Auth | Request Body | Response |
-|--------|----------|-------------|------|--------------|----------|
-| GET | `/api/platform/tickets` | List platform tickets | Super Admin | Query params | `PaginatedResponse<SupportTicket>` |
-| GET | `/api/platform/tickets/:id` | Get ticket by ID | Super Admin | - | `SupportTicket` |
-| POST | `/api/platform/tickets` | Create ticket | Super Admin | `Omit<SupportTicket, 'id'\|'createdAt'\|'updatedAt'>` | `SupportTicket` |
-| PUT | `/api/platform/tickets/:id` | Update ticket | Super Admin | `Partial<SupportTicket>` | `SupportTicket` |
-| PUT | `/api/platform/tickets/:id/assign` | Assign ticket | Super Admin | `{ assignedTo: string }` | `SupportTicket` |
-| PUT | `/api/platform/tickets/:id/status` | Update ticket status | Super Admin | `{ status: TicketStatus }` | `SupportTicket` |
-| POST | `/api/platform/tickets/:id/notes` | Add internal note | Super Admin | `{ note: string }` | `SupportTicket` |
+| Method | Endpoint                           | Description           | Auth        | Request Body                                          | Response                           |
+|--------|------------------------------------|-----------------------|-------------|-------------------------------------------------------|------------------------------------|
+| GET    | `/api/platform/tickets`            | List platform tickets | Super Admin | Query params                                          | `PaginatedResponse<SupportTicket>` |
+| GET    | `/api/platform/tickets/:id`        | Get ticket by ID      | Super Admin | -                                                     | `SupportTicket`                    |
+| POST   | `/api/platform/tickets`            | Create ticket         | Super Admin | `Omit<SupportTicket, 'id'\|'createdAt'\|'updatedAt'>` | `SupportTicket`                    |
+| PUT    | `/api/platform/tickets/:id`        | Update ticket         | Super Admin | `Partial<SupportTicket>`                              | `SupportTicket`                    |
+| PUT    | `/api/platform/tickets/:id/assign` | Assign ticket         | Super Admin | `{ assignedTo: string }`                              | `SupportTicket`                    |
+| PUT    | `/api/platform/tickets/:id/status` | Update ticket status  | Super Admin | `{ status: TicketStatus }`                            | `SupportTicket`                    |
+| POST   | `/api/platform/tickets/:id/notes`  | Add internal note     | Super Admin | `{ note: string }`                                    | `SupportTicket`                    |
 
 ### Platform Analytics Endpoints
 
-| Method | Endpoint | Description | Auth | Request Body | Response |
-|--------|----------|-------------|------|--------------|----------|
-| GET | `/api/platform/analytics/metrics` | Get platform metrics | Super Admin | Query params | `PlatformMetrics` |
-| GET | `/api/platform/analytics/feature-usage` | Get feature usage | Super Admin | Query params | `FeatureUsage[]` |
-| GET | `/api/platform/analytics/accounts` | Get account analytics | Super Admin | Query params | `AccountAnalytics[]` |
-| GET | `/api/platform/analytics/revenue` | Get revenue analytics | Super Admin | Query params | `RevenueAnalytics` |
+| Method | Endpoint                                | Description           | Auth        | Request Body | Response             |
+|--------|-----------------------------------------|-----------------------|-------------|--------------|----------------------|
+| GET    | `/api/platform/analytics/metrics`       | Get platform metrics  | Super Admin | Query params | `PlatformMetrics`    |
+| GET    | `/api/platform/analytics/feature-usage` | Get feature usage     | Super Admin | Query params | `FeatureUsage[]`     |
+| GET    | `/api/platform/analytics/accounts`      | Get account analytics | Super Admin | Query params | `AccountAnalytics[]` |
+| GET    | `/api/platform/analytics/revenue`       | Get revenue analytics | Super Admin | Query params | `RevenueAnalytics`   |
 
 ### Risk Management Endpoints
 
-| Method | Endpoint | Description | Auth | Request Body | Response |
-|--------|----------|-------------|------|--------------|----------|
-| GET | `/api/platform/risk/accounts` | List account risks | Super Admin | Query params | `PaginatedResponse<AccountRisk>` |
-| GET | `/api/platform/risk/accounts/:accountId` | Get account risk | Super Admin | - | `AccountRisk` |
-| POST | `/api/platform/risk/accounts/:accountId/assess` | Assess account risk | Super Admin | - | `AccountRisk` |
+| Method | Endpoint                                        | Description         | Auth        | Request Body | Response                         |
+|--------|-------------------------------------------------|---------------------|-------------|--------------|----------------------------------|
+| GET    | `/api/platform/risk/accounts`                   | List account risks  | Super Admin | Query params | `PaginatedResponse<AccountRisk>` |
+| GET    | `/api/platform/risk/accounts/:accountId`        | Get account risk    | Super Admin | -            | `AccountRisk`                    |
+| POST   | `/api/platform/risk/accounts/:accountId/assess` | Assess account risk | Super Admin | -            | `AccountRisk`                    |
 
 ### Admin User Endpoints
 
-| Method | Endpoint | Description | Auth | Request Body | Response |
-|--------|----------|-------------|------|--------------|----------|
-| GET | `/api/platform/admins` | List admin users | Super Admin | Query params | `PaginatedResponse<AdminUser>` |
-| GET | `/api/platform/admins/:id` | Get admin user | Super Admin | - | `AdminUser` |
-| POST | `/api/platform/admins` | Create admin user | Super Admin | `Omit<AdminUser, 'id'\|'createdAt'\|'updatedAt'>` | `AdminUser` |
-| PUT | `/api/platform/admins/:id` | Update admin user | Super Admin | `Partial<AdminUser>` | `AdminUser` |
-| DELETE | `/api/platform/admins/:id` | Delete admin user | Super Admin | - | `{ success: boolean }` |
+| Method | Endpoint                   | Description       | Auth        | Request Body                                      | Response                       |
+|--------|----------------------------|-------------------|-------------|---------------------------------------------------|--------------------------------|
+| GET    | `/api/platform/admins`     | List admin users  | Super Admin | Query params                                      | `PaginatedResponse<AdminUser>` |
+| GET    | `/api/platform/admins/:id` | Get admin user    | Super Admin | -                                                 | `AdminUser`                    |
+| POST   | `/api/platform/admins`     | Create admin user | Super Admin | `Omit<AdminUser, 'id'\|'createdAt'\|'updatedAt'>` | `AdminUser`                    |
+| PUT    | `/api/platform/admins/:id` | Update admin user | Super Admin | `Partial<AdminUser>`                              | `AdminUser`                    |
+| DELETE | `/api/platform/admins/:id` | Delete admin user | Super Admin | -                                                 | `{ success: boolean }`         |
 
 ### Feature Flags Endpoints (Platform)
 
-| Method | Endpoint | Description | Auth | Request Body | Response |
-|--------|----------|-------------|------|--------------|----------|
-| GET | `/api/platform/feature-flags` | List platform feature flags | Super Admin | - | `FeatureFlag[]` |
-| POST | `/api/platform/feature-flags` | Create feature flag | Super Admin | `Omit<FeatureFlag, 'id'\|'createdAt'\|'updatedAt'>` | `FeatureFlag` |
-| PUT | `/api/platform/feature-flags/:id` | Update feature flag | Super Admin | `Partial<FeatureFlag>` | `FeatureFlag` |
-| DELETE | `/api/platform/feature-flags/:id` | Delete feature flag | Super Admin | - | `{ success: boolean }` |
+| Method | Endpoint                          | Description                 | Auth        | Request Body                                        | Response               |
+|--------|-----------------------------------|-----------------------------|-------------|-----------------------------------------------------|------------------------|
+| GET    | `/api/platform/feature-flags`     | List platform feature flags | Super Admin | -                                                   | `FeatureFlag[]`        |
+| POST   | `/api/platform/feature-flags`     | Create feature flag         | Super Admin | `Omit<FeatureFlag, 'id'\|'createdAt'\|'updatedAt'>` | `FeatureFlag`          |
+| PUT    | `/api/platform/feature-flags/:id` | Update feature flag         | Super Admin | `Partial<FeatureFlag>`                              | `FeatureFlag`          |
+| DELETE | `/api/platform/feature-flags/:id` | Delete feature flag         | Super Admin | -                                                   | `{ success: boolean }` |
 
 ### Modules & Permissions Endpoints
 
-| Method | Endpoint | Description | Auth | Request Body | Response |
-|--------|----------|-------------|------|--------------|----------|
-| GET | `/api/platform/modules` | List modules | Super Admin | - | `Module[]` |
-| GET | `/api/platform/modules/:id/permissions` | Get module permissions | Super Admin | - | `Permission[]` |
-| PUT | `/api/platform/modules/:id/permissions` | Update module permissions | Super Admin | `{ permissions: Permission[] }` | `Module` |
+| Method | Endpoint                                | Description               | Auth        | Request Body                    | Response       |
+|--------|-----------------------------------------|---------------------------|-------------|---------------------------------|----------------|
+| GET    | `/api/platform/modules`                 | List modules              | Super Admin | -                               | `Module[]`     |
+| GET    | `/api/platform/modules/:id/permissions` | Get module permissions    | Super Admin | -                               | `Permission[]` |
+| PUT    | `/api/platform/modules/:id/permissions` | Update module permissions | Super Admin | `{ permissions: Permission[] }` | `Module`       |
 
 ---
 
 ## Data Models
 
 ### PlatformAccount
+
 ```typescript
 interface PlatformAccount {
   id: string;
@@ -193,6 +204,7 @@ interface PlatformAccount {
 ```
 
 **PlatformModule:**
+
 - `inventory`
 - `hr`
 - `finance`
@@ -205,21 +217,22 @@ interface PlatformAccount {
 - `multi_branch`
 
 ### SubscriptionPlan
+
 ```typescript
 interface SubscriptionPlan {
   id: string;
   name: string;
+  nameAr: string;
   description: string;
+  descriptionAr: string;
   tier: 'starter' | 'professional' | 'enterprise' | 'custom';
   price: number;
-  currency: string;
   billingCycle: 'monthly' | 'annual';
   maxPharmacies: number;
   maxStaff: number;
   enabledModules: PlatformModule[];
-  features: {
-    [key: string]: any;
-  };
+  features: string
+  featuresAr: string
   isActive: boolean;
   isArchived: boolean;
   createdAt: Date;
@@ -228,6 +241,7 @@ interface SubscriptionPlan {
 ```
 
 ### Subscription
+
 ```typescript
 interface Subscription {
   id: string;
@@ -246,6 +260,7 @@ interface Subscription {
 ```
 
 ### GlobalDrug
+
 ```typescript
 interface GlobalDrug {
   id: string;
@@ -267,6 +282,7 @@ interface GlobalDrug {
 ```
 
 ### SupportTicket
+
 ```typescript
 interface SupportTicket {
   id: string;
@@ -291,6 +307,7 @@ interface SupportTicket {
 ```
 
 ### PlatformMetrics
+
 ```typescript
 interface PlatformMetrics {
   totalAccounts: number;
@@ -310,6 +327,7 @@ interface PlatformMetrics {
 ```
 
 ### FeatureUsage
+
 ```typescript
 interface FeatureUsage {
   module: PlatformModule;
@@ -321,6 +339,7 @@ interface FeatureUsage {
 ```
 
 ### AccountRisk
+
 ```typescript
 interface AccountRisk {
   accountId: string;
@@ -341,6 +360,7 @@ interface RiskFactor {
 ```
 
 ### AdminUser
+
 ```typescript
 interface AdminUser {
   id: string;
@@ -359,12 +379,14 @@ interface AdminUser {
 ```
 
 **PlatformRole:**
+
 - `SUPER_ADMIN`
 - `SUPPORT_ADMIN`
 - `SALES_ADMIN`
 - `FINANCE_ADMIN`
 
 ### AdminPermission
+
 ```typescript
 interface AdminPermission {
   resource: string;
@@ -377,12 +399,14 @@ interface AdminPermission {
 ## Query Parameters
 
 ### Pagination
+
 - `page`: number (default: 1)
 - `pageSize`: number (default: 10)
 - `sortBy`: string (optional)
 - `sortOrder`: 'asc' | 'desc' (optional)
 
 ### Filters
+
 - `status`: string (filter by status)
 - `search`: string (search by name, email)
 - `startDate`: ISO date string
@@ -397,18 +421,21 @@ interface AdminPermission {
 ## Business Rules
 
 ### Account Management
+
 - Account status affects access to platform
 - Suspended accounts cannot access system
 - Trial accounts have limited features
 - Account limits enforced (max pharmacies, max staff)
 
 ### Subscription Management
+
 - Subscriptions link accounts to plans
 - Subscription status affects account access
 - Trial periods have expiration dates
 - Cancelled subscriptions continue until period end
 
 ### Risk Management
+
 - Risk scores calculated automatically
 - Risk factors trigger alerts
 - High-risk accounts may be restricted

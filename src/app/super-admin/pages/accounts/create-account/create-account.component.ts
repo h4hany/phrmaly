@@ -18,7 +18,6 @@ interface PharmacyFormData {
   city: string;
   area: string;
   country: string;
-  website: string;
   lat: number;
   long: number;
   manager: {
@@ -196,6 +195,13 @@ interface Module {
                   [required]="true"
                   [placeholder]="'account.create.phonePlaceholder'"
                 />
+
+                <app-text-input
+                  formControlName="website"
+                  type="text"
+                  [label]="'account.create.website'"
+                  [placeholder]="'account.create.websitePlaceholder'"
+                />
               </div>
 
               <!-- File Uploads -->
@@ -297,13 +303,6 @@ interface Module {
                         [label]="'account.create.country'"
                         [required]="true"
                         [placeholder]="'account.create.countryPlaceholder'"
-                      />
-
-                      <app-text-input
-                        [formControl]="getPharmacyControl(i, 'website')"
-                        type="text"
-                        [label]="'account.create.website'"
-                        [placeholder]="'account.create.websitePlaceholder'"
                       />
 
                       <app-text-input
@@ -440,6 +439,10 @@ interface Module {
                     <label class="text-sm font-medium text-gray-600">{{ 'account.create.username' | translate }}</label>
                     <p class="text-gray-900">{{ accountForm.get('username')?.value }}</p>
                   </div>
+                  <div>
+                    <label class="text-sm font-medium text-gray-600">{{ 'account.create.website' | translate }}</label>
+                    <p class="text-gray-900">{{ accountForm.get('website')?.value || '-' }}</p>
+                  </div>
                 </div>
               </div>
 
@@ -561,7 +564,8 @@ export class CreateAccountComponent implements OnInit {
       email: ['admin@pharmacorp.com', [Validators.required, Validators.email]],
       username: ['pharmacorp_admin', [Validators.required]],
       password: ['SecurePass123!', [Validators.required, Validators.minLength(8)]],
-      phone: ['+201234567890', [Validators.required]]
+      phone: ['+201234567890', [Validators.required]],
+      website: ['https://pharmacorp.com', []]
     });
 
     this.pharmaciesForm = this.fb.group({
@@ -790,7 +794,6 @@ export class CreateAccountComponent implements OnInit {
       city: ['Cairo', [Validators.required]],
       area: ['Downtown', [Validators.required]],
       country: ['Egypt', [Validators.required]],
-      website: ['https://pharmacy.example.com', []],
       lat: [30.0444, [Validators.required]],
       long: [31.2357, [Validators.required]],
       manager: this.fb.group({
@@ -898,6 +901,7 @@ export class CreateAccountComponent implements OnInit {
       email: this.accountForm.get('email')?.value,
       username: this.accountForm.get('username')?.value,
       password: this.accountForm.get('password')?.value,
+      website: this.accountForm.get('website')?.value,
       planId: this.selectedPlan.id,
       moduleIds: this.selectedModules.map(m => m.id),
       pharmacies: this.pharmaciesArray.value.map((pharmacy: any) => ({
@@ -906,7 +910,6 @@ export class CreateAccountComponent implements OnInit {
         city: pharmacy.city,
         area: pharmacy.area,
         country: pharmacy.country,
-        website: pharmacy.website,
         lat: parseFloat(pharmacy.lat),
         long: parseFloat(pharmacy.long),
         manager: {

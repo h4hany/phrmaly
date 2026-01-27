@@ -58,6 +58,11 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/modules-permissions/modules-permissions.component').then(m => m.ModulesPermissionsComponent)
   },
   {
+    path: 'modules',
+    canActivate: [superAdminGuard],
+    loadComponent: () => import('./pages/modules/modules.component').then(m => m.ModulesComponent)
+  },
+  {
     path: '',
     redirectTo: 'dashboard',
     pathMatch: 'full'

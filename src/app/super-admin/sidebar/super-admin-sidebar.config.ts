@@ -65,6 +65,11 @@ export const SUPER_ADMIN_SIDEBAR_GROUPS: SidebarGroup[] = [
         path: '/super-admin/modules-permissions',
         label: 'nav.modulesPermissions',
         icon: 'shield-check'
+      },
+      {
+        path: '/super-admin/modules',
+        label: 'nav.modules',
+        icon: 'grid'
       }
     ],
     collapsedByDefault: false,
