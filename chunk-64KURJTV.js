@@ -1,0 +1,1 @@
+import"./chunk-KAT7YFEL.js";var t=[{path:"",loadComponent:()=>import("./chunk-XSV426OH.js").then(o=>o.TransfersListComponent)},{path:"new",loadComponent:()=>import("./chunk-OWGNVL26.js").then(o=>o.TransferWizardComponent)},{path:":id",loadComponent:()=>import("./chunk-32Y2ELTC.js").then(o=>o.TransferDetailComponent)}];export{t as routes};
