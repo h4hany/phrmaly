@@ -1,65 +1,157 @@
-import { Injectable } from '@angular/core';
-import { Observable, of, delay } from 'rxjs';
+import { Injectable, inject } from '@angular/core';
+import { Observable, throwError } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
 import { Occupation } from '../models/occupation.model';
+import { PaginatedResponse, PaginationParams } from '../models/common.model';
+import { CoreApiService } from './core-api.service';
+import { PLATFORM_ENDPOINTS } from '../constants/platform-endpoints';
+import { ApiResponse, PaginatedApiResponse } from '../models/api-response.model';
 
 @Injectable({
   providedIn: 'root'
 })
 export class OccupationsService {
-  private occupations: Occupation[] = [
-    { id: '1', name: 'Engineer', createdAt: new Date('2024-01-01'), updatedAt: new Date('2024-01-01') },
-    { id: '2', name: 'Doctor', createdAt: new Date('2024-01-01'), updatedAt: new Date('2024-01-01') },
-    { id: '3', name: 'Teacher', createdAt: new Date('2024-01-01'), updatedAt: new Date('2024-01-01') },
-    { id: '4', name: 'Nurse', createdAt: new Date('2024-01-01'), updatedAt: new Date('2024-01-01') },
-    { id: '5', name: 'Lawyer', createdAt: new Date('2024-01-01'), updatedAt: new Date('2024-01-01') }
-  ];
+  private coreApi = inject(CoreApiService);
 
-  getAll(): Observable<Occupation[]> {
-    return of([...this.occupations]).pipe(delay(300));
+  getAll(params?: PaginationParams & { searchTerm?: string }): Observable<PaginatedResponse<Occupation>> {
+    const queryParams: Record<string, any> = {};
+    
+    if (params?.page) {
+      queryParams['PageNumber'] = params.page;
+    }
+    if (params?.pageSize) {
+      queryParams['pageSize'] = params.pageSize;
+    }
+    if (params?.searchTerm) {
+      queryParams['searchTerm'] = params.searchTerm;
+    }
+
+    return this.coreApi.getPaginated<Occupation>(
+      PLATFORM_ENDPOINTS.occupations.root,
+      queryParams
+    ).pipe(
+      map(response => {
+        if (!response.success || !response.data) {
+          throw new Error(response.message || 'Failed to fetch occupations');
+        }
+
+        const occupations = response.data.map(occupation => this.mapOccupationResponse(occupation));
+        
+        return {
+          data: occupations,
+          total: response.meta?.pagination?.totalItems ?? occupations.length,
+          page: response.meta?.pagination?.page ?? 1,
+          pageSize: response.meta?.pagination?.pageSize ?? 10,
+          totalPages: response.meta?.pagination?.totalPages ?? 1
+        };
+      }),
+      catchError(error => {
+        const errorMessage = error.message || 'Failed to fetch occupations';
+        return throwError(() => new Error(errorMessage));
+      })
+    );
   }
 
-  getById(id: string): Observable<Occupation | null> {
-    const occupation = this.occupations.find(o => o.id === id);
-    return of(occupation || null).pipe(delay(200));
+  getById(id: string): Observable<Occupation> {
+    return this.coreApi.get<Occupation>(
+      PLATFORM_ENDPOINTS.occupations.byId(id)
+    ).pipe(
+      map(response => {
+        if (!response.success || !response.data) {
+          throw new Error(response.message || 'Occupation not found');
+        }
+        return this.mapOccupationResponse(response.data);
+      }),
+      catchError(error => {
+        const errorMessage = error.message || 'Failed to fetch occupation';
+        return throwError(() => new Error(errorMessage));
+      })
+    );
   }
 
   create(occupation: Omit<Occupation, 'id' | 'createdAt' | 'updatedAt'>): Observable<Occupation> {
-    const newOccupation: Occupation = {
-      ...occupation,
-      id: Date.now().toString(),
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
-    this.occupations.push(newOccupation);
-    return of(newOccupation).pipe(delay(300));
+    return this.coreApi.post<Occupation>(
+      PLATFORM_ENDPOINTS.occupations.root,
+      occupation
+    ).pipe(
+      map(response => {
+        if (!response.success || !response.data) {
+          const errorMsg = response.errors?.[0]?.message || response.message || 'Failed to create occupation';
+          throw new Error(errorMsg);
+        }
+        return this.mapOccupationResponse(response.data);
+      }),
+      catchError(error => {
+        const errorMessage = error.message || 'Failed to create occupation';
+        return throwError(() => new Error(errorMessage));
+      })
+    );
   }
 
   update(id: string, occupation: Partial<Occupation>): Observable<Occupation> {
-    const index = this.occupations.findIndex(o => o.id === id);
-    if (index === -1) {
-      throw new Error('Occupation not found');
-    }
-    this.occupations[index] = {
-      ...this.occupations[index],
-      ...occupation,
-      id,
-      updatedAt: new Date()
-    };
-    return of(this.occupations[index]).pipe(delay(300));
+    return this.coreApi.put<Occupation>(
+      PLATFORM_ENDPOINTS.occupations.byId(id),
+      occupation
+    ).pipe(
+      map(response => {
+        if (!response.success || !response.data) {
+          const errorMsg = response.errors?.[0]?.message || response.message || 'Failed to update occupation';
+          throw new Error(errorMsg);
+        }
+        return this.mapOccupationResponse(response.data);
+      }),
+      catchError(error => {
+        const errorMessage = error.message || 'Failed to update occupation';
+        return throwError(() => new Error(errorMessage));
+      })
+    );
   }
 
-  delete(id: string): Observable<boolean> {
-    const index = this.occupations.findIndex(o => o.id === id);
-    if (index === -1) {
-      return of(false).pipe(delay(200));
-    }
-    this.occupations.splice(index, 1);
-    return of(true).pipe(delay(300));
+  delete(id: string): Observable<void> {
+    return this.coreApi.delete<void>(
+      PLATFORM_ENDPOINTS.occupations.byId(id)
+    ).pipe(
+      map(response => {
+        if (!response.success) {
+          const errorMsg = response.errors?.[0]?.message || response.message || 'Failed to delete occupation';
+          throw new Error(errorMsg);
+        }
+      }),
+      catchError(error => {
+        const errorMessage = error.message || 'Failed to delete occupation';
+        return throwError(() => new Error(errorMessage));
+      })
+    );
   }
 
   search(query: string): Observable<Occupation[]> {
-    const lowerQuery = query.toLowerCase();
-    return of(this.occupations.filter(o => o.name.toLowerCase().includes(lowerQuery))).pipe(delay(200));
+    return this.coreApi.get<Occupation[]>(
+      PLATFORM_ENDPOINTS.occupations.root,
+      { search: query }
+    ).pipe(
+      map(response => {
+        if (!response.success || !response.data) {
+          return [];
+        }
+        return Array.isArray(response.data) ? response.data.map(o => this.mapOccupationResponse(o)) : [];
+      }),
+      catchError(error => {
+        const errorMessage = error.message || 'Failed to search occupations';
+        return throwError(() => new Error(errorMessage));
+      })
+    );
+  }
+
+  /**
+   * Map API response to Occupation model
+   */
+  private mapOccupationResponse(occupation: any): Occupation {
+    return {
+      id: occupation.id,
+      name: occupation.name,
+      createdAt: typeof occupation.createdAt === 'string' ? new Date(occupation.createdAt) : occupation.createdAt,
+      updatedAt: typeof occupation.updatedAt === 'string' ? new Date(occupation.updatedAt) : occupation.updatedAt
+    };
   }
 }
 

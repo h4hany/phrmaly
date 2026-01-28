@@ -21,7 +21,7 @@ import { AlertComponent } from '../../../shared/components/alert/alert.component
           <div class="pill pill-1"></div>
           <div class="pill pill-2"></div>
           <div class="pill pill-3"></div>
-          
+
           <div class="logo">
             <div class="logo-icon">
               <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -77,11 +77,11 @@ import { AlertComponent } from '../../../shared/components/alert/alert.component
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                   <circle cx="12" cy="7" r="4"></circle>
                 </svg>
-                <input 
-                  type="text" 
-                  id="identifier" 
+                <input
+                  type="text"
+                  id="identifier"
                   formControlName="identifier"
-                  placeholder="Enter your admin username or email" 
+                  placeholder="Enter your admin username or email"
                   required
                 >
               </div>
@@ -94,16 +94,16 @@ import { AlertComponent } from '../../../shared/components/alert/alert.component
                   <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
                   <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
                 </svg>
-                <input 
-                  [type]="showPassword() ? 'text' : 'password'" 
-                  id="password" 
+                <input
+                  [type]="showPassword() ? 'text' : 'password'"
+                  id="password"
                   formControlName="password"
-                  placeholder="Enter your password" 
+                  placeholder="Enter your password"
                   required
                 >
-                <button 
-                  type="button" 
-                  class="password-toggle" 
+                <button
+                  type="button"
+                  class="password-toggle"
                   (click)="togglePassword()"
                   tabindex="-1"
                 >
@@ -127,8 +127,8 @@ import { AlertComponent } from '../../../shared/components/alert/alert.component
               <a href="#" class="forgot-password" (click)="$event.preventDefault()">Forgot Password?</a>
             </div>
 
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               class="login-btn"
               [disabled]="loginForm.invalid || loading()"
             >
@@ -674,8 +674,8 @@ export class AdminLoginComponent {
   showPassword = signal(false);
 
   loginForm = this.fb.group({
-    identifier: ['admin@pharmly.com', [Validators.required]],
-    password: ['password', [Validators.required]],
+    identifier: ['superadmin@pharmlyos.com', [Validators.required]],
+    password: ['SuperAdmin123!', [Validators.required]],
     rememberMe: [false]
   });
 

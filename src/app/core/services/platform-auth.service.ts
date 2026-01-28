@@ -1,9 +1,29 @@
-import { Injectable } from '@angular/core';
-import { Observable, of } from 'rxjs';
-import { delay } from 'rxjs/operators';
+import { Injectable, inject } from '@angular/core';
+import { Observable, throwError, of } from 'rxjs';
+import { map, catchError, tap } from 'rxjs/operators';
 import { User, UserRole } from '../models/user.model';
 import { PermissionContext } from '../models/permission.model';
 import { BaseAuthService } from './base-auth.service';
+import { CoreApiService } from './core-api.service';
+import { PLATFORM_ENDPOINTS } from '../constants/platform-endpoints';
+import { ApiResponse } from '../models/api-response.model';
+
+/**
+ * Login Response Interface
+ */
+interface LoginResponseData {
+  accessToken: string;
+  refreshToken: string;
+  expiresAt: string;
+  user: {
+    id: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    roles: string[];
+    permissions: string[];
+  };
+}
 
 /**
  * Platform Authentication Service
@@ -18,46 +38,7 @@ import { BaseAuthService } from './base-auth.service';
   providedIn: 'root'
 })
 export class PlatformAuthService extends BaseAuthService {
-
-  // Mock platform admin users
-  private mockUsers: User[] = [
-    {
-      id: '4',
-      email: 'admin@pharmly.com',
-      username: 'admin',
-      password: 'password',
-      role: UserRole.SUPER_ADMIN,
-      fullName: 'Super Admin',
-      avatarUrl: 'https://ui-avatars.com/api/?name=Super+Admin'
-    },
-    {
-      id: '6',
-      email: 'support@pharmly.com',
-      username: 'support',
-      password: 'password',
-      role: UserRole.SUPPORT_ADMIN,
-      fullName: 'Support Admin',
-      avatarUrl: 'https://ui-avatars.com/api/?name=Support+Admin'
-    },
-    {
-      id: '7',
-      email: 'sales@pharmly.com',
-      username: 'sales',
-      password: 'password',
-      role: UserRole.SALES_ADMIN,
-      fullName: 'Sales Admin',
-      avatarUrl: 'https://ui-avatars.com/api/?name=Sales+Admin'
-    },
-    {
-      id: '8',
-      email: 'finance@pharmly.com',
-      username: 'finance',
-      password: 'password',
-      role: UserRole.FINANCE_ADMIN,
-      fullName: 'Finance Admin',
-      avatarUrl: 'https://ui-avatars.com/api/?name=Finance+Admin'
-    }
-  ];
+  private coreApi = inject(CoreApiService);
 
   constructor() {
     super();
@@ -68,30 +49,124 @@ export class PlatformAuthService extends BaseAuthService {
    * Only allows platform admin roles to login
    */
   login(identifier: string, password: string): Observable<User> {
-    // Find user by email, username, or phone
-    const user = this.mockUsers.find(u =>
-      (u.email === identifier || u.username === identifier || u.phone === identifier) &&
-      (u.password === '' || u.password === password)
+    return this.coreApi.post<LoginResponseData>(
+      PLATFORM_ENDPOINTS.auth.login,
+      { email: identifier, password }
+    ).pipe(
+      map(response => {
+        if (!response.success || !response.data) {
+          throw new Error(response.message || 'Login failed');
+        }
+
+        const loginData = response.data;
+        
+        // Store tokens
+        localStorage.setItem('auth_token', loginData.accessToken);
+        localStorage.setItem('refresh_token', loginData.refreshToken);
+        
+        // Map API user to User model
+        const apiUser = loginData.user;
+        const user: User = {
+          id: apiUser.id,
+          email: apiUser.email,
+          username: apiUser.email, // Use email as username if not provided
+          password: '',
+          role: this.mapRoleToUserRole(apiUser.roles?.[0] || ''),
+          fullName: `${apiUser.firstName || ''} ${apiUser.lastName || ''}`.trim() || apiUser.email,
+          avatarUrl: undefined
+        };
+        
+        this.storeUser(user);
+        return user;
+      }),
+      catchError(error => {
+        const errorMessage = error.message || error.errors?.[0]?.message || 'Invalid credentials';
+        return throwError(() => new Error(errorMessage));
+      })
     );
+  }
 
-    if (!user) {
-      throw new Error('Invalid credentials');
+  /**
+   * Refresh access token
+   */
+  refreshToken(): Observable<{ accessToken: string }> {
+    const refreshToken = localStorage.getItem('refresh_token');
+    if (!refreshToken) {
+      return throwError(() => new Error('No refresh token available'));
     }
 
-    // Verify user is a platform role
-    const platformRoles = [
-      UserRole.SUPER_ADMIN,
-      UserRole.SUPPORT_ADMIN,
-      UserRole.SALES_ADMIN,
-      UserRole.FINANCE_ADMIN
-    ];
+    return this.coreApi.post<{ accessToken: string }>(
+      PLATFORM_ENDPOINTS.auth.refresh,
+      { refreshToken }
+    ).pipe(
+      map(response => {
+        if (!response.success || !response.data) {
+          throw new Error(response.message || 'Token refresh failed');
+        }
+        return response.data;
+      }),
+      tap(data => {
+        localStorage.setItem('auth_token', data.accessToken);
+      }),
+      catchError(error => {
+        // If refresh fails, logout
+        this.logout();
+        return throwError(() => new Error('Session expired. Please login again.'));
+      })
+    );
+  }
 
-    if (!platformRoles.includes(user.role)) {
-      throw new Error('Access denied. Platform admin credentials required.');
-    }
+  /**
+   * Get current user information
+   */
+  getCurrentUserInfo(): Observable<User> {
+    return this.coreApi.get<{
+      id: string;
+      email: string;
+      firstName: string;
+      lastName: string;
+      roles: string[];
+      permissions: string[];
+    }>(PLATFORM_ENDPOINTS.auth.me).pipe(
+      map(response => {
+        if (!response.success || !response.data) {
+          throw new Error(response.message || 'Failed to get user information');
+        }
 
-    this.storeUser(user);
-    return of(user).pipe(delay(500));
+        const apiUser = response.data;
+        const user: User = {
+          id: apiUser.id,
+          email: apiUser.email,
+          username: apiUser.email,
+          password: '',
+          role: this.mapRoleToUserRole(apiUser.roles?.[0] || ''),
+          fullName: `${apiUser.firstName || ''} ${apiUser.lastName || ''}`.trim() || apiUser.email,
+          avatarUrl: undefined
+        };
+        
+        this.storeUser(user);
+        return user;
+      }),
+      catchError(error => {
+        // If getting user info fails, logout
+        this.logout();
+        return throwError(() => new Error('Failed to get user information'));
+      })
+    );
+  }
+
+  /**
+   * Map API role to UserRole enum
+   */
+  private mapRoleToUserRole(role: string): UserRole {
+    const roleMap: { [key: string]: UserRole } = {
+      'super_admin': UserRole.SUPER_ADMIN,
+      'support_admin': UserRole.SUPPORT_ADMIN,
+      'sales_admin': UserRole.SALES_ADMIN,
+      'finance_admin': UserRole.FINANCE_ADMIN
+    };
+    
+    return roleMap[role] || UserRole.SUPER_ADMIN;
   }
 
   /**
@@ -194,7 +269,29 @@ export class PlatformAuthService extends BaseAuthService {
    * Override logout to redirect to admin login
    */
   override logout(): void {
+    const refreshToken = localStorage.getItem('refresh_token');
+    
+    // Call logout endpoint if refresh token exists
+    if (refreshToken) {
+      this.coreApi.post(PLATFORM_ENDPOINTS.auth.logout, { refreshToken }).subscribe({
+        next: () => this.clearSession(),
+        error: () => {
+          // Continue with logout even if API call fails
+          this.clearSession();
+        }
+      });
+    } else {
+      this.clearSession();
+    }
+  }
+
+  /**
+   * Clear session data
+   */
+  private clearSession(): void {
     localStorage.removeItem('currentUser');
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('refresh_token');
     this.currentUserSubject.next(null);
     this.router.navigate(['/admin-login']);
   }

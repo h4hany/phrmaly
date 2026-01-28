@@ -15,6 +15,7 @@ import { TranslatePipe } from '../../../core/pipes/translate.pipe';
 import { TranslationService } from '../../../core/services/translation.service';
 import { ModalComponent } from '../../../shared/components/modal/modal.component';
 import { StatCardComponent } from '../../../shared/components/stat-card/stat-card.component';
+import { PlatformAreasService, Area } from '../../../core/services/platform-areas.service';
 
 @Component({
   selector: 'app-areas',
@@ -126,11 +127,11 @@ import { StatCardComponent } from '../../../shared/components/stat-card/stat-car
             </div>
             <div>
               <label class="block text-sm font-medium text-[var(--card-text)] mb-1">{{ 'platform.areas.city' | translate }}</label>
-              <p class="text-[var(--text-primary)]">{{ selectedArea.city || '-' }}</p>
+              <p class="text-[var(--text-primary)]">{{ selectedArea.city?.name || '-' }}</p>
             </div>
             <div>
               <label class="block text-sm font-medium text-[var(--card-text)] mb-1">{{ 'platform.areas.country' | translate }}</label>
-              <p class="text-[var(--text-primary)]">{{ selectedArea.country || '-' }}</p>
+              <p class="text-[var(--text-primary)]">{{ selectedArea.country?.name || '-' }}</p>
             </div>
             <div>
               <label class="block text-sm font-medium text-[var(--card-text)] mb-1">{{ 'platform.areas.status' | translate }}</label>
@@ -145,10 +146,11 @@ import { StatCardComponent } from '../../../shared/components/stat-card/stat-car
 })
 export class AreasComponent implements OnInit {
   private translationService = inject(TranslationService);
+  private areasService = inject(PlatformAreasService);
 
   loading = false;
-  areas: any[] = [];
-  selectedArea: any | null = null;
+  areas: Area[] = [];
+  selectedArea: Area | null = null;
 
   filters = {
     search: '',
@@ -168,8 +170,7 @@ export class AreasComponent implements OnInit {
 
   columns: TableColumn[] = [
     { key: 'name', label: 'platform.areas.name', sortable: true },
-    { key: 'city', label: 'platform.areas.city', sortable: true },
-    { key: 'country', label: 'platform.areas.country', sortable: true },
+    { key: 'cityName', label: 'platform.areas.city', sortable: true },
     { key: 'isActive', label: 'platform.areas.status', sortable: true }
   ];
 
@@ -181,16 +182,42 @@ export class AreasComponent implements OnInit {
 
   loadAreas(): void {
     this.loading = true;
-    // TODO: Implement API call
-    setTimeout(() => {
-      this.areas = [];
-      this.totalAreas = 0;
-      this.activeAreas = 0;
-      this.inactiveAreas = 0;
-      this.pagination.total = 0;
-      this.pagination.totalPages = 0;
-      this.loading = false;
-    }, 500);
+    
+    const params = {
+      page: this.pagination.page,
+      pageSize: this.pagination.pageSize,
+      ...(this.filters.search && { searchTerm: this.filters.search }),
+      ...(this.filters.isActive !== undefined && { isActive: this.filters.isActive })
+    };
+
+    this.areasService.getAll(params).subscribe({
+      next: (response) => {
+        // Map areas for table display
+        this.areas = response.data.map(area => ({
+          ...area,
+          cityName: area.city?.name || '-'
+        }));
+        this.pagination.total = response.total;
+        this.pagination.totalPages = response.totalPages;
+        this.pagination.page = response.page;
+        this.pagination.pageSize = response.pageSize;
+        
+        // Calculate stats
+        this.totalAreas = response.total;
+        this.activeAreas = response.data.filter(a => a.isActive).length;
+        this.inactiveAreas = response.data.filter(a => !a.isActive).length;
+        
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Failed to load areas:', error);
+        this.areas = [];
+        this.totalAreas = 0;
+        this.activeAreas = 0;
+        this.inactiveAreas = 0;
+        this.loading = false;
+      }
+    });
   }
 
   applyFilters(): void {

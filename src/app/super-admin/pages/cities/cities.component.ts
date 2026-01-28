@@ -15,6 +15,7 @@ import { TranslatePipe } from '../../../core/pipes/translate.pipe';
 import { TranslationService } from '../../../core/services/translation.service';
 import { ModalComponent } from '../../../shared/components/modal/modal.component';
 import { StatCardComponent } from '../../../shared/components/stat-card/stat-card.component';
+import { PlatformCitiesService, City } from '../../../core/services/platform-cities.service';
 
 @Component({
   selector: 'app-cities',
@@ -126,7 +127,7 @@ import { StatCardComponent } from '../../../shared/components/stat-card/stat-car
             </div>
             <div>
               <label class="block text-sm font-medium text-[var(--card-text)] mb-1">{{ 'platform.cities.country' | translate }}</label>
-              <p class="text-[var(--text-primary)]">{{ selectedCity.country || '-' }}</p>
+              <p class="text-[var(--text-primary)]">{{ selectedCity.country?.name || '-' }}</p>
             </div>
             <div>
               <label class="block text-sm font-medium text-[var(--card-text)] mb-1">{{ 'platform.cities.status' | translate }}</label>
@@ -141,10 +142,11 @@ import { StatCardComponent } from '../../../shared/components/stat-card/stat-car
 })
 export class CitiesComponent implements OnInit {
   private translationService = inject(TranslationService);
+  private citiesService = inject(PlatformCitiesService);
 
   loading = false;
-  cities: any[] = [];
-  selectedCity: any | null = null;
+  cities: City[] = [];
+  selectedCity: City | null = null;
 
   filters = {
     search: '',
@@ -164,7 +166,7 @@ export class CitiesComponent implements OnInit {
 
   columns: TableColumn[] = [
     { key: 'name', label: 'platform.cities.name', sortable: true },
-    { key: 'country', label: 'platform.cities.country', sortable: true },
+    { key: 'countryName', label: 'platform.cities.country', sortable: true },
     { key: 'isActive', label: 'platform.cities.status', sortable: true }
   ];
 
@@ -176,16 +178,42 @@ export class CitiesComponent implements OnInit {
 
   loadCities(): void {
     this.loading = true;
-    // TODO: Implement API call
-    setTimeout(() => {
-      this.cities = [];
-      this.totalCities = 0;
-      this.activeCities = 0;
-      this.inactiveCities = 0;
-      this.pagination.total = 0;
-      this.pagination.totalPages = 0;
-      this.loading = false;
-    }, 500);
+    
+    const params = {
+      page: this.pagination.page,
+      pageSize: this.pagination.pageSize,
+      ...(this.filters.search && { searchTerm: this.filters.search }),
+      ...(this.filters.isActive !== undefined && { isActive: this.filters.isActive })
+    };
+
+    this.citiesService.getAll(params).subscribe({
+      next: (response) => {
+        // Map cities for table display
+        this.cities = response.data.map(city => ({
+          ...city,
+          countryName: city.country?.name || '-'
+        }));
+        this.pagination.total = response.total;
+        this.pagination.totalPages = response.totalPages;
+        this.pagination.page = response.page;
+        this.pagination.pageSize = response.pageSize;
+        
+        // Calculate stats
+        this.totalCities = response.total;
+        this.activeCities = response.data.filter(c => c.isActive).length;
+        this.inactiveCities = response.data.filter(c => !c.isActive).length;
+        
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Failed to load cities:', error);
+        this.cities = [];
+        this.totalCities = 0;
+        this.activeCities = 0;
+        this.inactiveCities = 0;
+        this.loading = false;
+      }
+    });
   }
 
   applyFilters(): void {

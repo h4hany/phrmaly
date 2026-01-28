@@ -15,6 +15,7 @@ import { TranslatePipe } from '../../../core/pipes/translate.pipe';
 import { TranslationService } from '../../../core/services/translation.service';
 import { ModalComponent } from '../../../shared/components/modal/modal.component';
 import { StatCardComponent } from '../../../shared/components/stat-card/stat-card.component';
+import { PlatformCountriesService, Country } from '../../../core/services/platform-countries.service';
 
 @Component({
   selector: 'app-countries',
@@ -141,10 +142,11 @@ import { StatCardComponent } from '../../../shared/components/stat-card/stat-car
 })
 export class CountriesComponent implements OnInit {
   private translationService = inject(TranslationService);
+  private countriesService = inject(PlatformCountriesService);
 
   loading = false;
-  countries: any[] = [];
-  selectedCountry: any | null = null;
+  countries: Country[] = [];
+  selectedCountry: Country | null = null;
 
   filters = {
     search: '',
@@ -176,16 +178,38 @@ export class CountriesComponent implements OnInit {
 
   loadCountries(): void {
     this.loading = true;
-    // TODO: Implement API call
-    setTimeout(() => {
-      this.countries = [];
-      this.totalCountries = 0;
-      this.activeCountries = 0;
-      this.inactiveCountries = 0;
-      this.pagination.total = 0;
-      this.pagination.totalPages = 0;
-      this.loading = false;
-    }, 500);
+    
+    const params = {
+      page: this.pagination.page,
+      pageSize: this.pagination.pageSize,
+      ...(this.filters.search && { searchTerm: this.filters.search }),
+      ...(this.filters.isActive !== undefined && { isActive: this.filters.isActive })
+    };
+
+    this.countriesService.getAll(params).subscribe({
+      next: (response) => {
+        this.countries = response.data;
+        this.pagination.total = response.total;
+        this.pagination.totalPages = response.totalPages;
+        this.pagination.page = response.page;
+        this.pagination.pageSize = response.pageSize;
+        
+        // Calculate stats
+        this.totalCountries = response.total;
+        this.activeCountries = this.countries.filter(c => c.isActive).length;
+        this.inactiveCountries = this.countries.filter(c => !c.isActive).length;
+        
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Failed to load countries:', error);
+        this.countries = [];
+        this.totalCountries = 0;
+        this.activeCountries = 0;
+        this.inactiveCountries = 0;
+        this.loading = false;
+      }
+    });
   }
 
   applyFilters(): void {

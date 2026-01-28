@@ -42,10 +42,12 @@
       </button>
       <!-- User Profile -->
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 bg-gray-300 rounded-full" aria-hidden="true"></div>
+        <div class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center text-gray-600 font-semibold text-sm" aria-hidden="true">
+          {{ userDisplayName.charAt(0).toUpperCase() }}
+        </div>
         <div class="text-left">
-          <div class="text-sm font-medium text-gray-900">James Bond</div>
-          <div class="text-xs text-gray-500">&#64;james.bond</div>
+          <div class="text-sm font-medium text-gray-900">{{ userDisplayName }}</div>
+          <div class="text-xs text-gray-500">&#64;{{ userDisplayUsername }}</div>
         </div>
         <app-icon name="chevron-down" size="16" [color]="'#9CA3AF'" />
       </div>
