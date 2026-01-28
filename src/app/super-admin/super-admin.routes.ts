@@ -63,6 +63,26 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/modules/modules.component').then(m => m.ModulesComponent)
   },
   {
+    path: 'areas',
+    canActivate: [superAdminGuard],
+    loadComponent: () => import('./pages/areas/areas.component').then(m => m.AreasComponent)
+  },
+  {
+    path: 'countries',
+    canActivate: [superAdminGuard],
+    loadComponent: () => import('./pages/countries/countries.component').then(m => m.CountriesComponent)
+  },
+  {
+    path: 'cities',
+    canActivate: [superAdminGuard],
+    loadComponent: () => import('./pages/cities/cities.component').then(m => m.CitiesComponent)
+  },
+  {
+    path: 'occupations',
+    canActivate: [superAdminGuard],
+    loadComponent: () => import('./pages/occupations/occupations.component').then(m => m.OccupationsComponent)
+  },
+  {
     path: '',
     redirectTo: 'dashboard',
     pathMatch: 'full'

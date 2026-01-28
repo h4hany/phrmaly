@@ -32,11 +32,6 @@ export const SUPER_ADMIN_SIDEBAR_GROUPS: SidebarGroup[] = [
         icon: 'credit-card'
       },
       {
-        path: '/super-admin/catalog',
-        label: 'nav.globalDrugs',
-        icon: 'pill-bottle'
-      },
-      {
         path: '/super-admin/support',
         label: 'nav.supportTickets',
         icon: 'help-circle'
@@ -74,6 +69,41 @@ export const SUPER_ADMIN_SIDEBAR_GROUPS: SidebarGroup[] = [
     ],
     collapsedByDefault: false,
     order: 1
+  },
+  // Master Data Group
+  {
+    key: 'master-data',
+    label: 'nav.masterData',
+    icon: 'database-arrow-down',
+    items: [
+      {
+        path: '/super-admin/catalog',
+        label: 'nav.globalDrugs',
+        icon: 'pill-bottle'
+      },
+      {
+        path: '/super-admin/areas',
+        label: 'nav.areas',
+        icon: 'map-pin'
+      },
+      {
+        path: '/super-admin/countries',
+        label: 'nav.countries',
+        icon: 'map-grid'
+      },
+      {
+        path: '/super-admin/cities',
+        label: 'nav.cities',
+        icon: 'factory'
+      },
+      {
+        path: '/super-admin/occupations',
+        label: 'nav.occupations',
+        icon: 'briefcase'
+      }
+    ],
+    collapsedByDefault: false,
+    order: 2
   }
 ];
 
