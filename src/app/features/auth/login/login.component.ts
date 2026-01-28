@@ -668,7 +668,7 @@ export class LoginComponent {
 
       const { identifier, password } = this.loginForm.value;
 
-      this.authService.login(identifier!, password!).subscribe({
+      this.authService.loginPharmacy(identifier!, password!).subscribe({
         next: (user) => {
           // Redirect to role-based home route
           const homeRoute = this.rbacService.getHomeRoute();

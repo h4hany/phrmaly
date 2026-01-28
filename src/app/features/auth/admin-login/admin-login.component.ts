@@ -690,17 +690,10 @@ export class AdminLoginComponent {
 
       const { identifier, password } = this.loginForm.value;
 
-      this.authService.login(identifier!, password!).subscribe({
+      this.authService.loginPlatform(identifier!, password!).subscribe({
         next: (user) => {
-          // Check if user has platform role
-          const platformRoles = ['super_admin', 'support_admin', 'sales_admin', 'finance_admin'];
-          if (platformRoles.includes(user.role)) {
-            // Navigate to super admin dashboard
-            this.router.navigate(['/super-admin/dashboard']);
-          } else {
-            this.errorMessage.set('Access denied. Admin credentials required.');
-            this.loading.set(false);
-          }
+          // Navigate to super admin dashboard
+          this.router.navigate(['/super-admin/dashboard']);
         },
         error: (error) => {
           this.errorMessage.set(error.message || 'Invalid credentials');
