@@ -3,10 +3,10 @@
  *
  * Centralized, config-driven permission system for Permission-Based Access Control.
  * This file maps routes, sidebar groups, sidebar items, and features to permission keys.
- * 
+ *
  * Migration Note: Changed from role-based to permission-based system.
  * Each route/group/item/feature now requires a specific permission key instead of role names.
- * 
+ *
  * Permission Key Format: resource.action (e.g., 'patients.view', 'invoice.create')
  */
 
@@ -54,6 +54,8 @@ export const PERMISSIONS: PermissionsConfig = {
     '/vouchers/new': ['vouchers.create'],
     '/purchases/new': ['purchases.create'],
     '/vouchers/:id/edit': ['vouchers.edit'],
+    '/system/automation': ['system.automation.manage'],
+    '/system/migration': ['system.migration.manage'],
   },
 
   // Sidebar group permissions

@@ -117,7 +117,6 @@ import { ChartComponent } from '../../../shared/components/chart/chart.component
                   [plan]="plan"
                   [highlighted]="plan.tier === 'enterprise'"
                   [showActions]="true"
-                  (onSelect)="assignPlan(plan)"
                   (onEdit)="editPlan(plan)"
                 />
               }
@@ -377,14 +376,8 @@ export class SubscriptionsComponent implements OnInit {
     this.loadInvoices();
   }
 
-  assignPlan(plan: SubscriptionPlan): void {
-    // TODO: Implement plan assignment
-    console.log('Assign plan:', plan);
-  }
-
   editPlan(plan: SubscriptionPlan): void {
-    // TODO: Implement plan editing
-    console.log('Edit plan:', plan);
+    this.router.navigate(['/super-admin/subscriptions/edit', plan.id]);
   }
 
   getStatusBadge(status: string): string {

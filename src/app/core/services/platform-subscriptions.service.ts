@@ -11,6 +11,22 @@ import { SubscriptionMapper } from '../../platform/mappers/subscription.mapper';
 import { InvoiceMapper } from '../../platform/mappers/invoice.mapper';
 
 /**
+ * Create Subscription Plan DTO
+ * Matches backend DTO structure
+ */
+export interface CreateSubscriptionPlanDto {
+  name: string;
+  nameAr: string;
+  description: string;
+  descriptionAr: string;
+  price: number;
+  billingCycle: number; // 1 for monthly, 2 for annual
+  isActive: boolean;
+  maxPharmacies: number;
+  maxUsers: number;
+}
+
+/**
  * Platform Subscriptions Service
  * 
  * Feature service for subscription management.
@@ -98,12 +114,10 @@ export class PlatformSubscriptionsService {
   /**
    * Create subscription plan
    */
-  createPlan(
-    plan: Omit<SubscriptionPlan, 'id' | 'createdAt' | 'updatedAt'>
-  ): Observable<SubscriptionPlan> {
+  createPlan(planDto: CreateSubscriptionPlanDto): Observable<SubscriptionPlan> {
     return this.coreApi.post<SubscriptionPlan>(
       PLATFORM_ENDPOINTS.plans.root,
-      plan
+      planDto
     ).pipe(
       map(response => {
         if (!response.success || !response.data) {
@@ -124,7 +138,7 @@ export class PlatformSubscriptionsService {
    */
   updatePlan(
     id: string,
-    updates: Partial<SubscriptionPlan>
+    updates: CreateSubscriptionPlanDto
   ): Observable<SubscriptionPlan> {
     return this.coreApi.put<SubscriptionPlan>(
       PLATFORM_ENDPOINTS.plans.byId(id),

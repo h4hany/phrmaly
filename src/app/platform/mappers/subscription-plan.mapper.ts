@@ -24,16 +24,23 @@ export class SubscriptionPlanMapper {
   static fromApi(plan: unknown): SubscriptionPlan {
     const apiPlan = plan as any;
 
+    // Map billingCycle: 1 = monthly, 2 = annual
+    const billingCycleNumber = Number(apiPlan.billingCycle);
+    const billingCycle = billingCycleNumber === 2 ? 'annual' : 'monthly';
+
     return {
       id: apiPlan.id ?? '',
       name: apiPlan.name ?? '',
+      nameAr: apiPlan.nameAr ?? '',
       description: apiPlan.description ?? '',
+      descriptionAr: apiPlan.descriptionAr ?? '',
       tier: apiPlan.tier ?? 'starter',
       price: Number(apiPlan.price) || 0,
       currency: apiPlan.currency ?? 'USD',
-      billingCycle: apiPlan.billingCycle ?? 'monthly',
+      billingCycle: billingCycle,
       maxPharmacies: Number(apiPlan.maxPharmacies) || 0,
-      maxStaff: Number(apiPlan.maxStaff) || 0,
+      maxStaff: Number(apiPlan.maxUsers) || 0, // Backend uses maxUsers, map to maxStaff for compatibility
+      maxUsers: Number(apiPlan.maxUsers) || 0,
       enabledModules: Array.isArray(apiPlan.enabledModules) ? apiPlan.enabledModules : [],
       features: apiPlan.features && typeof apiPlan.features === 'object' ? apiPlan.features : {},
       isActive: apiPlan.isActive ?? true,

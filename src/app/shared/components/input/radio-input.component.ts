@@ -31,17 +31,17 @@ import { BaseInputComponent } from './base-input.component';
           <div class="radio-item">
             <input
               type="radio"
-              [id]="inputId + '-' + option.value"
+              [id]="inputId + '-' + toValueString(option.value)"
               [name]="name || inputId"
-              [value]="option.value"
-              [checked]="value === option.value"
+              [value]="toValueString(option.value)"
+              [checked]="isOptionSelected(option.value)"
               (change)="onRadioChange(option.value)"
               (blur)="onBlur()"
               [disabled]="disabled"
               [required]="required"
               class="radio-input"
             />
-            <label [for]="inputId + '-' + option.value" class="radio-label">
+            <label [for]="inputId + '-' + toValueString(option.value)" class="radio-label">
               {{ option.label | translate }}
             </label>
           </div>
@@ -135,6 +135,15 @@ export class RadioInputComponent extends BaseInputComponent implements ControlVa
     this.value = value;
     this.onChangeCallback(value);
     this.onTouchedCallback();
+  }
+
+  toValueString(value: any): string {
+    return String(value);
+  }
+
+  isOptionSelected(optionValue: any): boolean {
+    // Handle both strict equality and string comparison for boolean/string values
+    return this.value === optionValue || String(this.value) === String(optionValue);
   }
 }
 

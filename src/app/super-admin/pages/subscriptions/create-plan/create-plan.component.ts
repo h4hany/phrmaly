@@ -1,18 +1,14 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { TextInputComponent } from '../../../../shared/components/input/text-input.component';
-import { ButtonComponent } from '../../../../shared/components/button/button.component';
-import { SelectableCardComponent } from '../../../../shared/components/selectable-card/selectable-card.component';
+import { TextareaInputComponent } from '../../../../shared/components/input/textarea-input.component';
+import { RadioInputComponent } from '../../../../shared/components/input/radio-input.component';
+import { ModernFormWrapperComponent } from '../../../../shared/components/modern-form-wrapper/modern-form-wrapper.component';
+import { FormSectionComponent } from '../../../../shared/components/form-section/form-section.component';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
-import { PlatformSubscriptionsService } from '../../../../core/services/platform-subscriptions.service';
-import { PlatformModule } from '../../../../core/models/platform.model';
-
-interface PlanCapability {
-  id: string;
-  nameKey: string;
-}
+import { PlatformSubscriptionsService, CreateSubscriptionPlanDto } from '../../../../core/services/platform-subscriptions.service';
 
 @Component({
   selector: 'app-create-plan',
@@ -21,31 +17,21 @@ interface PlanCapability {
     CommonModule,
     ReactiveFormsModule,
     TextInputComponent,
-    ButtonComponent,
-    SelectableCardComponent,
+    TextareaInputComponent,
+    RadioInputComponent,
+    ModernFormWrapperComponent,
+    FormSectionComponent,
     TranslatePipe
   ],
   template: `
-    <div class="w-full px-4 sm:px-6 lg:px-8 py-8">
-      <div class="mb-6">
-        <button
-          (click)="goBack()"
-          class="flex items-center text-sm text-[var(--card-text)] hover:text-[var(--text-primary)] mb-4"
-        >
-          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-          </svg>
-          {{ 'common.back' | translate }}
-        </button>
-        <h1 class="text-2xl font-bold text-[var(--text-primary)]">{{ 'platform.subscriptions.createPlan' | translate }}</h1>
-        <p class="text-sm text-[var(--card-text)] mt-1">{{ 'platform.subscriptions.createPlanSubtitle' | translate }}</p>
-      </div>
-
-      <form [formGroup]="planForm" class="space-y-6">
-        <!-- Basic Information -->
-        <div class="bg-[var(--card-bg)] rounded-[var(--radius-lg)] shadow-[var(--shadow-sm)] p-6">
-          <h2 class="text-lg font-semibold text-[var(--text-primary)] mb-4">{{ 'platform.subscriptions.planBasicInfo' | translate }}</h2>
-          
+    <app-modern-form-wrapper
+      [title]="(isEdit ? 'platform.subscriptions.editPlan' : 'platform.subscriptions.createPlan')"
+      [description]="(isEdit ? 'platform.subscriptions.editPlanSubtitle' : 'platform.subscriptions.createPlanSubtitle')"
+      [errorMessage]="errorMessage"
+    >
+      <form [formGroup]="planForm" (ngSubmit)="createPlan()" class="p-8">
+        <!-- Basic Information Section -->
+        <app-form-section [title]="'platform.subscriptions.planBasicInfo'">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <app-text-input
               formControlName="name"
@@ -54,18 +40,12 @@ interface PlanCapability {
               [placeholder]="'platform.subscriptions.planNamePlaceholder'"
             />
 
-            <div>
-              <label class="block text-sm font-medium text-[var(--card-text)] mb-1">{{ 'platform.subscriptions.planTier' | translate }}</label>
-              <select
-                formControlName="tier"
-                class="w-full px-4 py-2 border border-[var(--border-color)] rounded-[var(--radius-md)] text-sm bg-[var(--card-bg)] text-[var(--text-primary)]"
-              >
-                <option value="starter">{{ 'platform.subscriptions.tierStarter' | translate }}</option>
-                <option value="professional">{{ 'platform.subscriptions.tierProfessional' | translate }}</option>
-                <option value="enterprise">{{ 'platform.subscriptions.tierEnterprise' | translate }}</option>
-                <option value="custom">{{ 'platform.subscriptions.tierCustom' | translate }}</option>
-              </select>
-            </div>
+            <app-text-input
+              formControlName="nameAr"
+              [label]="'platform.subscriptions.planNameAr'"
+              [required]="true"
+              [placeholder]="'platform.subscriptions.planNameArPlaceholder'"
+            />
 
             <app-text-input
               formControlName="price"
@@ -74,17 +54,6 @@ interface PlanCapability {
               [required]="true"
               [placeholder]="'platform.subscriptions.planPricePlaceholder'"
             />
-
-            <div>
-              <label class="block text-sm font-medium text-[var(--card-text)] mb-1">{{ 'platform.subscriptions.billingCycle' | translate }}</label>
-              <select
-                formControlName="billingCycle"
-                class="w-full px-4 py-2 border border-[var(--border-color)] rounded-[var(--radius-md)] text-sm bg-[var(--card-bg)] text-[var(--text-primary)]"
-              >
-                <option value="monthly">{{ 'platform.plan.month' | translate }}</option>
-                <option value="annual">{{ 'platform.plan.year' | translate }}</option>
-              </select>
-            </div>
 
             <app-text-input
               formControlName="maxPharmacies"
@@ -95,160 +64,158 @@ interface PlanCapability {
             />
 
             <app-text-input
-              formControlName="maxStaff"
+              formControlName="maxUsers"
               type="number"
-              [label]="'platform.subscriptions.maxStaff'"
+              [label]="'platform.subscriptions.maxUsers'"
               [required]="true"
-              [placeholder]="'platform.subscriptions.maxStaffPlaceholder'"
+              [placeholder]="'platform.subscriptions.maxUsersPlaceholder'"
             />
           </div>
 
           <div class="mt-6">
-            <label class="block text-sm font-medium text-[var(--card-text)] mb-2">{{ 'platform.subscriptions.planDescription' | translate }}</label>
-            <textarea
+            <app-radio-input
+              formControlName="billingCycle"
+              [label]="'platform.subscriptions.billingCycle'"
+              [required]="true"
+              [radioOptions]="billingCycleOptions"
+            />
+          </div>
+
+          <div class="mt-6">
+            <app-radio-input
+              formControlName="isActive"
+              [label]="'platform.subscriptions.planStatus'"
+              [required]="true"
+              [radioOptions]="statusOptions"
+            />
+          </div>
+
+          <div class="mt-6">
+            <app-textarea-input
               formControlName="description"
-              rows="4"
-              class="w-full px-4 py-2 border border-[var(--border-color)] rounded-[var(--radius-md)] text-sm bg-[var(--card-bg)] text-[var(--text-primary)]"
-              [placeholder]="'platform.subscriptions.planDescriptionPlaceholder' | translate"
-            ></textarea>
+              [label]="'platform.subscriptions.planDescription'"
+              [required]="true"
+              [placeholder]="'platform.subscriptions.planDescriptionPlaceholder'"
+              [rows]="4"
+            />
           </div>
-        </div>
 
-        <!-- Capabilities -->
-        <div class="bg-[var(--card-bg)] rounded-[var(--radius-lg)] shadow-[var(--shadow-sm)] p-6">
-          <h2 class="text-lg font-semibold text-[var(--text-primary)] mb-4">{{ 'platform.subscriptions.planCapabilities' | translate }}</h2>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            @for (capability of capabilities; track capability.id) {
-              <div class="flex items-center">
-                <input
-                  type="checkbox"
-                  [id]="'capability-' + capability.id"
-                  [value]="capability.id"
-                  (change)="toggleCapability(capability.id, $event)"
-                  [checked]="isCapabilitySelected(capability.id)"
-                  class="w-4 h-4 text-[var(--primary-color)] border-[var(--border-color)] rounded focus:ring-[var(--primary-color)]"
-                />
-                <label [for]="'capability-' + capability.id" class="ml-2 text-sm text-[var(--text-primary)] cursor-pointer">
-                  {{ capability.nameKey | translate }}
-                </label>
-              </div>
-            }
+          <div class="mt-6">
+            <app-textarea-input
+              formControlName="descriptionAr"
+              [label]="'platform.subscriptions.planDescriptionAr'"
+              [required]="true"
+              [placeholder]="'platform.subscriptions.planDescriptionArPlaceholder'"
+              [rows]="4"
+            />
           </div>
-        </div>
+        </app-form-section>
 
-        <!-- Modules Selection -->
-        <div class="bg-[var(--card-bg)] rounded-[var(--radius-lg)] shadow-[var(--shadow-sm)] p-6">
-          <h2 class="text-lg font-semibold text-[var(--text-primary)] mb-4">{{ 'platform.subscriptions.planModules' | translate }}</h2>
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            @for (module of availableModules; track module.id) {
-              <app-selectable-card
-                [selected]="isModuleSelected(module.id)"
-                (cardClick)="toggleModule(module.id)"
-              >
-                <div class="flex items-center justify-between mb-2">
-                  <h3 class="text-lg font-bold text-gray-900">{{ module.nameKey | translate }}</h3>
-                </div>
-                <p class="text-sm text-gray-600">{{ module.descriptionKey | translate }}</p>
-              </app-selectable-card>
-            }
-          </div>
-        </div>
-
-        <!-- Actions -->
-        <div class="flex items-center justify-end gap-4 pt-6 border-t border-[var(--border-color)]">
-          <app-button variant="outline" (onClick)="goBack()">
-            {{ 'common.cancel' | translate }}
-          </app-button>
-          <app-button 
-            variant="primary" 
-            (onClick)="createPlan()"
-            [disabled]="planForm.invalid"
-            [loading]="loading"
+        <!-- Form Actions -->
+        <div class="flex items-center justify-end gap-4 pt-8 border-t-2 border-gray-100">
+          <button
+            type="button"
+            (click)="goBack()"
+            class="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 hover:border-gray-400 transition-all duration-200"
           >
-            {{ 'platform.subscriptions.createPlan' | translate }}
-          </app-button>
+            {{ 'common.cancel' | translate }}
+          </button>
+          <button
+            type="submit"
+            [disabled]="planForm.invalid || loading"
+            class="px-6 py-3 rounded-xl font-semibold hover:shadow-xl hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-none transition-all duration-200 flex items-center gap-2"
+            [style.background]="'var(--primary-bg)'"
+            [style.color]="'var(--primary-text)'"
+          >
+            @if (loading) {
+              <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            } @else {
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+            }
+            {{ (isEdit ? 'platform.subscriptions.updatePlan' : 'platform.subscriptions.createPlan') | translate }}
+          </button>
         </div>
       </form>
-    </div>
+    </app-modern-form-wrapper>
   `,
   styles: []
 })
 export class CreatePlanComponent implements OnInit {
   private fb = inject(FormBuilder);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private subscriptionsService = inject(PlatformSubscriptionsService);
 
   planForm!: FormGroup;
   loading = false;
-  selectedCapabilities: string[] = [];
-  selectedModules: PlatformModule[] = [];
+  errorMessage?: string;
+  isEdit = false;
+  planId: string | null = null;
 
-  capabilities: PlanCapability[] = [
-    { id: 'unlimited_pharmacies', nameKey: 'platform.subscriptions.capabilityUnlimitedPharmacies' },
-    { id: 'unlimited_staff', nameKey: 'platform.subscriptions.capabilityUnlimitedStaff' },
-    { id: 'priority_support', nameKey: 'platform.subscriptions.capabilityPrioritySupport' },
-    { id: 'advanced_analytics', nameKey: 'platform.subscriptions.capabilityAdvancedAnalytics' },
-    { id: 'api_access', nameKey: 'platform.subscriptions.capabilityApiAccess' },
-    { id: 'custom_integrations', nameKey: 'platform.subscriptions.capabilityCustomIntegrations' },
-    { id: 'white_label', nameKey: 'platform.subscriptions.capabilityWhiteLabel' },
-    { id: 'dedicated_account_manager', nameKey: 'platform.subscriptions.capabilityDedicatedManager' }
+  billingCycleOptions: Array<{ value: string; label: string }> = [
+    { value: 'monthly', label: 'platform.plan.month' },
+    { value: 'annual', label: 'platform.plan.year' }
   ];
 
-  availableModules: Array<{ id: PlatformModule; nameKey: string; descriptionKey: string }> = [
-    { id: 'inventory', nameKey: 'platform.modules.inventory', descriptionKey: 'account.create.modules.inventory.description' },
-    { id: 'hr', nameKey: 'platform.modules.hr', descriptionKey: 'account.create.modules.hr.description' },
-    { id: 'finance', nameKey: 'platform.modules.finance', descriptionKey: 'account.create.modules.finance.description' },
-    { id: 'automation', nameKey: 'platform.modules.automation', descriptionKey: 'account.create.modules.automation.description' },
-    { id: 'loyalty', nameKey: 'platform.modules.loyalty', descriptionKey: 'account.create.modules.loyalty.description' },
-    { id: 'api_access', nameKey: 'platform.modules.api_access', descriptionKey: 'account.create.modules.apiAccess.description' },
-    { id: 'ai_features', nameKey: 'platform.modules.ai_features', descriptionKey: 'account.create.modules.aiFeatures.description' },
-    { id: 'analytics', nameKey: 'platform.modules.analytics', descriptionKey: 'account.create.modules.analytics.description' },
-    { id: 'reports', nameKey: 'platform.modules.reports', descriptionKey: 'account.create.modules.reports.description' },
-    { id: 'multi_branch', nameKey: 'platform.modules.multi_branch', descriptionKey: 'account.create.modules.multiBranch.description' }
+  statusOptions: Array<{ value: boolean; label: string }> = [
+    { value: true, label: 'common.active' },
+    { value: false, label: 'common.inactive' }
   ];
 
   ngOnInit(): void {
+    this.planId = this.route.snapshot.paramMap.get('id');
+    this.isEdit = !!this.planId;
+    
     this.initializeForm();
+    
+    if (this.isEdit && this.planId) {
+      this.loadPlan();
+    }
   }
 
   initializeForm(): void {
     this.planForm = this.fb.group({
       name: ['', [Validators.required]],
+      nameAr: ['', [Validators.required]],
       description: ['', [Validators.required]],
-      tier: ['starter', [Validators.required]],
+      descriptionAr: ['', [Validators.required]],
       price: [0, [Validators.required, Validators.min(0)]],
       billingCycle: ['monthly', [Validators.required]],
       maxPharmacies: [1, [Validators.required, Validators.min(-1)]],
-      maxStaff: [1, [Validators.required, Validators.min(-1)]]
+      maxUsers: [1, [Validators.required, Validators.min(-1)]],
+      isActive: [true, [Validators.required]]
     });
   }
 
-  toggleCapability(capabilityId: string, event: Event): void {
-    const checked = (event.target as HTMLInputElement).checked;
-    if (checked) {
-      if (!this.selectedCapabilities.includes(capabilityId)) {
-        this.selectedCapabilities.push(capabilityId);
+  loadPlan(): void {
+    if (!this.planId) return;
+    
+    this.loading = true;
+    this.subscriptionsService.getPlanById(this.planId).subscribe({
+      next: (plan) => {
+        this.planForm.patchValue({
+          name: plan.name,
+          nameAr: plan.nameAr || '',
+          description: plan.description,
+          descriptionAr: plan.descriptionAr || '',
+          price: plan.price,
+          billingCycle: plan.billingCycle,
+          maxPharmacies: plan.maxPharmacies,
+          maxUsers: plan.maxUsers || plan.maxStaff,
+          isActive: plan.isActive
+        });
+        this.loading = false;
+      },
+      error: (error) => {
+        this.loading = false;
+        this.errorMessage = error.message || 'Failed to load subscription plan';
       }
-    } else {
-      this.selectedCapabilities = this.selectedCapabilities.filter(id => id !== capabilityId);
-    }
-  }
-
-  isCapabilitySelected(capabilityId: string): boolean {
-    return this.selectedCapabilities.includes(capabilityId);
-  }
-
-  toggleModule(moduleId: PlatformModule): void {
-    const index = this.selectedModules.indexOf(moduleId);
-    if (index >= 0) {
-      this.selectedModules.splice(index, 1);
-    } else {
-      this.selectedModules.push(moduleId);
-    }
-  }
-
-  isModuleSelected(moduleId: PlatformModule): boolean {
-    return this.selectedModules.includes(moduleId);
+    });
   }
 
   createPlan(): void {
@@ -258,24 +225,47 @@ export class CreatePlanComponent implements OnInit {
     }
 
     this.loading = true;
-    const planData = {
-      ...this.planForm.value,
-      enabledModules: this.selectedModules,
-      features: {
-        capabilities: this.selectedCapabilities
-      },
-      isActive: true,
-      isArchived: false
+    this.errorMessage = undefined;
+
+    // Map form values to backend DTO
+    const formValue = this.planForm.value;
+    const planDto: CreateSubscriptionPlanDto = {
+      name: formValue.name,
+      nameAr: formValue.nameAr,
+      description: formValue.description,
+      descriptionAr: formValue.descriptionAr,
+      price: Number(formValue.price),
+      billingCycle: formValue.billingCycle === 'monthly' ? 1 : 2, // 1 for monthly, 2 for annual
+      isActive: formValue.isActive === true || formValue.isActive === 'true' || formValue.isActive === true,
+      maxPharmacies: Number(formValue.maxPharmacies),
+      maxUsers: Number(formValue.maxUsers)
     };
 
-    // TODO: Replace with actual API call
-    console.log('Creating plan:', planData);
-    
-    // Simulate API call
-    setTimeout(() => {
-      this.loading = false;
-      this.router.navigate(['/super-admin/subscriptions']);
-    }, 2000);
+    if (this.isEdit && this.planId) {
+      // Update existing plan
+      this.subscriptionsService.updatePlan(this.planId, planDto).subscribe({
+        next: () => {
+          this.loading = false;
+          this.router.navigate(['/super-admin/subscriptions']);
+        },
+        error: (error) => {
+          this.loading = false;
+          this.errorMessage = error.message || 'Failed to update subscription plan';
+        }
+      });
+    } else {
+      // Create new plan
+      this.subscriptionsService.createPlan(planDto).subscribe({
+        next: () => {
+          this.loading = false;
+          this.router.navigate(['/super-admin/subscriptions']);
+        },
+        error: (error) => {
+          this.loading = false;
+          this.errorMessage = error.message || 'Failed to create subscription plan';
+        }
+      });
+    }
   }
 
   goBack(): void {

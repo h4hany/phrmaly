@@ -64,13 +64,16 @@ export type PlatformModule =
 export interface SubscriptionPlan {
   id: string;
   name: string;
+  nameAr?: string;
   description: string;
+  descriptionAr?: string;
   tier: 'starter' | 'professional' | 'enterprise' | 'custom';
   price: number;
   currency: string;
   billingCycle: 'monthly' | 'annual';
   maxPharmacies: number;
   maxStaff: number;
+  maxUsers?: number;
   enabledModules: PlatformModule[];
   features: {
     [key: string]: any;

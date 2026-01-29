@@ -8,6 +8,10 @@ export const routes: Routes = [
   {
     path: 'new',
     loadComponent: () => import('./create-plan/create-plan.component').then(m => m.CreatePlanComponent)
+  },
+  {
+    path: 'edit/:id',
+    loadComponent: () => import('./create-plan/create-plan.component').then(m => m.CreatePlanComponent)
   }
 ];
 

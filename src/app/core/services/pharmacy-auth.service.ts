@@ -7,7 +7,7 @@ import { BaseAuthService } from './base-auth.service';
 
 /**
  * Pharmacy Authentication Service
- * 
+ *
  * Handles authentication for pharmacy users:
  * - Account Owners
  * - Pharmacy Managers

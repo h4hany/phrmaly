@@ -8,8 +8,15 @@ import { inject } from '@angular/core';
  * 
  * Token key: 'auth_token'
  * Header format: 'Authorization: Bearer <token>'
+ * 
+ * Note: Skips auth endpoints (login, refresh) as they don't need tokens
  */
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
+  // Skip adding token for auth endpoints
+  if (req.url.includes('/auth/login') || req.url.includes('/auth/refresh')) {
+    return next(req);
+  }
+
   const token = localStorage.getItem('auth_token');
 
   if (token) {

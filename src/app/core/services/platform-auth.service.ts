@@ -89,13 +89,13 @@ export class PlatformAuthService extends BaseAuthService {
   /**
    * Refresh access token
    */
-  refreshToken(): Observable<{ accessToken: string }> {
+  refreshToken(): Observable<{ accessToken: string; refreshToken: string }> {
     const refreshToken = localStorage.getItem('refresh_token');
     if (!refreshToken) {
       return throwError(() => new Error('No refresh token available'));
     }
 
-    return this.coreApi.post<{ accessToken: string }>(
+    return this.coreApi.post<LoginResponseData>(
       PLATFORM_ENDPOINTS.auth.refresh,
       { refreshToken }
     ).pipe(
@@ -103,10 +103,21 @@ export class PlatformAuthService extends BaseAuthService {
         if (!response.success || !response.data) {
           throw new Error(response.message || 'Token refresh failed');
         }
-        return response.data;
-      }),
-      tap(data => {
-        localStorage.setItem('auth_token', data.accessToken);
+        
+        const loginData = response.data;
+        
+        // Store new tokens
+        if (loginData.accessToken) {
+          localStorage.setItem('auth_token', loginData.accessToken);
+        }
+        if (loginData.refreshToken) {
+          localStorage.setItem('refresh_token', loginData.refreshToken);
+        }
+        
+        return {
+          accessToken: loginData.accessToken,
+          refreshToken: loginData.refreshToken || refreshToken
+        };
       }),
       catchError(error => {
         // If refresh fails, logout

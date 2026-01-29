@@ -11,8 +11,7 @@ import { BadgeComponent } from '../badge/badge.component';
   imports: [CommonModule, TranslatePipe, ButtonComponent, BadgeComponent],
   template: `
     <div class="bg-[var(--card-bg)] rounded-[var(--radius-lg)] shadow-[var(--shadow-sm)] p-6 border-2"
-         [class.border-[var(--primary-color)]]="highlighted"
-         [class.border-transparent]="!highlighted">
+         [class.border-[var(--primary-color)]]="highlighted">
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-xl font-bold text-[var(--text-primary)]">{{ plan.name }}</h3>
         @if (plan.tier === 'enterprise') {
@@ -35,24 +34,13 @@ import { BadgeComponent } from '../badge/badge.component';
           <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
           </svg>
-          <span class="text-[var(--text-primary)]">{{ plan.maxStaff === -1 ? ('platform.plan.unlimitedStaff' | translate) : (plan.maxStaff + ' ' + ('platform.plan.staff' | translate)) }}</span>
-        </div>
-        <div class="flex items-center gap-2 text-sm">
-          <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-          </svg>
-          <span class="text-[var(--text-primary)]">{{ plan.enabledModules.length }} {{ 'platform.plan.modules' | translate }}</span>
+          <span class="text-[var(--text-primary)]">{{ (plan.maxUsers ?? plan.maxStaff) === -1 ? ('platform.plan.unlimitedStaff' | translate) : ((plan.maxUsers ?? plan.maxStaff) + ' ' + ('platform.plan.staff' | translate)) }}</span>
         </div>
       </div>
       @if (showActions) {
-        <div class="flex gap-2">
-          <app-button variant="primary" size="sm" class="flex-1" (onClick)="onSelect.emit(plan)">
-            {{ 'platform.plan.select' | translate }}
-          </app-button>
-          <app-button variant="outline" size="sm" (onClick)="onEdit.emit(plan)">
-            {{ 'common.edit' | translate }}
-          </app-button>
-        </div>
+        <app-button variant="primary" size="lg" [fullWidth]="true" (onClick)="onEdit.emit(plan)">
+          {{ 'common.edit' | translate }}
+        </app-button>
       }
     </div>
   `,
@@ -62,7 +50,6 @@ export class PlanCardComponent {
   @Input() plan!: SubscriptionPlan;
   @Input() highlighted = false;
   @Input() showActions = true;
-  @Output() onSelect = new EventEmitter<SubscriptionPlan>();
   @Output() onEdit = new EventEmitter<SubscriptionPlan>();
 
   formatPrice(amount: number): string {

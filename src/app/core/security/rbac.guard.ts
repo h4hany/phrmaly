@@ -1,8 +1,8 @@
 /**
  * RBAC Route Guard
- * 
+ *
  * Hard security layer that protects every route.
- * 
+ *
  * Behavior:
  * - Checks if user can access the route using RbacService
  * - If unauthorized, redirects to /access-denied
@@ -32,11 +32,11 @@ export const rbacGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state) =
   // Check if user can access this route
   if (!rbacService.canAccessRoute(routePath)) {
     // Redirect to access denied page
-    router.navigate(['/access-denied'], { 
-      queryParams: { 
+    router.navigate(['/access-denied'], {
+      queryParams: {
         returnUrl: state.url,
         attemptedRoute: routePath
-      } 
+      }
     });
     return false;
   }

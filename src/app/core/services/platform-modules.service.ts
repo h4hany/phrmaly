@@ -1,114 +1,183 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { PaginatedResponse, PaginationParams } from '../models/common.model';
+import { CoreApiService } from './core-api.service';
+import { PLATFORM_ENDPOINTS } from '../constants/platform-endpoints';
+import { ApiResponse, PaginatedApiResponse } from '../models/api-response.model';
 
+/**
+ * Platform Module DTO matching backend structure
+ */
 export interface PlatformModule {
   id: string;
   name: string;
-  nameAr?: string;
+  nameAr: string;
   description: string;
-  descriptionAr?: string;
-  capabilities: string;
-  capabilitiesAr?: string;
-  pricePerMonth?: number;
+  descriptionAr: string;
+  code: string;
+  capabilities: string; // Comma-separated string
+  capabilitiesAr: string; // Comma-separated string
+  price: number;
   isActive: boolean;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
+/**
+ * Create/Update Module DTO
+ */
+export interface CreateModuleDto {
+  name: string;
+  nameAr: string;
+  description: string;
+  descriptionAr: string;
+  code: string;
+  capabilities: string; // Comma-separated string
+  capabilitiesAr: string; // Comma-separated string
+  price: number;
+  isActive: boolean;
+}
+
+/**
+ * Platform Modules Service
+ * 
+ * Feature service for module management.
+ * 
+ * Architecture Rules:
+ * - Orchestration only (calls CoreApiService)
+ * - Handles pagination meta
+ * - Handles success/error responses
+ */
 @Injectable({
   providedIn: 'root'
 })
 export class PlatformModulesService {
-  private http = inject(HttpClient);
-  private readonly baseUrl = 'http://localhost:5000/api/platform/v1';
+  private coreApi = inject(CoreApiService);
 
-  private getHeaders(): HttpHeaders {
-    const token = localStorage.getItem('auth_token');
-    return new HttpHeaders({
-      'Content-Type': 'application/json',
-      ...(token && { Authorization: `Bearer ${token}` })
-    });
-  }
-
+  /**
+   * Get all modules with pagination
+   */
   getAll(params?: PaginationParams): Observable<PaginatedResponse<PlatformModule>> {
-    let httpParams = new HttpParams();
+    const queryParams: Record<string, any> = {};
     
     if (params?.page) {
-      httpParams = httpParams.set('page', params.page.toString());
+      queryParams['PageNumber'] = params.page;
     }
     if (params?.pageSize) {
-      httpParams = httpParams.set('pageSize', params.pageSize.toString());
+      queryParams['pageSize'] = params.pageSize;
     }
 
-    return this.http.get<PaginatedResponse<PlatformModule>>(`${this.baseUrl}/modules`, {
-      headers: this.getHeaders(),
-      params: httpParams
-    }).pipe(
-      map(response => ({
-        ...response,
-        data: response.data.map(module => this.mapModuleResponse(module))
-      })),
+    return this.coreApi.get<PlatformModule[]>(
+      PLATFORM_ENDPOINTS.modules.root,
+      queryParams
+    ).pipe(
+      map(response => {
+        if (!response.success || !response.data) {
+          throw new Error(response.message || 'Failed to fetch modules');
+        }
+
+        // Handle both array and single object responses
+        const modulesArray = Array.isArray(response.data) 
+          ? response.data 
+          : [response.data];
+        
+        const modules = modulesArray.map(module => this.mapModuleResponse(module));
+        
+        return {
+          data: modules,
+          total: response.meta?.pagination?.totalItems ?? modules.length,
+          page: response.meta?.pagination?.page ?? 1,
+          pageSize: response.meta?.pagination?.pageSize ?? 10,
+          totalPages: response.meta?.pagination?.totalPages ?? 1
+        };
+      }),
       catchError(error => {
-        const errorMessage = error.error?.message || error.message || 'Failed to fetch modules';
+        const errorMessage = error.message || 'Failed to fetch modules';
         return throwError(() => new Error(errorMessage));
       })
     );
   }
 
+  /**
+   * Get module by ID
+   */
   getById(id: string): Observable<PlatformModule> {
-    return this.http.get<PlatformModule>(`${this.baseUrl}/modules/${id}`, {
-      headers: this.getHeaders()
-    }).pipe(
-      map(module => this.mapModuleResponse(module)),
-      catchError(error => {
-        if (error.status === 404) {
-          return throwError(() => new Error('Module not found'));
+    return this.coreApi.get<PlatformModule>(
+      PLATFORM_ENDPOINTS.modules.byId(id)
+    ).pipe(
+      map(response => {
+        if (!response.success || !response.data) {
+          throw new Error(response.message || 'Module not found');
         }
-        const errorMessage = error.error?.message || error.message || 'Failed to fetch module';
+        return this.mapModuleResponse(response.data);
+      }),
+      catchError(error => {
+        const errorMessage = error.message || 'Failed to fetch module';
         return throwError(() => new Error(errorMessage));
       })
     );
   }
 
-  create(module: Omit<PlatformModule, 'id' | 'createdAt' | 'updatedAt'>): Observable<PlatformModule> {
-    return this.http.post<PlatformModule>(`${this.baseUrl}/modules`, module, {
-      headers: this.getHeaders()
-    }).pipe(
-      map(response => this.mapModuleResponse(response)),
-      catchError(error => {
-        const errorMessage = error.error?.message || error.message || 'Failed to create module';
-        return throwError(() => new Error(errorMessage));
-      })
-    );
-  }
-
-  update(id: string, updates: Partial<PlatformModule>): Observable<PlatformModule> {
-    return this.http.put<PlatformModule>(`${this.baseUrl}/modules/${id}`, updates, {
-      headers: this.getHeaders()
-    }).pipe(
-      map(response => this.mapModuleResponse(response)),
-      catchError(error => {
-        if (error.status === 404) {
-          return throwError(() => new Error('Module not found'));
+  /**
+   * Create module
+   */
+  create(moduleDto: CreateModuleDto): Observable<PlatformModule> {
+    return this.coreApi.post<PlatformModule>(
+      PLATFORM_ENDPOINTS.modules.root,
+      moduleDto
+    ).pipe(
+      map(response => {
+        if (!response.success || !response.data) {
+          const errorMsg = response.errors?.[0]?.message || response.message || 'Failed to create module';
+          throw new Error(errorMsg);
         }
-        const errorMessage = error.error?.message || error.message || 'Failed to update module';
+        return this.mapModuleResponse(response.data);
+      }),
+      catchError(error => {
+        const errorMessage = error.message || 'Failed to create module';
         return throwError(() => new Error(errorMessage));
       })
     );
   }
 
+  /**
+   * Update module
+   */
+  update(id: string, updates: CreateModuleDto): Observable<PlatformModule> {
+    return this.coreApi.put<PlatformModule>(
+      PLATFORM_ENDPOINTS.modules.byId(id),
+      updates
+    ).pipe(
+      map(response => {
+        if (!response.success || !response.data) {
+          const errorMsg = response.errors?.[0]?.message || response.message || 'Failed to update module';
+          throw new Error(errorMsg);
+        }
+        return this.mapModuleResponse(response.data);
+      }),
+      catchError(error => {
+        const errorMessage = error.message || 'Failed to update module';
+        return throwError(() => new Error(errorMessage));
+      })
+    );
+  }
+
+  /**
+   * Delete module
+   */
   delete(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/modules/${id}`, {
-      headers: this.getHeaders()
-    }).pipe(
-      catchError(error => {
-        if (error.status === 404) {
-          return throwError(() => new Error('Module not found'));
+    return this.coreApi.delete<void>(
+      PLATFORM_ENDPOINTS.modules.byId(id)
+    ).pipe(
+      map(response => {
+        if (!response.success) {
+          const errorMsg = response.errors?.[0]?.message || response.message || 'Failed to delete module';
+          throw new Error(errorMsg);
         }
-        const errorMessage = error.error?.message || error.message || 'Failed to delete module';
+      }),
+      catchError(error => {
+        const errorMessage = error.message || 'Failed to delete module';
         return throwError(() => new Error(errorMessage));
       })
     );
@@ -116,20 +185,22 @@ export class PlatformModulesService {
 
   /**
    * Map API response to PlatformModule model
+   * Handles both PascalCase (from backend) and camelCase
    */
   private mapModuleResponse(module: any): PlatformModule {
     return {
-      id: module.id,
-      name: module.name,
-      nameAr: module.nameAr,
-      description: module.description || '',
-      descriptionAr: module.descriptionAr,
-      capabilities: module.capabilities || '',
-      capabilitiesAr: module.capabilitiesAr,
-      pricePerMonth: module.pricePerMonth,
-      isActive: module.isActive !== undefined ? module.isActive : true,
-      createdAt: new Date(module.createdAt),
-      updatedAt: new Date(module.updatedAt)
+      id: module.id || module.Id || '',
+      name: module.name || module.Name || '',
+      nameAr: module.nameAr || module.NameAr || '',
+      description: module.description || module.Description || '',
+      descriptionAr: module.descriptionAr || module.DescriptionAr || '',
+      code: module.code || module.Code || '',
+      capabilities: module.capabilities || module.Capabilities || '',
+      capabilitiesAr: module.capabilitiesAr || module.CapabilitiesAr || '',
+      price: module.price ?? module.Price ?? 0,
+      isActive: module.isActive !== undefined ? module.isActive : (module.IsActive !== undefined ? module.IsActive : true),
+      createdAt: module.createdAt ? new Date(module.createdAt) : (module.CreatedAt ? new Date(module.CreatedAt) : undefined),
+      updatedAt: module.updatedAt ? new Date(module.updatedAt) : (module.UpdatedAt ? new Date(module.UpdatedAt) : undefined)
     };
   }
 }
