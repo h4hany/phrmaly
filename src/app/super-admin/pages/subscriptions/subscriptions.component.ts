@@ -226,10 +226,11 @@ export class SubscriptionsComponent implements OnInit {
   invoicePagination = { page: 1, pageSize: 10, total: 0, totalPages: 0 };
 
   subscriptionColumns: TableColumn[] = [
-    { key: 'accountId', label: 'platform.subscriptions.account', sortable: true },
-    { key: 'planId', label: 'platform.subscriptions.plan', sortable: true },
+    { key: 'accountName', label: 'platform.subscriptions.account', sortable: true },
+    { key: 'planName', label: 'platform.subscriptions.plan', sortable: true },
     { key: 'status', label: 'platform.subscriptions.status', sortable: true },
-    { key: 'currentPeriodEnd', label: 'platform.subscriptions.nextBilling', sortable: true }
+    { key: 'currentPeriodEnd', label: 'platform.subscriptions.nextBilling', sortable: true },
+    { key: 'totalPrice', label: 'platform.subscriptions.amount', sortable: true }
   ];
 
   invoiceColumns: TableColumn[] = [
@@ -279,8 +280,11 @@ export class SubscriptionsComponent implements OnInit {
       next: (response) => {
         this.subscriptions = response.data.map((sub: Subscription) => ({
           ...sub,
+          accountName: sub.accountName || sub.account?.name || sub.accountId,
+          planName: sub.planName || sub.plan?.name || sub.planId,
           status: this.translationService.translate(this.getStatusBadge(sub.status)),
-          currentPeriodEnd: new Date(sub.currentPeriodEnd).toLocaleDateString()
+          currentPeriodEnd: new Date(sub.currentPeriodEnd).toLocaleDateString(),
+          totalPrice: sub.totalPrice ? this.formatCurrency(sub.totalPrice) : '-'
         }));
         this.subscriptionPagination = {
           page: response.page,
@@ -327,12 +331,13 @@ export class SubscriptionsComponent implements OnInit {
   }
 
   loadAnalytics(): void {
-    // Mock analytics data
+    // Analytics data will be loaded from API in future
+    // For now, show empty charts
     this.mrrData = {
-      labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+      labels: [],
       datasets: [{
         label: 'MRR',
-        data: [25000, 27000, 29000, 31000, 32000, 32860],
+        data: [],
         borderColor: 'rgba(22, 101, 52, 1)',
         backgroundColor: 'rgba(22, 101, 52, 0.1)',
         fill: true
@@ -340,23 +345,19 @@ export class SubscriptionsComponent implements OnInit {
     };
 
     this.churnData = {
-      labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+      labels: [],
       datasets: [{
         label: 'Churn Rate %',
-        data: [3.2, 2.8, 2.5, 2.3, 2.4, 2.5],
+        data: [],
         backgroundColor: 'rgba(245, 158, 11, 0.8)'
       }]
     };
 
     this.revenueByPlanData = {
-      labels: ['Starter', 'Professional', 'Enterprise'],
+      labels: [],
       datasets: [{
-        data: [7920, 14950, 9990],
-        backgroundColor: [
-          'rgba(59, 130, 246, 0.8)',
-          'rgba(22, 101, 52, 0.8)',
-          'rgba(245, 158, 11, 0.8)'
-        ]
+        data: [],
+        backgroundColor: []
       }]
     };
 

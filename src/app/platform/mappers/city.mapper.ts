@@ -3,9 +3,9 @@ import { CountryMapper } from './country.mapper';
 
 /**
  * City Mapper
- * 
+ *
  * Pure class for transforming API responses to domain models.
- * 
+ *
  * Rules:
  * - Static methods only
  * - No Angular decorators
@@ -18,7 +18,7 @@ import { CountryMapper } from './country.mapper';
 export class CityMapper {
   /**
    * Map API response to City domain model
-   * 
+   *
    * @param city - Raw API response (may be any/unknown)
    * @returns City domain model
    */
@@ -29,6 +29,7 @@ export class CityMapper {
       id: apiCity.id ?? '',
       name: apiCity.name ?? '',
       countryId: apiCity.countryId ?? '',
+      countryName: apiCity.countryName ?? '',
       country: apiCity.country ? {
         id: apiCity.country.id ?? '',
         name: apiCity.country.name ?? '',
@@ -42,7 +43,7 @@ export class CityMapper {
 
   /**
    * Parse date from string or Date object
-   * 
+   *
    * @param date - Date string or Date object
    * @returns Date object
    */
@@ -50,12 +51,12 @@ export class CityMapper {
     if (date instanceof Date) {
       return date;
     }
-    
+
     if (typeof date === 'string') {
       const parsed = new Date(date);
       return isNaN(parsed.getTime()) ? new Date() : parsed;
     }
-    
+
     return new Date();
   }
 }

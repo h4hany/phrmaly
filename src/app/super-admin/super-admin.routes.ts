@@ -18,6 +18,11 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/accounts/create-account/create-account.component').then(m => m.CreateAccountComponent)
   },
   {
+    path: 'accounts/edit/:id',
+    canActivate: [superAdminGuard],
+    loadComponent: () => import('./pages/accounts/edit-account/edit-account.component').then(m => m.EditAccountComponent)
+  },
+  {
     path: 'subscriptions',
     canActivate: [superAdminGuard],
     loadChildren: () => import('./pages/subscriptions/subscriptions.routes').then(m => m.routes)

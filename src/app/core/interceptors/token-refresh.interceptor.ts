@@ -1,9 +1,8 @@
 import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { BehaviorSubject, Observable, throwError, EMPTY } from 'rxjs';
+import { BehaviorSubject, throwError } from 'rxjs';
 import { catchError, switchMap, filter, take, finalize } from 'rxjs/operators';
 import { PlatformAuthService } from '../services/platform-auth.service';
-import { Router } from '@angular/router';
 import { ApiResponse } from '../models/api-response.model';
 
 /**
@@ -23,19 +22,33 @@ let refreshTokenSubject: BehaviorSubject<string | null> = new BehaviorSubject<st
 
 export const tokenRefreshInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(PlatformAuthService);
-  const router = inject(Router);
 
   return next(req).pipe(
-    catchError((error: HttpErrorResponse) => {
-      // Check if error is token expiration
-      const apiError = error.error as ApiResponse<any>;
-      const isTokenExpired = 
-        error.status === 401 ||
-        (apiError && 
-         typeof apiError === 'object' && 
-         'errors' in apiError &&
-         Array.isArray(apiError.errors) &&
-         apiError.errors.some((e: any) => e.code === 'TOKEN_EXPIRED'));
+    catchError((error: HttpErrorResponse | ApiResponse<any>) => {
+      // Handle both HttpErrorResponse and ApiResponse (after error interceptor transformation)
+      let isTokenExpired = false;
+      let apiError: ApiResponse<any> | null = null;
+
+      // Check if error is HttpErrorResponse (before error interceptor) or ApiResponse (after error interceptor)
+      if (error instanceof HttpErrorResponse) {
+        // Original HttpErrorResponse from HTTP client
+        apiError = error.error as ApiResponse<any>;
+        isTokenExpired = 
+          error.status === 401 ||
+          (apiError && 
+           typeof apiError === 'object' && 
+           'errors' in apiError &&
+           Array.isArray(apiError.errors) &&
+           apiError.errors.some((e: any) => e.code === 'TOKEN_EXPIRED'));
+      } else if (error && typeof error === 'object' && 'success' in error) {
+        // ApiResponse after error interceptor transformation
+        apiError = error as ApiResponse<any>;
+        isTokenExpired = 
+          apiError.errors &&
+          Array.isArray(apiError.errors) &&
+          apiError.errors.length > 0 &&
+          apiError.errors.some((e: any) => e && typeof e === 'object' && 'code' in e && e.code === 'TOKEN_EXPIRED');
+      }
 
       // Skip refresh for auth endpoints
       if (req.url.includes('/auth/login') || req.url.includes('/auth/refresh') || req.url.includes('/auth/logout')) {
@@ -50,9 +63,8 @@ export const tokenRefreshInterceptor: HttpInterceptorFn = (req, next) => {
         const refreshToken = localStorage.getItem('refresh_token');
         
         if (!refreshToken) {
-          // No refresh token, logout
+          // No refresh token, logout (logout() handles redirect to /admin-login)
           authService.logout();
-          router.navigate(['/login']);
           return throwError(() => new Error('Session expired. Please login again.'));
         }
 
@@ -73,9 +85,8 @@ export const tokenRefreshInterceptor: HttpInterceptorFn = (req, next) => {
             isRefreshing = false;
             refreshTokenSubject.next(null);
             
-            // Refresh failed, logout
+            // Refresh failed, logout (logout() handles redirect to /admin-login)
             authService.logout();
-            router.navigate(['/login']);
             return throwError(() => new Error('Session expired. Please login again.'));
           }),
           finalize(() => {
@@ -105,4 +116,5 @@ export const tokenRefreshInterceptor: HttpInterceptorFn = (req, next) => {
     })
   );
 };
+
 

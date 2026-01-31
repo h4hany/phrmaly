@@ -67,6 +67,42 @@ export const PLATFORM_ENDPOINTS = {
   occupations: {
     root: 'occupations',
     byId: (id: string) => `occupations/${id}`
+  },
+  
+  // Accounts
+  accounts: {
+    root: 'accounts',
+    byId: (id: string) => `accounts/${id}`
+  }
+} as const;
+
+/**
+ * Tenant (Pharmacy) Endpoint Constants
+ */
+export const TENANT_ENDPOINTS = {
+  // Authentication
+  auth: {
+    login: 'auth/login',
+    refresh: 'auth/refresh',
+    logout: 'auth/logout',
+    me: 'auth/me',
+    switchPharmacy: 'auth/switch-pharmacy'
+  },
+  // Staff
+  staff: {
+    root: 'staff',
+    byId: (id: string) => `staff/${id}`,
+    permissions: (id: string) => `staff/${id}/permissions`
+  },
+  // Pharmacies
+  pharmacies: {
+    root: 'pharmacies',
+    byId: (id: string) => `pharmacies/${id}`
+  },
+  // Subscriptions
+  subscriptions: {
+    root: 'subscriptions',
+    current: 'subscriptions/current'
   }
 } as const;
 

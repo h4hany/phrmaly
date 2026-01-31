@@ -1,130 +1,194 @@
-import { Injectable } from '@angular/core';
-import { Observable, of, delay } from 'rxjs';
+import { Injectable, inject } from '@angular/core';
+import { Observable, throwError } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
 import { PharmacyStaff } from '../models/pharmacy-staff.model';
 import { PaginatedResponse, PaginationParams } from '../models/common.model';
+import { CoreApiService } from './core-api.service';
+import { TENANT_ENDPOINTS } from '../constants/platform-endpoints';
 import { UserRole } from '../models/user.model';
+
+export interface StaffPermissions {
+  modules: Array<{
+    moduleCode: string;
+    moduleName: string;
+    permissions: Array<{
+      permissionId: string;
+      resource: string;
+      action: string;
+      permissionKey: string;
+      isGranted: boolean;
+    }>;
+  }>;
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class PharmacyStaffService {
-  private staff: PharmacyStaff[] = [
-    {
-      id: 'ST001',
-      fullName: 'Sarah Johnson',
-      email: 'sarah.johnson@pharmly.com',
-      phone: '+1234567890',
-      username: 'sarah.j',
-      role: UserRole.PHARMACY_MANAGER,
-      pharmacyId: 'ph1',
-      status: 'active',
-      avatarUrl: 'https://ui-avatars.com/api/?name=Sarah+Johnson',
-      createdAt: new Date('2024-01-15'),
-      updatedAt: new Date('2024-11-27')
-    },
-    {
-      id: 'ST002',
-      fullName: 'Michael Chen',
-      email: 'michael.chen@pharmly.com',
-      phone: '+1234567891',
-      username: 'michael.c',
-      role: UserRole.PHARMACY_STAFF,
-      pharmacyId: 'ph1',
-      status: 'active',
-      avatarUrl: 'https://ui-avatars.com/api/?name=Michael+Chen',
-      createdAt: new Date('2024-02-10'),
-      updatedAt: new Date('2024-11-26')
-    },
-    {
-      id: 'ST003',
-      fullName: 'Emily Davis',
-      email: 'emily.davis@pharmly.com',
-      phone: '+1234567892',
-      username: 'emily.d',
-      role: UserRole.PHARMACY_STAFF,
-      pharmacyId: 'ph1',
-      status: 'active',
-      avatarUrl: 'https://ui-avatars.com/api/?name=Emily+Davis',
-      createdAt: new Date('2024-03-20'),
-      updatedAt: new Date('2024-11-25')
+  private coreApi = inject(CoreApiService);
+
+  getAll(params?: PaginationParams & { searchTerm?: string; sortBy?: string; sortDescending?: boolean }): Observable<PaginatedResponse<PharmacyStaff>> {
+    const queryParams: any = {
+      PageNumber: params?.page || 1,
+      PageSize: params?.pageSize || 10
+    };
+
+    if (params?.searchTerm) {
+      queryParams.SearchTerm = params.searchTerm;
     }
-  ];
+    if (params?.sortBy) {
+      queryParams.SortBy = params.sortBy;
+    }
+    if (params?.sortDescending !== undefined) {
+      queryParams.SortDescending = params.sortDescending;
+    }
 
-  getAll(params?: PaginationParams): Observable<PaginatedResponse<PharmacyStaff>> {
-    const page = params?.page || 1;
-    const pageSize = params?.pageSize || 10;
-    const start = (page - 1) * pageSize;
-    const end = start + pageSize;
-
-    const filtered = [...this.staff];
-    const paginated = filtered.slice(start, end);
-
-    return of({
-      data: paginated,
-      total: filtered.length,
-      page,
-      pageSize,
-      totalPages: Math.ceil(filtered.length / pageSize)
-    }).pipe(delay(500));
+    return this.coreApi.get<any>(TENANT_ENDPOINTS.staff.root, queryParams, false, true).pipe(
+      map(response => {
+        if (!response.success || !response.data) {
+          throw new Error(response.message || 'Failed to fetch staff');
+        }
+        // Map backend DTO to frontend model
+        // Backend returns TenantPaginatedResult with Items, Page, PageSize, TotalItems, TotalPages
+        const backendData = response.data;
+        return {
+          data: (backendData.items || []).map((item: any) => this.mapStaffDto(item)),
+          total: backendData.totalItems || 0,
+          page: backendData.page || 1,
+          pageSize: backendData.pageSize || 10,
+          totalPages: backendData.totalPages || 0
+        };
+      }),
+      catchError(error => {
+        const errorMessage = error.message || 'Failed to fetch staff';
+        return throwError(() => new Error(errorMessage));
+      })
+    );
   }
 
   getById(id: string): Observable<PharmacyStaff | null> {
-    const staffMember = this.staff.find(s => s.id === id);
-    return of(staffMember || null).pipe(delay(300));
+    return this.coreApi.get<PharmacyStaff>(TENANT_ENDPOINTS.staff.byId(id), {}, false, true).pipe(
+      map(response => {
+        if (!response.success || !response.data) {
+          throw new Error(response.message || 'Failed to fetch staff member');
+        }
+        return this.mapStaffDto(response.data);
+      }),
+      catchError(error => {
+        const errorMessage = error.message || 'Failed to fetch staff member';
+        return throwError(() => new Error(errorMessage));
+      })
+    );
+  }
+
+  getPermissions(staffId: string, pharmacyId: string): Observable<StaffPermissions> {
+    return this.coreApi.get<StaffPermissions>(TENANT_ENDPOINTS.staff.permissions(staffId), { pharmacyId }, false, true).pipe(
+      map(response => {
+        if (!response.success || !response.data) {
+          throw new Error(response.message || 'Failed to fetch staff permissions');
+        }
+        return response.data;
+      }),
+      catchError(error => {
+        const errorMessage = error.message || 'Failed to fetch staff permissions';
+        return throwError(() => new Error(errorMessage));
+      })
+    );
+  }
+
+  updatePermissions(staffId: string, pharmacyId: string, permissionIds: string[]): Observable<void> {
+    return this.coreApi.put<void>(TENANT_ENDPOINTS.staff.permissions(staffId), { pharmacyId, permissionIds }, false, true).pipe(
+      map(response => {
+        if (!response.success) {
+          throw new Error(response.message || 'Failed to update staff permissions');
+        }
+      }),
+      catchError(error => {
+        const errorMessage = error.message || 'Failed to update staff permissions';
+        return throwError(() => new Error(errorMessage));
+      })
+    );
   }
 
   search(query: string): Observable<PharmacyStaff[]> {
-    const lowerQuery = query.toLowerCase();
-    const filtered = this.staff.filter(member =>
-      member.fullName.toLowerCase().includes(lowerQuery) ||
-      member.email.toLowerCase().includes(lowerQuery) ||
-      member.phone?.toLowerCase().includes(lowerQuery) ||
-      member.username?.toLowerCase().includes(lowerQuery)
+    return this.getAll({ page: 1, pageSize: 100, searchTerm: query }).pipe(
+      map(response => response.data)
     );
-    return of(filtered).pipe(delay(300));
   }
 
   create(staff: Omit<PharmacyStaff, 'id' | 'createdAt' | 'updatedAt'>): Observable<PharmacyStaff> {
-    const newStaff: PharmacyStaff = {
-      ...staff,
-      id: `ST${String(this.staff.length + 1).padStart(3, '0')}`,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
-    this.staff.push(newStaff);
-    return of(newStaff).pipe(delay(500));
+    return this.coreApi.post<PharmacyStaff>(TENANT_ENDPOINTS.staff.root, staff, false, true).pipe(
+      map(response => {
+        if (!response.success) {
+          throw new Error(response.message || 'Failed to create staff member');
+        }
+        return this.mapStaffDto(response.data);
+      }),
+      catchError(error => {
+        const errorMessage = error.message || 'Failed to create staff member';
+        return throwError(() => new Error(errorMessage));
+      })
+    );
   }
 
   update(id: string, staff: Partial<PharmacyStaff>): Observable<PharmacyStaff> {
-    const index = this.staff.findIndex(s => s.id === id);
-    if (index === -1) {
-      throw new Error('Staff member not found');
-    }
-    this.staff[index] = {
-      ...this.staff[index],
-      ...staff,
-      id,
-      updatedAt: new Date()
-    };
-    return of(this.staff[index]).pipe(delay(500));
+    return this.coreApi.put<PharmacyStaff>(TENANT_ENDPOINTS.staff.byId(id), staff, false, true).pipe(
+      map(response => {
+        if (!response.success) {
+          throw new Error(response.message || 'Failed to update staff member');
+        }
+        return this.mapStaffDto(response.data);
+      }),
+      catchError(error => {
+        const errorMessage = error.message || 'Failed to update staff member';
+        return throwError(() => new Error(errorMessage));
+      })
+    );
   }
 
   delete(id: string): Observable<boolean> {
-    const index = this.staff.findIndex(s => s.id === id);
-    if (index === -1) {
-      return of(false).pipe(delay(300));
-    }
-    this.staff.splice(index, 1);
-    return of(true).pipe(delay(300));
+    return this.coreApi.delete<boolean>(TENANT_ENDPOINTS.staff.byId(id), false, true).pipe(
+      map(response => {
+        if (!response.success) {
+          throw new Error(response.message || 'Failed to delete staff member');
+        }
+        return true;
+      }),
+      catchError(error => {
+        const errorMessage = error.message || 'Failed to delete staff member';
+        return throwError(() => new Error(errorMessage));
+      })
+    );
+  }
+
+  private mapStaffDto(dto: any): PharmacyStaff {
+    // Map backend DTO to frontend model
+    // Get the first pharmacy role as the primary role
+    const primaryRole = dto.pharmacyRoles && dto.pharmacyRoles.length > 0 ? dto.pharmacyRoles[0] : null;
+    
+    return {
+      id: dto.id,
+      fullName: dto.fullName,
+      email: dto.email,
+      phone: dto.phone,
+      username: dto.username,
+      role: this.mapRoleName(dto.pharmacyRoles?.[0]?.roleName),
+      pharmacyId: primaryRole?.pharmacyId || '',
+      status: dto.status?.toLowerCase() || 'active',
+      avatarUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(dto.fullName)}`,
+      createdAt: new Date(dto.createdAt),
+      updatedAt: new Date(dto.updatedAt || dto.createdAt),
+      pharmacyRoles: dto.pharmacyRoles || []
+    };
+  }
+
+  private mapRoleName(roleName: string): UserRole {
+    const roleMap: { [key: string]: UserRole } = {
+      'ACCOUNT_OWNER': UserRole.ACCOUNT_OWNER,
+      'PHARMACY_MANAGER': UserRole.PHARMACY_MANAGER,
+      'PHARMACY_STAFF': UserRole.PHARMACY_STAFF,
+      'PHARMACY_INVENTORY_MANAGER': UserRole.PHARMACY_INVENTORY_MANAGER
+    };
+    return roleMap[roleName] || UserRole.PHARMACY_STAFF;
   }
 }
-
-
-
-
-
-
-
-
-
-

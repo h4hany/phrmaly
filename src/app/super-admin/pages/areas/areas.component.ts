@@ -1,8 +1,8 @@
 /**
  * Areas Master Data Component
- * 
+ *
  * Classification: PAGE MODIFICATION + SYSTEM EXTENSION
- * 
+ *
  * Business Purpose: Manage areas master data
  */
 
@@ -182,7 +182,7 @@ export class AreasComponent implements OnInit {
 
   loadAreas(): void {
     this.loading = true;
-    
+
     const params = {
       page: this.pagination.page,
       pageSize: this.pagination.pageSize,
@@ -195,18 +195,18 @@ export class AreasComponent implements OnInit {
         // Map areas for table display
         this.areas = response.data.map(area => ({
           ...area,
-          cityName: area.city?.name || '-'
+          cityName: area.city?.name || area.cityName || '-'
         }));
         this.pagination.total = response.total;
         this.pagination.totalPages = response.totalPages;
         this.pagination.page = response.page;
         this.pagination.pageSize = response.pageSize;
-        
+
         // Calculate stats
         this.totalAreas = response.total;
         this.activeAreas = response.data.filter(a => a.isActive).length;
         this.inactiveAreas = response.data.filter(a => !a.isActive).length;
-        
+
         this.loading = false;
       },
       error: (error) => {

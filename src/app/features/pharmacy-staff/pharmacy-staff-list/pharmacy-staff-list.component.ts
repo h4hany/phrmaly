@@ -136,7 +136,8 @@ export class PharmacyStaffListComponent implements OnInit {
     this.loading = true;
     this.pharmacyStaffService.getAll({
       page: this.pagination.page,
-      pageSize: this.pagination.pageSize
+      pageSize: this.pagination.pageSize,
+      searchTerm: this.searchQuery.trim() || undefined
     }).subscribe({
       next: (response) => {
         this.staff = response.data;
@@ -156,24 +157,8 @@ export class PharmacyStaffListComponent implements OnInit {
   }
 
   onSearch(): void {
-    if (this.searchQuery.trim()) {
-      this.pharmacyStaffService.search(this.searchQuery).subscribe({
-        next: (results) => {
-          this.staff = results;
-          this.pagination = {
-            page: 1,
-            pageSize: 10,
-            total: results.length,
-            totalPages: Math.ceil(results.length / 10)
-          };
-        },
-        error: () => {
-          this.errorMessage = 'Search failed';
-        }
-      });
-    } else {
-      this.loadStaff();
-    }
+    this.pagination.page = 1;
+    this.loadStaff();
   }
 
   navigateToNew(): void {

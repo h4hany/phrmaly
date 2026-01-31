@@ -1,21 +1,21 @@
 /**
  * Cities Master Data Component
- * 
+ *
  * Classification: PAGE MODIFICATION + SYSTEM EXTENSION
- * 
+ *
  * Business Purpose: Manage cities master data
  */
 
-import { Component, inject, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { TableComponent, TableColumn } from '../../../shared/components/table/table.component';
-import { ButtonComponent } from '../../../shared/components/button/button.component';
-import { TranslatePipe } from '../../../core/pipes/translate.pipe';
-import { TranslationService } from '../../../core/services/translation.service';
-import { ModalComponent } from '../../../shared/components/modal/modal.component';
-import { StatCardComponent } from '../../../shared/components/stat-card/stat-card.component';
-import { PlatformCitiesService, City } from '../../../core/services/platform-cities.service';
+import {Component, inject, OnInit} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {FormsModule} from '@angular/forms';
+import {TableColumn, TableComponent} from '../../../shared/components/table/table.component';
+import {ButtonComponent} from '../../../shared/components/button/button.component';
+import {TranslatePipe} from '../../../core/pipes/translate.pipe';
+import {TranslationService} from '../../../core/services/translation.service';
+import {ModalComponent} from '../../../shared/components/modal/modal.component';
+import {StatCardComponent} from '../../../shared/components/stat-card/stat-card.component';
+import {City, PlatformCitiesService} from '../../../core/services/platform-cities.service';
 
 @Component({
   selector: 'app-cities',
@@ -39,7 +39,7 @@ import { PlatformCitiesService, City } from '../../../core/services/platform-cit
         </div>
         <app-button variant="primary" (onClick)="showCreateModal = true">
           <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
           </svg>
           {{ 'platform.cities.addCity' | translate }}
         </app-button>
@@ -68,7 +68,8 @@ import { PlatformCitiesService, City } from '../../../core/services/platform-cit
       <div class="bg-[var(--card-bg)] rounded-[var(--radius-lg)] shadow-[var(--shadow-sm)] p-4">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label class="block text-sm font-medium text-[var(--card-text)] mb-1">{{ 'common.search' | translate }}</label>
+            <label
+              class="block text-sm font-medium text-[var(--card-text)] mb-1">{{ 'common.search' | translate }}</label>
             <input
               type="text"
               [(ngModel)]="filters.search"
@@ -77,7 +78,8 @@ import { PlatformCitiesService, City } from '../../../core/services/platform-cit
             />
           </div>
           <div>
-            <label class="block text-sm font-medium text-[var(--card-text)] mb-1">{{ 'platform.cities.status' | translate }}</label>
+            <label
+              class="block text-sm font-medium text-[var(--card-text)] mb-1">{{ 'platform.cities.status' | translate }}</label>
             <select
               [(ngModel)]="filters.isActive"
               class="w-full px-4 py-2 border border-[var(--border-color)] rounded-[var(--radius-md)] text-sm bg-[var(--card-bg)] text-[var(--text-primary)]"
@@ -122,16 +124,20 @@ import { PlatformCitiesService, City } from '../../../core/services/platform-cit
           <!-- City Info -->
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <label class="block text-sm font-medium text-[var(--card-text)] mb-1">{{ 'platform.cities.name' | translate }}</label>
+              <label
+                class="block text-sm font-medium text-[var(--card-text)] mb-1">{{ 'platform.cities.name' | translate }}</label>
               <p class="text-[var(--text-primary)]">{{ selectedCity.name }}</p>
             </div>
             <div>
-              <label class="block text-sm font-medium text-[var(--card-text)] mb-1">{{ 'platform.cities.country' | translate }}</label>
+              <label
+                class="block text-sm font-medium text-[var(--card-text)] mb-1">{{ 'platform.cities.country' | translate }}</label>
               <p class="text-[var(--text-primary)]">{{ selectedCity.country?.name || '-' }}</p>
             </div>
             <div>
-              <label class="block text-sm font-medium text-[var(--card-text)] mb-1">{{ 'platform.cities.status' | translate }}</label>
-              <p class="text-[var(--text-primary)]">{{ selectedCity.isActive ? ('platform.cities.active' | translate) : ('platform.cities.inactive' | translate) }}</p>
+              <label
+                class="block text-sm font-medium text-[var(--card-text)] mb-1">{{ 'platform.cities.status' | translate }}</label>
+              <p
+                class="text-[var(--text-primary)]">{{ selectedCity.isActive ? ('platform.cities.active' | translate) : ('platform.cities.inactive' | translate) }}</p>
             </div>
           </div>
         </div>
@@ -165,9 +171,9 @@ export class CitiesComponent implements OnInit {
   };
 
   columns: TableColumn[] = [
-    { key: 'name', label: 'platform.cities.name', sortable: true },
-    { key: 'countryName', label: 'platform.cities.country', sortable: true },
-    { key: 'isActive', label: 'platform.cities.status', sortable: true }
+    {key: 'name', label: 'platform.cities.name', sortable: true},
+    {key: 'countryName', label: 'platform.cities.country', sortable: true},
+    {key: 'isActive', label: 'platform.cities.status', sortable: true}
   ];
 
   showCreateModal = false;
@@ -178,12 +184,12 @@ export class CitiesComponent implements OnInit {
 
   loadCities(): void {
     this.loading = true;
-    
+
     const params = {
       page: this.pagination.page,
       pageSize: this.pagination.pageSize,
-      ...(this.filters.search && { searchTerm: this.filters.search }),
-      ...(this.filters.isActive !== undefined && { isActive: this.filters.isActive })
+      ...(this.filters.search && {searchTerm: this.filters.search}),
+      ...(this.filters.isActive !== undefined && {isActive: this.filters.isActive})
     };
 
     this.citiesService.getAll(params).subscribe({
@@ -191,18 +197,18 @@ export class CitiesComponent implements OnInit {
         // Map cities for table display
         this.cities = response.data.map(city => ({
           ...city,
-          countryName: city.country?.name || '-'
+          countryName: city.country?.name || city.countryName || '-'
         }));
         this.pagination.total = response.total;
         this.pagination.totalPages = response.totalPages;
         this.pagination.page = response.page;
         this.pagination.pageSize = response.pageSize;
-        
+
         // Calculate stats
         this.totalCities = response.total;
         this.activeCities = response.data.filter(c => c.isActive).length;
         this.inactiveCities = response.data.filter(c => !c.isActive).length;
-        
+
         this.loading = false;
       },
       error: (error) => {

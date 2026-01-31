@@ -11,6 +11,7 @@ export interface City {
   id: string;
   name: string;
   countryId: string;
+  countryName: string;
   country?: { id: string; name: string; code: string };
   isActive: boolean;
   createdAt: Date;
@@ -25,7 +26,7 @@ export class PlatformCitiesService {
 
   getAll(params?: PaginationParams & { countryId?: string; searchTerm?: string; isActive?: boolean }): Observable<PaginatedResponse<City>> {
     const queryParams: Record<string, any> = {};
-    
+
     if (params?.page) {
       queryParams['PageNumber'] = params.page;
     }
@@ -52,7 +53,7 @@ export class PlatformCitiesService {
         }
 
         const cities = response.data.map(city => CityMapper.fromApi(city));
-        
+
         return {
           data: cities,
           total: response.meta?.pagination?.totalItems ?? cities.length,

@@ -68,8 +68,8 @@ export class AuthService {
   /**
    * Login for pharmacy users
    */
-  loginPharmacy(identifier: string, password: string): Observable<User> {
-    return this.pharmacyAuthService.login(identifier, password);
+  loginPharmacy(identifier: string, password: string, accountSlug?: string): Observable<User> {
+    return this.pharmacyAuthService.login(identifier, password, accountSlug);
   }
 
   /**

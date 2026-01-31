@@ -16,12 +16,11 @@ import { Router, RouterOutlet } from '@angular/router';
 import { SidebarComponent } from './components/sidebar/sidebar.component';
 import { HeaderComponent } from './components/header/header.component';
 import { ToastComponent } from '../../shared/components/toast/toast.component';
-import { DevRoleSwitcherComponent } from '../../shared/components/dev-role-switcher/dev-role-switcher.component';
 
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, SidebarComponent, HeaderComponent, ToastComponent, DevRoleSwitcherComponent],
+  imports: [CommonModule, RouterOutlet, SidebarComponent, HeaderComponent, ToastComponent],
   templateUrl: './main-layout.component.html',
   styles: []
 })

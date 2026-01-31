@@ -1,7 +1,8 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule, FormBuilder, FormGroup, FormArray, FormControl, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { PharmacyStaffService } from '../../../core/services/pharmacy-staff.service';
+import { PharmacyStaffService, StaffPermissions } from '../../../core/services/pharmacy-staff.service';
 import { PharmacyStaff } from '../../../core/models/pharmacy-staff.model';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { AlertComponent } from '../../../shared/components/alert/alert.component';
@@ -16,12 +17,17 @@ import { TimelineComponent, TimelineEvent } from '../../../shared/components/tim
 import { HRPerformanceService } from '../../../core/services/hr-performance.service';
 import { AttendanceService } from '../../../core/services/attendance.service';
 import { RiskBadgeComponent } from '../../../shared/components/risk-badge/risk-badge.component';
+import { CheckboxInputComponent } from '../../../shared/components/input/checkbox-input.component';
+import { AuthService } from '../../../core/services/auth.service';
+import { PharmacyContextService } from '../../../core/services/pharmacy-context.service';
 
 @Component({
   selector: 'app-pharmacy-staff-detail',
   standalone: true,
   imports: [
-    CommonModule, 
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
     ButtonComponent, 
     AlertComponent, 
     TranslatePipe,
@@ -31,7 +37,8 @@ import { RiskBadgeComponent } from '../../../shared/components/risk-badge/risk-b
     StaffKPICardComponent,
     PerformanceScoreRingComponent,
     TimelineComponent,
-    RiskBadgeComponent
+    RiskBadgeComponent,
+    CheckboxInputComponent
   ],
   template: `
     <div class="space-y-[var(--spacing-gap)]">
@@ -113,7 +120,58 @@ import { RiskBadgeComponent } from '../../../shared/components/risk-badge/risk-b
         <!-- HR Performance Dashboard -->
         @if (staff) {
           <app-tabs>
-            <app-tab [title]="'hr.performance.title' | translate" [active]="true">
+            <app-tab [title]="'staff.permissions' | translate" [active]="true">
+              <div class="space-y-6 p-6">
+                @if (loadingPermissions) {
+                  <div class="text-center py-12">
+                    <p class="text-[var(--card-text)]">{{ 'common.loading' | translate }}</p>
+                  </div>
+                } @else if (permissionsError) {
+                  <app-alert type="error" [title]="permissionsError" />
+                } @else if (staffPermissions) {
+                  <form [formGroup]="permissionsForm" (ngSubmit)="savePermissions()">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      @for (module of staffPermissions.modules; track module.moduleCode) {
+                        <div class="p-6 bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+                          <h4 class="text-lg font-semibold text-gray-800 mb-4">
+                            {{ module.moduleName }}
+                          </h4>
+                      <div class="space-y-3">
+                        @for (permission of module.permissions; track permission.permissionId) {
+                          <app-checkbox-input
+                            [formControl]="getPermissionControl(permission.permissionId)"
+                            [checkboxOptions]="[{ value: true, label: getPermissionLabel(permission.permissionKey) }]"
+                            [label]="''"
+                          ></app-checkbox-input>
+                        }
+                      </div>
+                        </div>
+                      }
+                    </div>
+                    <div class="flex items-center justify-end gap-4 pt-8 border-t-2 border-gray-100 mt-6">
+                      <app-button
+                        type="button"
+                        variant="outline"
+                        size="lg"
+                        (onClick)="cancelPermissionsEdit()"
+                      >
+                        {{ 'common.cancel' | translate }}
+                      </app-button>
+                      <app-button
+                        type="submit"
+                        variant="primary"
+                        size="lg"
+                        [disabled]="permissionsForm.invalid || savingPermissions"
+                        [loading]="savingPermissions"
+                      >
+                        {{ 'common.save' | translate }}
+                      </app-button>
+                    </div>
+                  </form>
+                }
+              </div>
+            </app-tab>
+            <app-tab [title]="'hr.performance.title' | translate">
               <div class="space-y-6 p-6">
                 <!-- Performance KPIs -->
                 @if (performanceMetrics) {
@@ -208,6 +266,9 @@ export class PharmacyStaffDetailComponent implements OnInit {
   private pharmacyStaffService = inject(PharmacyStaffService);
   private translationService = inject(TranslationService);
   private hrPerformanceService = inject(HRPerformanceService);
+  private fb = inject(FormBuilder);
+  private authService = inject(AuthService);
+  private pharmacyContextService = inject(PharmacyContextService);
 
   staff: PharmacyStaff | null = null;
   loading = true;
@@ -215,6 +276,13 @@ export class PharmacyStaffDetailComponent implements OnInit {
   loadingPerformance = false;
   performanceMetrics: any = null;
   timelineEvents: TimelineEvent[] = [];
+  
+  // Permissions
+  staffPermissions: StaffPermissions | null = null;
+  loadingPermissions = false;
+  permissionsError = '';
+  permissionsForm!: FormGroup;
+  savingPermissions = false;
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
@@ -237,6 +305,7 @@ export class PharmacyStaffDetailComponent implements OnInit {
           this.errorMessage = 'Staff member not found';
         } else {
           this.loadPerformanceData(id);
+          this.loadPermissions(id);
         }
       },
       error: (error) => {
@@ -301,6 +370,92 @@ export class PharmacyStaffDetailComponent implements OnInit {
 
   goBack(): void {
     this.router.navigate(['/pharmacy-staff']);
+  }
+
+  loadPermissions(staffId: string): void {
+    const currentPharmacy = this.pharmacyContextService.getCurrentPharmacy();
+    if (!currentPharmacy) {
+      this.permissionsError = 'No pharmacy selected';
+      return;
+    }
+
+    this.loadingPermissions = true;
+    this.permissionsError = '';
+    
+    this.pharmacyStaffService.getPermissions(staffId, currentPharmacy.id).subscribe({
+      next: (permissions) => {
+        this.staffPermissions = permissions;
+        this.initializePermissionsForm(permissions);
+        this.loadingPermissions = false;
+      },
+      error: (error) => {
+        this.permissionsError = error.message || 'Failed to load permissions';
+        this.loadingPermissions = false;
+      }
+    });
+  }
+
+  initializePermissionsForm(permissions: StaffPermissions): void {
+    const formControls: { [key: string]: FormControl } = {};
+    
+    permissions.modules.forEach(module => {
+      module.permissions.forEach(permission => {
+        formControls[permission.permissionId] = new FormControl(permission.isGranted);
+      });
+    });
+
+    this.permissionsForm = this.fb.group(formControls);
+  }
+
+  getPermissionControl(permissionId: string): FormControl {
+    return this.permissionsForm.get(permissionId) as FormControl;
+  }
+
+  savePermissions(): void {
+    if (!this.staff || !this.staffPermissions) return;
+
+    const currentPharmacy = this.pharmacyContextService.getCurrentPharmacy();
+    if (!currentPharmacy) {
+      this.permissionsError = 'No pharmacy selected';
+      return;
+    }
+
+    const selectedPermissionIds: string[] = [];
+    Object.keys(this.permissionsForm.controls).forEach(permissionId => {
+      if (this.permissionsForm.get(permissionId)?.value) {
+        selectedPermissionIds.push(permissionId);
+      }
+    });
+
+    this.savingPermissions = true;
+    this.permissionsError = '';
+
+    this.pharmacyStaffService.updatePermissions(this.staff.id, currentPharmacy.id, selectedPermissionIds).subscribe({
+      next: () => {
+        this.savingPermissions = false;
+        // Reload permissions to reflect changes
+        this.loadPermissions(this.staff!.id);
+      },
+      error: (error) => {
+        this.permissionsError = error.message || 'Failed to update permissions';
+        this.savingPermissions = false;
+      }
+    });
+  }
+
+  cancelPermissionsEdit(): void {
+    if (this.staffPermissions) {
+      this.initializePermissionsForm(this.staffPermissions);
+    }
+  }
+
+  getPermissionLabel(permissionKey: string): string {
+    // Extract action from permission key (e.g., "dashboard.read" -> "read")
+    const parts = permissionKey.split('.');
+    if (parts.length > 1) {
+      return parts[parts.length - 1]; // Return the last part (action)
+    }
+    return permissionKey;
   }
 }
 

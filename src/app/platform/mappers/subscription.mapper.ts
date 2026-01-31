@@ -28,13 +28,16 @@ export class SubscriptionMapper {
       id: apiSub.id ?? '',
       accountId: apiSub.accountId ?? '',
       account: apiSub.account ?? undefined,
+      accountName: apiSub.accountName ?? apiSub.account?.name ?? '',
       planId: apiSub.planId ?? '',
       plan: apiSub.plan ? SubscriptionPlanMapper.fromApi(apiSub.plan) : undefined,
+      planName: apiSub.planName ?? apiSub.plan?.name ?? '',
       status: apiSub.status ?? 'active',
       currentPeriodStart: this.parseDate(apiSub.currentPeriodStart),
       currentPeriodEnd: this.parseDate(apiSub.currentPeriodEnd),
       cancelAtPeriodEnd: apiSub.cancelAtPeriodEnd ?? false,
       trialEndsAt: apiSub.trialEndsAt ? this.parseDate(apiSub.trialEndsAt) : undefined,
+      totalPrice: apiSub.totalPrice ?? 0,
       createdAt: this.parseDate(apiSub.createdAt),
       updatedAt: this.parseDate(apiSub.updatedAt)
     };

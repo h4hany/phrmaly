@@ -76,6 +76,17 @@ import { TextInputComponent } from '../../../shared/components/input/text-input.
             <div class="form-group">
               <app-text-input
                 type="text"
+                formControlName="accountSlug"
+                label="Pharmacy"
+                placeholder="Enter pharmacy slug (e.g., demo-pharmacy)"
+                [required]="true"
+                prefixIcon="building"
+              ></app-text-input>
+            </div>
+
+            <div class="form-group">
+              <app-text-input
+                type="text"
                 formControlName="identifier"
                 label="Username / Email"
                 placeholder="Enter your username or email"
@@ -652,8 +663,9 @@ export class LoginComponent {
   showPassword = signal(false);
 
   loginForm = this.fb.group({
-    identifier: ['manager@pharmly.com', [Validators.required]],
-    password: ['password', [Validators.required]],
+    accountSlug: ['demo-pharmacy', [Validators.required]],
+    identifier: ['owner@demo.pharmly.com', [Validators.required]],
+    password: ['Password123!', [Validators.required]],
     rememberMe: [false]
   });
 
@@ -666,9 +678,9 @@ export class LoginComponent {
       this.loading.set(true);
       this.errorMessage.set(null);
 
-      const { identifier, password } = this.loginForm.value;
+      const { accountSlug, identifier, password } = this.loginForm.value;
 
-      this.authService.loginPharmacy(identifier!, password!).subscribe({
+      this.authService.loginPharmacy(identifier!, password!, accountSlug!).subscribe({
         next: (user) => {
           // Redirect to role-based home route
           const homeRoute = this.rbacService.getHomeRoute();

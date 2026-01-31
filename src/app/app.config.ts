@@ -14,8 +14,8 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(
       withInterceptors([
         authInterceptor,
-        tokenRefreshInterceptor, // Must be after authInterceptor to catch token errors
-        errorInterceptor
+        tokenRefreshInterceptor, // Must run before errorInterceptor to catch original HttpErrorResponse
+        errorInterceptor // Transforms errors after token refresh handling
       ])
     )
   ]

@@ -88,13 +88,16 @@ export interface Subscription {
   id: string;
   accountId: string;
   account?: PlatformAccount;
+  accountName?: string;
   planId: string;
   plan?: SubscriptionPlan;
+  planName?: string;
   status: 'active' | 'trial' | 'cancelled' | 'expired' | 'past_due';
   currentPeriodStart: Date;
   currentPeriodEnd: Date;
   cancelAtPeriodEnd: boolean;
   trialEndsAt?: Date;
+  totalPrice?: number;
   createdAt: Date;
   updatedAt: Date;
 }

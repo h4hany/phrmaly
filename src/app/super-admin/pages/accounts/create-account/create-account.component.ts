@@ -1,16 +1,22 @@
-import { Component, inject, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, FormArray, FormControl, Validators, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-import { WizardComponent, WizardStep } from '../../../../shared/components/wizard/wizard.component';
-import { TextInputComponent } from '../../../../shared/components/input/text-input.component';
-import { ButtonComponent } from '../../../../shared/components/button/button.component';
-import { SelectableCardComponent } from '../../../../shared/components/selectable-card/selectable-card.component';
-import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
-import { FileUploadComponent } from '../../../../shared/components/file-input/file-upload.component';
-import { PlatformSubscriptionsService } from '../../../../core/services/platform-subscriptions.service';
-import { PlatformAccountsService } from '../../../../core/services/platform-accounts.service';
-import { SubscriptionPlan } from '../../../../core/models/platform.model';
+import {Component, inject, OnInit} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {FormArray, FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
+import {Router} from '@angular/router';
+import {WizardComponent, WizardStep} from '../../../../shared/components/wizard/wizard.component';
+import {TextInputComponent} from '../../../../shared/components/input/text-input.component';
+import {AutocompleteInputComponent, AutocompleteOption} from '../../../../shared/components/input/autocomplete-input.component';
+import {ButtonComponent} from '../../../../shared/components/button/button.component';
+import {SelectableCardComponent} from '../../../../shared/components/selectable-card/selectable-card.component';
+import {TranslatePipe} from '../../../../core/pipes/translate.pipe';
+import {FileUploadComponent} from '../../../../shared/components/file-input/file-upload.component';
+import {PlatformSubscriptionsService} from '../../../../core/services/platform-subscriptions.service';
+import {PlatformAccountsService} from '../../../../core/services/platform-accounts.service';
+import {PlatformCountriesService, Country} from '../../../../core/services/platform-countries.service';
+import {PlatformCitiesService, City} from '../../../../core/services/platform-cities.service';
+import {PlatformAreasService, Area} from '../../../../core/services/platform-areas.service';
+import {SubscriptionPlan} from '../../../../core/models/platform.model';
+import {debounceTime, distinctUntilChanged, switchMap} from 'rxjs/operators';
+import {Subject, Observable} from 'rxjs';
 
 interface PharmacyFormData {
   name: string;
@@ -46,6 +52,7 @@ interface Module {
     ReactiveFormsModule,
     WizardComponent,
     TextInputComponent,
+    AutocompleteInputComponent,
     ButtonComponent,
     TranslatePipe,
     SelectableCardComponent,
@@ -68,26 +75,28 @@ interface Module {
                   [selected]="selectedPlan?.id === plan.id"
                   (cardClick)="selectPlan(plan)"
                 >
-                  <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-xl font-bold text-gray-900">{{ plan.name }}</h3>
-                  </div>
-                  <p class="text-gray-600 mb-4">{{ plan.description }}</p>
-                  <div class="space-y-2 mb-4">
-                    <div class="flex items-center text-sm text-gray-700">
-                      <svg class="w-4 h-4 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                      </svg>
-                      {{ plan.maxPharmacies === -1 ? ('account.create.unlimitedPharmacies' | translate) : (plan.maxPharmacies + ' ' + ('account.create.pharmacies' | translate)) }}
+                  <div>
+                    <div class="flex items-center justify-between mb-4">
+                      <h3 class="text-xl font-bold text-gray-900">{{ plan.name }}</h3>
                     </div>
-                    <div class="flex items-center text-sm text-gray-700">
-                      <svg class="w-4 h-4 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                      </svg>
-                      {{ plan.maxStaff === -1 ? ('account.create.unlimitedStaff' | translate) : (plan.maxStaff + ' ' + ('account.create.staff' | translate)) }}
+                    <p class="text-gray-600 mb-4">{{ plan.description }}</p>
+                    <div class="space-y-2 mb-4">
+                      <div class="flex items-center text-sm text-gray-700">
+                        <svg class="w-4 h-4 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        {{ plan.maxPharmacies === -1 ? ('account.create.unlimitedPharmacies' | translate) : (plan.maxPharmacies + ' ' + ('account.create.pharmacies' | translate)) }}
+                      </div>
+                      <div class="flex items-center text-sm text-gray-700">
+                        <svg class="w-4 h-4 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        {{ plan.maxStaff === -1 ? ('account.create.unlimitedStaff' | translate) : (plan.maxStaff + ' ' + ('account.create.staff' | translate)) }}
+                      </div>
                     </div>
-                  </div>
-                  <div class="text-2xl font-bold text-gray-900">
-                    {{ plan.price }}<span class="text-sm font-normal text-gray-600">/{{ plan.billingCycle }}</span>
+                    <div class="text-2xl font-bold text-gray-900">
+                      {{ plan.price }}<span class="text-sm font-normal text-gray-600">/{{ plan.billingCycle }}</span>
+                    </div>
                   </div>
                 </app-selectable-card>
               }
@@ -97,8 +106,8 @@ interface Module {
               <app-button variant="outline" (onClick)="onCancel()">
                 {{ 'common.cancel' | translate }}
               </app-button>
-              <app-button 
-                variant="primary" 
+              <app-button
+                variant="primary"
                 (onClick)="nextStep()"
                 [disabled]="!selectedPlan"
               >
@@ -125,14 +134,15 @@ interface Module {
                     @for (capability of module.capabilities; track capability) {
                       <div class="flex items-center text-sm text-gray-700">
                         <svg class="w-4 h-4 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                         </svg>
                         {{ capability }}
                       </div>
                     }
                   </div>
                   <div class="text-2xl font-bold text-gray-900">
-                    {{ module.pricePerMonth }}<span class="text-sm font-normal text-gray-600">/{{ 'account.create.perMonth' | translate }}</span>
+                    {{ module.pricePerMonth }}<span
+                    class="text-sm font-normal text-gray-600">/{{ 'account.create.perMonth' | translate }}</span>
                   </div>
                 </app-selectable-card>
               }
@@ -142,8 +152,8 @@ interface Module {
               <app-button variant="outline" (onClick)="previousStep()">
                 {{ 'common.back' | translate }}
               </app-button>
-              <app-button 
-                variant="primary" 
+              <app-button
+                variant="primary"
                 (onClick)="nextStep()"
               >
                 {{ 'common.next' | translate }}
@@ -223,8 +233,8 @@ interface Module {
                 <app-button variant="outline" (onClick)="previousStep()">
                   {{ 'common.back' | translate }}
                 </app-button>
-                <app-button 
-                  variant="primary" 
+                <app-button
+                  variant="primary"
                   (onClick)="nextStep()"
                   [disabled]="accountForm.invalid"
                 >
@@ -242,7 +252,7 @@ interface Module {
               <h3 class="text-xl font-bold text-gray-900">{{ 'account.create.pharmacies' | translate }}</h3>
               <app-button variant="primary" size="sm" (onClick)="addPharmacy()">
                 <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                 </svg>
                 {{ 'account.create.addPharmacy' | translate }}
               </app-button>
@@ -263,7 +273,8 @@ interface Module {
                           class="text-red-500 hover:text-red-700"
                         >
                           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                           </svg>
                         </button>
                       }
@@ -284,25 +295,36 @@ interface Module {
                         [placeholder]="'account.create.addressPlaceholder'"
                       />
 
-                      <app-text-input
-                        [formControl]="getPharmacyControl(i, 'city')"
-                        [label]="'account.create.city'"
-                        [required]="true"
-                        [placeholder]="'account.create.cityPlaceholder'"
-                      />
-
-                      <app-text-input
-                        [formControl]="getPharmacyControl(i, 'area')"
-                        [label]="'account.create.area'"
-                        [required]="true"
-                        [placeholder]="'account.create.areaPlaceholder'"
-                      />
-
-                      <app-text-input
-                        [formControl]="getPharmacyControl(i, 'country')"
+                      <app-autocomplete-input
+                        [formControl]="getPharmacyControl(i, 'countryId')"
                         [label]="'account.create.country'"
                         [required]="true"
                         [placeholder]="'account.create.countryPlaceholder'"
+                        [options]="getCountryOptions(i)"
+                        (optionSelected)="onCountrySelected(i, $event)"
+                        (inputChanged)="onCountrySearch(i, $event)"
+                      />
+
+                      <app-autocomplete-input
+                        [formControl]="getPharmacyControl(i, 'cityId')"
+                        [label]="'account.create.city'"
+                        [required]="true"
+                        [placeholder]="'account.create.cityPlaceholder'"
+                        [options]="getCityOptions(i)"
+                        [disabled]="!getPharmacyControl(i, 'countryId').value"
+                        (optionSelected)="onCitySelected(i, $event)"
+                        (inputChanged)="onCitySearch(i, $event)"
+                      />
+
+                      <app-autocomplete-input
+                        [formControl]="getPharmacyControl(i, 'areaId')"
+                        [label]="'account.create.area'"
+                        [required]="true"
+                        [placeholder]="'account.create.areaPlaceholder'"
+                        [options]="getAreaOptions(i)"
+                        [disabled]="!getPharmacyControl(i, 'cityId').value"
+                        (optionSelected)="onAreaSelected(i, $event)"
+                        (inputChanged)="onAreaSearch(i, $event)"
                       />
 
                       <app-text-input
@@ -363,8 +385,8 @@ interface Module {
               <app-button variant="outline" (onClick)="previousStep()">
                 {{ 'common.back' | translate }}
               </app-button>
-              <app-button 
-                variant="primary" 
+              <app-button
+                variant="primary"
                 (onClick)="nextStep()"
                 [disabled]="pharmaciesForm.invalid || pharmaciesArray.length === 0"
               >
@@ -380,16 +402,20 @@ interface Module {
             <div class="space-y-6">
               <!-- Plan Preview -->
               <div class="border-2 border-gray-200 rounded-xl p-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">{{ 'account.create.selectedPlan' | translate }}</h3>
+                <h3
+                  class="text-lg font-semibold text-gray-900 mb-4">{{ 'account.create.selectedPlan' | translate }}</h3>
                 @if (selectedPlan) {
                   <div class="grid grid-cols-2 gap-4">
                     <div>
-                      <label class="text-sm font-medium text-gray-600">{{ 'account.create.planName' | translate }}</label>
+                      <label
+                        class="text-sm font-medium text-gray-600">{{ 'account.create.planName' | translate }}</label>
                       <p class="text-lg font-bold text-gray-900">{{ selectedPlan.name }}</p>
                     </div>
                     <div>
-                      <label class="text-sm font-medium text-gray-600">{{ 'account.create.planPrice' | translate }}</label>
-                      <p class="text-lg font-bold text-gray-900">{{ selectedPlan.price }}/{{ selectedPlan.billingCycle }}</p>
+                      <label
+                        class="text-sm font-medium text-gray-600">{{ 'account.create.planPrice' | translate }}</label>
+                      <p class="text-lg font-bold text-gray-900">{{ selectedPlan.price }}
+                        /{{ selectedPlan.billingCycle }}</p>
                     </div>
                   </div>
                 }
@@ -397,7 +423,8 @@ interface Module {
 
               <!-- Modules Preview -->
               <div class="border-2 border-gray-200 rounded-xl p-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">{{ 'account.create.selectedModules' | translate }} ({{ selectedModules.length }})</h3>
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">{{ 'account.create.selectedModules' | translate }}
+                  ({{ selectedModules.length }})</h3>
                 @if (selectedModules.length > 0) {
                   <div class="space-y-3 mb-4">
                     @for (module of selectedModules; track module.id) {
@@ -406,7 +433,8 @@ interface Module {
                           <p class="font-semibold text-gray-900">{{ module.nameKey | translate }}</p>
                           <p class="text-sm text-gray-600">{{ module.descriptionKey | translate }}</p>
                         </div>
-                        <p class="text-lg font-bold text-gray-900">{{ module.pricePerMonth }}/{{ 'account.create.perMonth' | translate }}</p>
+                        <p class="text-lg font-bold text-gray-900">{{ module.pricePerMonth }}
+                          /{{ 'account.create.perMonth' | translate }}</p>
                       </div>
                     }
                   </div>
@@ -418,17 +446,21 @@ interface Module {
               <!-- Total Price -->
               <div class="border-2 border-gray-200 rounded-xl p-6 bg-gray-50">
                 <div class="flex items-center justify-between">
-                  <h3 class="text-lg font-semibold text-gray-900">{{ 'account.create.totalMonthlyPrice' | translate }}</h3>
-                  <p class="text-3xl font-bold text-gray-900">{{ getTotalMonthlyPrice() }}<span class="text-lg font-normal text-gray-600">/{{ 'account.create.perMonth' | translate }}</span></p>
+                  <h3
+                    class="text-lg font-semibold text-gray-900">{{ 'account.create.totalMonthlyPrice' | translate }}</h3>
+                  <p class="text-3xl font-bold text-gray-900">{{ getTotalMonthlyPrice() }}<span
+                    class="text-lg font-normal text-gray-600">/{{ 'account.create.perMonth' | translate }}</span></p>
                 </div>
               </div>
 
               <!-- Account Info Preview -->
               <div class="border-2 border-gray-200 rounded-xl p-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">{{ 'account.create.accountInformation' | translate }}</h3>
+                <h3
+                  class="text-lg font-semibold text-gray-900 mb-4">{{ 'account.create.accountInformation' | translate }}</h3>
                 <div class="grid grid-cols-2 gap-4">
                   <div>
-                    <label class="text-sm font-medium text-gray-600">{{ 'account.create.accountName' | translate }}</label>
+                    <label
+                      class="text-sm font-medium text-gray-600">{{ 'account.create.accountName' | translate }}</label>
                     <p class="text-gray-900">{{ accountForm.get('name')?.value }}</p>
                   </div>
                   <div>
@@ -464,7 +496,15 @@ interface Module {
                         </div>
                         <div>
                           <span class="text-gray-600">{{ 'account.create.city' | translate }}:</span>
-                          <span class="text-gray-900 ml-2">{{ getPharmacyValue(i, 'city') }}</span>
+                          <span class="text-gray-900 ml-2">{{ getCityName(i) }}</span>
+                        </div>
+                        <div>
+                          <span class="text-gray-600">{{ 'account.create.country' | translate }}:</span>
+                          <span class="text-gray-900 ml-2">{{ getCountryName(i) }}</span>
+                        </div>
+                        <div>
+                          <span class="text-gray-600">{{ 'account.create.area' | translate }}:</span>
+                          <span class="text-gray-900 ml-2">{{ getAreaName(i) }}</span>
                         </div>
                         <div>
                           <span class="text-gray-600">{{ 'account.create.managerFullName' | translate }}:</span>
@@ -485,8 +525,8 @@ interface Module {
               <app-button variant="outline" (onClick)="previousStep()">
                 {{ 'common.back' | translate }}
               </app-button>
-              <app-button 
-                variant="primary" 
+              <app-button
+                variant="primary"
                 (onClick)="createAccount()"
                 [loading]="loading"
               >
@@ -505,6 +545,9 @@ export class CreateAccountComponent implements OnInit {
   private router = inject(Router);
   private subscriptionsService = inject(PlatformSubscriptionsService);
   private accountsService = inject(PlatformAccountsService);
+  private countriesService = inject(PlatformCountriesService);
+  private citiesService = inject(PlatformCitiesService);
+  private areasService = inject(PlatformAreasService);
 
   currentStep = 1;
   selectedPlan: SubscriptionPlan | null = null;
@@ -518,6 +561,16 @@ export class CreateAccountComponent implements OnInit {
 
   accountForm!: FormGroup;
   pharmaciesForm!: FormGroup;
+
+  // Store options for each pharmacy index
+  countryOptions: Map<number, AutocompleteOption[]> = new Map();
+  cityOptions: Map<number, AutocompleteOption[]> = new Map();
+  areaOptions: Map<number, AutocompleteOption[]> = new Map();
+
+  // Search subjects for debouncing
+  private countrySearchSubjects: Map<number, Subject<string>> = new Map();
+  private citySearchSubjects: Map<number, Subject<string>> = new Map();
+  private areaSearchSubjects: Map<number, Subject<string>> = new Map();
 
   wizardSteps: WizardStep[] = [
     {
@@ -577,7 +630,7 @@ export class CreateAccountComponent implements OnInit {
   }
 
   loadPlans(): void {
-    this.subscriptionsService.getPlans({ page: 1, pageSize: 100, isActive: true }).subscribe({
+    this.subscriptionsService.getPlans({page: 1, pageSize: 100, isActive: true}).subscribe({
       next: (response) => {
         this.plans = response.data;
       },
@@ -788,12 +841,13 @@ export class CreateAccountComponent implements OnInit {
   }
 
   addPharmacy(): void {
+    const index = this.pharmaciesArray.length;
     const pharmacyGroup = this.fb.group({
       name: ['Main Pharmacy', [Validators.required]],
       address: ['123 Main Street', [Validators.required]],
-      city: ['Cairo', [Validators.required]],
-      area: ['Downtown', [Validators.required]],
-      country: ['Egypt', [Validators.required]],
+      countryId: [null, [Validators.required]],
+      cityId: [null, [Validators.required]],
+      areaId: [null, [Validators.required]],
       lat: [30.0444, [Validators.required]],
       long: [31.2357, [Validators.required]],
       manager: this.fb.group({
@@ -804,10 +858,71 @@ export class CreateAccountComponent implements OnInit {
     });
 
     this.pharmaciesArray.push(pharmacyGroup);
+    
+    // Initialize options and search subjects for this pharmacy
+    this.countryOptions.set(index, []);
+    this.cityOptions.set(index, []);
+    this.areaOptions.set(index, []);
+    
+    // Initialize search subjects
+    this.initializeSearchSubjects(index);
+    
+    // Load initial countries
+    this.loadCountries(index);
   }
 
   removePharmacy(index: number): void {
     this.pharmaciesArray.removeAt(index);
+    
+    // Clean up options and search subjects
+    this.countryOptions.delete(index);
+    this.cityOptions.delete(index);
+    this.areaOptions.delete(index);
+    this.countrySearchSubjects.delete(index);
+    this.citySearchSubjects.delete(index);
+    this.areaSearchSubjects.delete(index);
+    
+    // Reindex remaining pharmacies
+    this.reindexPharmacies();
+  }
+
+  private reindexPharmacies(): void {
+    // Rebuild maps with new indices
+    const newCountryOptions = new Map<number, AutocompleteOption[]>();
+    const newCityOptions = new Map<number, AutocompleteOption[]>();
+    const newAreaOptions = new Map<number, AutocompleteOption[]>();
+    const newCountrySearchSubjects = new Map<number, Subject<string>>();
+    const newCitySearchSubjects = new Map<number, Subject<string>>();
+    const newAreaSearchSubjects = new Map<number, Subject<string>>();
+
+    this.pharmaciesArray.controls.forEach((_, newIndex) => {
+      const oldIndex = newIndex;
+      if (this.countryOptions.has(oldIndex)) {
+        newCountryOptions.set(newIndex, this.countryOptions.get(oldIndex)!);
+      }
+      if (this.cityOptions.has(oldIndex)) {
+        newCityOptions.set(newIndex, this.cityOptions.get(oldIndex)!);
+      }
+      if (this.areaOptions.has(oldIndex)) {
+        newAreaOptions.set(newIndex, this.areaOptions.get(oldIndex)!);
+      }
+      if (this.countrySearchSubjects.has(oldIndex)) {
+        newCountrySearchSubjects.set(newIndex, this.countrySearchSubjects.get(oldIndex)!);
+      }
+      if (this.citySearchSubjects.has(oldIndex)) {
+        newCitySearchSubjects.set(newIndex, this.citySearchSubjects.get(oldIndex)!);
+      }
+      if (this.areaSearchSubjects.has(oldIndex)) {
+        newAreaSearchSubjects.set(newIndex, this.areaSearchSubjects.get(oldIndex)!);
+      }
+    });
+
+    this.countryOptions = newCountryOptions;
+    this.cityOptions = newCityOptions;
+    this.areaOptions = newAreaOptions;
+    this.countrySearchSubjects = newCountrySearchSubjects;
+    this.citySearchSubjects = newCitySearchSubjects;
+    this.areaSearchSubjects = newAreaSearchSubjects;
   }
 
   getPharmacyControl(index: number, field: string): FormControl {
@@ -824,6 +939,30 @@ export class CreateAccountComponent implements OnInit {
 
   getManagerValue(index: number, field: string): string {
     return this.pharmaciesArray.at(index).get('manager')?.get(field)?.value || '';
+  }
+
+  getCountryName(index: number): string {
+    const countryId = this.getPharmacyValue(index, 'countryId');
+    if (!countryId) return '';
+    const options = this.countryOptions.get(index) || [];
+    const option = options.find(opt => opt.value === countryId);
+    return option?.label || '';
+  }
+
+  getCityName(index: number): string {
+    const cityId = this.getPharmacyValue(index, 'cityId');
+    if (!cityId) return '';
+    const options = this.cityOptions.get(index) || [];
+    const option = options.find(opt => opt.value === cityId);
+    return option?.label || '';
+  }
+
+  getAreaName(index: number): string {
+    const areaId = this.getPharmacyValue(index, 'areaId');
+    if (!areaId) return '';
+    const options = this.areaOptions.get(index) || [];
+    const option = options.find(opt => opt.value === areaId);
+    return option?.label || '';
   }
 
   onStepChange(step: number): void {
@@ -896,39 +1035,51 @@ export class CreateAccountComponent implements OnInit {
     this.loading = true;
     this.errorMessage = '';
 
-    const accountData = {
-      name: this.accountForm.get('name')?.value,
-      email: this.accountForm.get('email')?.value,
-      username: this.accountForm.get('username')?.value,
-      password: this.accountForm.get('password')?.value,
-      website: this.accountForm.get('website')?.value,
+    // Build request matching backend ProvisionAccountRequestDto
+    const request = {
       planId: this.selectedPlan.id,
-      moduleIds: this.selectedModules.map(m => m.id),
+      selectedModules: this.selectedModules.map(m => m.id),
+      accountInfo: {
+        name: this.accountForm.get('name')?.value,
+        email: this.accountForm.get('email')?.value,
+        phone: this.accountForm.get('phone')?.value || undefined,
+        website: this.accountForm.get('website')?.value || undefined,
+        logoUrl: undefined, // Logo URL would be set after upload to storage service
+        contract: this.contractFile || undefined
+      },
       pharmacies: this.pharmaciesArray.value.map((pharmacy: any) => ({
         name: pharmacy.name,
-        address: pharmacy.address,
-        city: pharmacy.city,
-        area: pharmacy.area,
-        country: pharmacy.country,
-        lat: parseFloat(pharmacy.lat),
-        long: parseFloat(pharmacy.long),
-        manager: {
-          fullName: pharmacy.manager.fullName,
-          email: pharmacy.manager.email,
-          password: pharmacy.manager.password,
-          role: 'pharmacy_manager'
-        }
-      }))
+        address: pharmacy.address || undefined,
+        areaId: pharmacy.areaId ? String(pharmacy.areaId) : undefined, // Ensure it's a string (Guid)
+        latitude: pharmacy.lat ? parseFloat(pharmacy.lat) : undefined,
+        longitude: pharmacy.long ? parseFloat(pharmacy.long) : undefined
+      })),
+      accountOwner: {
+        fullName: this.accountForm.get('name')?.value || 'Account Owner', // Use account name as owner name
+        email: this.accountForm.get('email')?.value,
+        username: this.accountForm.get('username')?.value,
+        password: this.accountForm.get('password')?.value
+      }
     };
 
-    // TODO: Replace with actual API call
-    console.log('Creating account:', accountData);
-    
-    // Simulate API call
-    setTimeout(() => {
-      this.loading = false;
-      this.router.navigate(['/super-admin/accounts']);
-    }, 2000);
+    // Call the API
+    this.accountsService.provisionAccount(request).subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          // Show success message with credentials
+          console.log('Account provisioned:', response.data);
+          this.loading = false;
+          this.router.navigate(['/super-admin/accounts']);
+        } else {
+          this.errorMessage = response.message || 'account.create.validationError';
+          this.loading = false;
+        }
+      },
+      error: (error) => {
+        this.errorMessage = error.message || error.errors?.[0]?.message || 'account.create.validationError';
+        this.loading = false;
+      }
+    });
   }
 
   onCancel(): void {
@@ -941,6 +1092,277 @@ export class CreateAccountComponent implements OnInit {
 
   onLogoFileChange(file: File): void {
     this.logoFile = file;
+  }
+
+  // Initialize search subjects for debouncing
+  private initializeSearchSubjects(index: number): void {
+    const countrySubject = new Subject<string>();
+    const citySubject = new Subject<string>();
+    const areaSubject = new Subject<string>();
+
+    countrySubject.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap(searchTerm => this.searchCountries(index, searchTerm))
+    ).subscribe();
+
+    citySubject.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap(searchTerm => this.searchCities(index, searchTerm))
+    ).subscribe();
+
+    areaSubject.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap(searchTerm => this.searchAreas(index, searchTerm))
+    ).subscribe();
+
+    this.countrySearchSubjects.set(index, countrySubject);
+    this.citySearchSubjects.set(index, citySubject);
+    this.areaSearchSubjects.set(index, areaSubject);
+  }
+
+  // Load countries
+  private loadCountries(index: number): void {
+    this.countriesService.getAll({ page: 1, pageSize: 100, isActive: true }).subscribe({
+      next: (response) => {
+        const options: AutocompleteOption[] = response.data.map(country => ({
+          value: country.id,
+          label: country.name,
+          metadata: country
+        }));
+        this.countryOptions.set(index, options);
+      },
+      error: (error) => {
+        console.error('Error loading countries:', error);
+        this.countryOptions.set(index, []);
+      }
+    });
+  }
+
+  // Search countries
+  private searchCountries(index: number, searchTerm: string): Observable<void> {
+    return new Observable(observer => {
+      this.countriesService.getAll({
+        page: 1,
+        pageSize: 100,
+        isActive: true,
+        searchTerm: searchTerm || undefined
+      }).subscribe({
+        next: (response) => {
+          const options: AutocompleteOption[] = response.data.map(country => ({
+            value: country.id,
+            label: country.name,
+            metadata: country
+          }));
+          this.countryOptions.set(index, options);
+          observer.next();
+          observer.complete();
+        },
+        error: (error) => {
+          console.error('Error searching countries:', error);
+          observer.complete();
+        }
+      });
+    });
+  }
+
+  // Load cities for a country
+  private loadCities(index: number, countryId: string): void {
+    if (!countryId) {
+      this.cityOptions.set(index, []);
+      return;
+    }
+
+    this.citiesService.getAll({
+      page: 1,
+      pageSize: 100,
+      isActive: true,
+      countryId: countryId
+    }).subscribe({
+      next: (response) => {
+        const options: AutocompleteOption[] = response.data.map(city => ({
+          value: city.id,
+          label: city.name,
+          metadata: city
+        }));
+        this.cityOptions.set(index, options);
+      },
+      error: (error) => {
+        console.error('Error loading cities:', error);
+        this.cityOptions.set(index, []);
+      }
+    });
+  }
+
+  // Search cities
+  private searchCities(index: number, searchTerm: string): Observable<void> {
+    return new Observable(observer => {
+      const countryId = this.getPharmacyControl(index, 'countryId')?.value;
+      if (!countryId) {
+        observer.complete();
+        return;
+      }
+
+      this.citiesService.getAll({
+        page: 1,
+        pageSize: 100,
+        isActive: true,
+        countryId: countryId,
+        searchTerm: searchTerm || undefined
+      }).subscribe({
+        next: (response) => {
+          const options: AutocompleteOption[] = response.data.map(city => ({
+            value: city.id,
+            label: city.name,
+            metadata: city
+          }));
+          this.cityOptions.set(index, options);
+          observer.next();
+          observer.complete();
+        },
+        error: (error) => {
+          console.error('Error searching cities:', error);
+          observer.complete();
+        }
+      });
+    });
+  }
+
+  // Load areas for a city
+  private loadAreas(index: number, cityId: string): void {
+    if (!cityId) {
+      this.areaOptions.set(index, []);
+      return;
+    }
+
+    this.areasService.getAll({
+      page: 1,
+      pageSize: 100,
+      isActive: true,
+      cityId: cityId
+    }).subscribe({
+      next: (response) => {
+        const options: AutocompleteOption[] = response.data.map(area => ({
+          value: area.id,
+          label: area.name,
+          metadata: area
+        }));
+        this.areaOptions.set(index, options);
+      },
+      error: (error) => {
+        console.error('Error loading areas:', error);
+        this.areaOptions.set(index, []);
+      }
+    });
+  }
+
+  // Search areas
+  private searchAreas(index: number, searchTerm: string): Observable<void> {
+    return new Observable(observer => {
+      const cityId = this.getPharmacyControl(index, 'cityId')?.value;
+      if (!cityId) {
+        observer.complete();
+        return;
+      }
+
+      this.areasService.getAll({
+        page: 1,
+        pageSize: 100,
+        isActive: true,
+        cityId: cityId,
+        searchTerm: searchTerm || undefined
+      }).subscribe({
+        next: (response) => {
+          const options: AutocompleteOption[] = response.data.map(area => ({
+            value: area.id,
+            label: area.name,
+            metadata: area
+          }));
+          this.areaOptions.set(index, options);
+          observer.next();
+          observer.complete();
+        },
+        error: (error) => {
+          console.error('Error searching areas:', error);
+          observer.complete();
+        }
+      });
+    });
+  }
+
+  // Get options for template
+  getCountryOptions(index: number): AutocompleteOption[] {
+    return this.countryOptions.get(index) || [];
+  }
+
+  getCityOptions(index: number): AutocompleteOption[] {
+    return this.cityOptions.get(index) || [];
+  }
+
+  getAreaOptions(index: number): AutocompleteOption[] {
+    return this.areaOptions.get(index) || [];
+  }
+
+  // Handle selections
+  onCountrySelected(index: number, option: AutocompleteOption): void {
+    // Clear city and area when country changes
+    this.getPharmacyControl(index, 'cityId')?.setValue(null);
+    this.getPharmacyControl(index, 'areaId')?.setValue(null);
+    this.cityOptions.set(index, []);
+    this.areaOptions.set(index, []);
+    
+    // Load cities for selected country
+    if (option.value) {
+      this.loadCities(index, option.value as string);
+    }
+  }
+
+  onCitySelected(index: number, option: AutocompleteOption): void {
+    // Clear area when city changes
+    this.getPharmacyControl(index, 'areaId')?.setValue(null);
+    this.areaOptions.set(index, []);
+    
+    // Load areas for selected city
+    if (option.value) {
+      this.loadAreas(index, option.value as string);
+    }
+  }
+
+  onAreaSelected(index: number, option: AutocompleteOption): void {
+    // Area selected, no further cascading needed
+  }
+
+  // Handle search input changes
+  onCountrySearch(index: number, searchTerm: string): void {
+    const subject = this.countrySearchSubjects.get(index);
+    if (subject) {
+      subject.next(searchTerm);
+    } else {
+      // If no subject exists, load directly
+      this.searchCountries(index, searchTerm).subscribe();
+    }
+  }
+
+  onCitySearch(index: number, searchTerm: string): void {
+    const subject = this.citySearchSubjects.get(index);
+    if (subject) {
+      subject.next(searchTerm);
+    } else {
+      // If no subject exists, load directly
+      this.searchCities(index, searchTerm).subscribe();
+    }
+  }
+
+  onAreaSearch(index: number, searchTerm: string): void {
+    const subject = this.areaSearchSubjects.get(index);
+    if (subject) {
+      subject.next(searchTerm);
+    } else {
+      // If no subject exists, load directly
+      this.searchAreas(index, searchTerm).subscribe();
+    }
   }
 }
 

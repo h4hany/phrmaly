@@ -2,9 +2,9 @@ import { Area } from '../../core/services/platform-areas.service';
 
 /**
  * Area Mapper
- * 
+ *
  * Pure class for transforming API responses to domain models.
- * 
+ *
  * Rules:
  * - Static methods only
  * - No Angular decorators
@@ -16,7 +16,7 @@ import { Area } from '../../core/services/platform-areas.service';
 export class AreaMapper {
   /**
    * Map API response to Area domain model
-   * 
+   *
    * @param area - Raw API response (may be any/unknown)
    * @returns Area domain model
    */
@@ -27,6 +27,7 @@ export class AreaMapper {
       id: apiArea.id ?? '',
       name: apiArea.name ?? '',
       cityId: apiArea.cityId ?? '',
+      cityName: apiArea.cityName ?? '',
       city: apiArea.city ? {
         id: apiArea.city.id ?? '',
         name: apiArea.city.name ?? '',
@@ -45,7 +46,7 @@ export class AreaMapper {
 
   /**
    * Parse date from string or Date object
-   * 
+   *
    * @param date - Date string or Date object
    * @returns Date object
    */
@@ -53,12 +54,12 @@ export class AreaMapper {
     if (date instanceof Date) {
       return date;
     }
-    
+
     if (typeof date === 'string') {
       const parsed = new Date(date);
       return isNaN(parsed.getTime()) ? new Date() : parsed;
     }
-    
+
     return new Date();
   }
 }

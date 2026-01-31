@@ -22,6 +22,43 @@ import { IconComponent } from '../../../../shared/components/icon/icon.component
 import { RbacService } from '../../../../core/security/rbac.service';
 import { SIDEBAR_GROUPS, SidebarGroup, SidebarItem } from './sidebar.config';
 
+// Map sidebar groups/items to module codes
+const MODULE_MAPPING: Record<string, string[]> = {
+  'overview': ['dashboard'],
+  'operations': ['patients', 'finance', 'vouchers'],
+  'people': ['staff', 'attendance', 'payroll', 'performance', 'training'],
+  'inventory': ['inventory'],
+  'procurement': ['procurement'],
+  'finance': ['finance'],
+  'growth': ['growth'],
+  'system': ['system']
+};
+
+const ITEM_MODULE_MAPPING: Record<string, string> = {
+  '/dashboard': 'dashboard',
+  '/patients': 'patients',
+  '/invoices': 'finance',
+  '/vouchers': 'vouchers',
+  '/pharmacy-staff': 'staff',
+  '/people/attendance': 'attendance',
+  '/people/payroll': 'payroll',
+  '/people/performance': 'performance',
+  '/people/training': 'training',
+  '/drugs': 'inventory',
+  '/bundles': 'inventory',
+  '/inventory/alerts': 'inventory',
+  '/inventory/requested-products': 'inventory',
+  '/inventory/transfers': 'inventory',
+  '/inventory/map': 'inventory',
+  '/suppliers': 'procurement',
+  '/purchases': 'procurement',
+  '/payments': 'finance',
+  '/audit-logs': 'finance',
+  '/inventory/movements': 'finance',
+  '/growth/referrals': 'growth',
+  '/settings': 'system'
+};
+
 @Component({
   selector: 'app-sidebar',
   standalone: true,
@@ -103,11 +140,36 @@ export class SidebarComponent implements OnInit, OnDestroy {
       return false;
     }
     
-    // Use RBAC service to check group access
-    return this.rbacService.canAccessGroup(group.key);
+    // Check if group's module is enabled
+    const user = this.authService.getCurrentUser();
+    const enabledModules = (user as any)?.modules || [];
+    const groupModules = MODULE_MAPPING[group.key] || [];
+    
+    // If group has module mapping, check if any module is enabled
+    let hasEnabledModule = true;
+    if (groupModules.length > 0) {
+      hasEnabledModule = groupModules.some(module => enabledModules.includes(module));
+    }
+    
+    // Check RBAC permissions
+    const hasPermission = this.rbacService.canAccessGroup(group.key);
+    
+    // Group is visible if EITHER module is enabled OR user has permission
+    // This allows groups to show based on modules even if permission check hasn't loaded yet
+    return hasEnabledModule || hasPermission;
   }
 
   isItemVisible(item: SidebarItem): boolean {
+    // Check if item's module is enabled
+    const user = this.authService.getCurrentUser();
+    const enabledModules = (user as any)?.modules || [];
+    const itemModule = ITEM_MODULE_MAPPING[item.path];
+    
+    // If item has module mapping, check if module is enabled
+    if (itemModule && !enabledModules.includes(itemModule)) {
+      return false;
+    }
+    
     // Use RBAC service to check item access
     return this.rbacService.canAccessItem(item.path);
   }

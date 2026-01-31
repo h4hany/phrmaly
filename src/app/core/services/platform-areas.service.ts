@@ -11,6 +11,7 @@ export interface Area {
   id: string;
   name: string;
   cityId: string;
+  cityName: string;
   city?: { id: string; name: string; countryId: string };
   country?: { id: string; name: string; code: string };
   isActive: boolean;
@@ -26,7 +27,7 @@ export class PlatformAreasService {
 
   getAll(params?: PaginationParams & { cityId?: string; searchTerm?: string; isActive?: boolean }): Observable<PaginatedResponse<Area>> {
     const queryParams: Record<string, any> = {};
-    
+
     if (params?.page) {
       queryParams['PageNumber'] = params.page;
     }
@@ -53,7 +54,7 @@ export class PlatformAreasService {
         }
 
         const areas = response.data.map(area => AreaMapper.fromApi(area));
-        
+
         return {
           data: areas,
           total: response.meta?.pagination?.totalItems ?? areas.length,

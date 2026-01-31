@@ -1,9 +1,41 @@
-import { Injectable } from '@angular/core';
-import { Observable, of } from 'rxjs';
-import { delay } from 'rxjs/operators';
+import { Injectable, inject } from '@angular/core';
+import { Observable, of, throwError } from 'rxjs';
+import { map, catchError, tap } from 'rxjs/operators';
 import { User, UserRole } from '../models/user.model';
 import { PermissionContext } from '../models/permission.model';
 import { BaseAuthService } from './base-auth.service';
+import { CoreApiService } from './core-api.service';
+import { TENANT_ENDPOINTS } from '../constants/platform-endpoints';
+import { ApiResponse } from '../models/api-response.model';
+
+/**
+ * Tenant Login Response Interface
+ */
+interface TenantLoginResponseData {
+  accessToken: string;
+  refreshToken: string;
+  expiresAt: string;
+  user: {
+    id: string;
+    accountId: string;
+    accountName: string;
+    accountSlug: string;
+    subdomain: string;
+    email: string;
+    username: string;
+    fullName: string;
+    pharmacyId?: string;
+    pharmacyName?: string;
+    roleName?: string;
+    permissions: string[];
+    modules: string[];
+  };
+  pharmacies?: Array<{
+    id: string;
+    name: string;
+    address?: string;
+  }>;
+}
 
 /**
  * Pharmacy Authentication Service
@@ -19,95 +51,7 @@ import { BaseAuthService } from './base-auth.service';
   providedIn: 'root'
 })
 export class PharmacyAuthService extends BaseAuthService {
-
-  // Mock pharmacy users
-  private mockUsers: User[] = [
-    {
-      id: '1',
-      email: 'owner@pharmly.com',
-      username: 'owner',
-      phone: '+1234567890',
-      password: 'password',
-      role: UserRole.ACCOUNT_OWNER,
-      fullName: 'James Bond',
-      avatarUrl: 'https://ui-avatars.com/api/?name=James+Bond',
-      pharmacies: [
-        {
-          id: 'ph1',
-          name: 'Main Pharmacy',
-          address: '123 Main St',
-          phone: '+1234567890',
-          email: 'main@pharmly.com',
-          primaryColor: '#166534',
-          secondaryColor: '#22c55e',
-          sidebarColor: '#14532d',
-          rtlEnabled: false
-        },
-        {
-          id: 'ph2',
-          name: 'Branch Pharmacy',
-          address: '456 Branch Ave',
-          phone: '+1234567891',
-          email: 'branch@pharmly.com',
-          primaryColor: '#166534',
-          secondaryColor: '#22c55e',
-          sidebarColor: '#14532d',
-          rtlEnabled: false
-        }
-      ]
-    },
-    {
-      id: '2',
-      email: 'manager@pharmly.com',
-      username: 'manager',
-      password: '',
-      role: UserRole.PHARMACY_MANAGER,
-      fullName: 'John Manager',
-      pharmacyId: 'ph1'
-    },
-    {
-      id: '3',
-      email: 'staff@pharmly.com',
-      username: 'staff',
-      password: 'password',
-      role: UserRole.PHARMACY_STAFF,
-      fullName: 'Jane Staff',
-      pharmacyId: 'ph1'
-    },
-    {
-      id: '5',
-      email: 'inventory@pharmly.com',
-      username: 'inventory',
-      password: 'password',
-      role: UserRole.PHARMACY_INVENTORY_MANAGER,
-      fullName: 'Inventory Manager',
-      avatarUrl: 'https://ui-avatars.com/api/?name=Inventory+Manager',
-      pharmacies: [
-        {
-          id: 'ph1',
-          name: 'Main Pharmacy',
-          address: '123 Main St',
-          phone: '+1234567890',
-          email: 'main@pharmly.com',
-          primaryColor: '#166534',
-          secondaryColor: '#22c55e',
-          sidebarColor: '#14532d',
-          rtlEnabled: false
-        },
-        {
-          id: 'ph2',
-          name: 'Branch Pharmacy',
-          address: '456 Branch Ave',
-          phone: '+1234567891',
-          email: 'branch@pharmly.com',
-          primaryColor: '#166534',
-          secondaryColor: '#22c55e',
-          sidebarColor: '#14532d',
-          rtlEnabled: false
-        }
-      ]
-    }
-  ];
+  private coreApi = inject(CoreApiService);
 
   constructor() {
     super();
@@ -117,36 +61,161 @@ export class PharmacyAuthService extends BaseAuthService {
    * Login pharmacy user
    * Only allows pharmacy roles to login
    */
-  login(identifier: string, password: string): Observable<User> {
-    // Find user by email, username, or phone
-    const user = this.mockUsers.find(u =>
-      (u.email === identifier || u.username === identifier || u.phone === identifier) &&
-      (u.password === '' || u.password === password)
+  login(identifier: string, password: string, accountSlug?: string): Observable<User> {
+    const loginRequest = {
+      emailOrUsernameOrPhone: identifier,
+      password: password,
+      accountSlug: accountSlug,
+      subdomain: undefined as string | undefined,
+      pharmacyId: undefined as string | undefined
+    };
+
+    return this.coreApi.post<TenantLoginResponseData>(
+      TENANT_ENDPOINTS.auth.login,
+      loginRequest,
+      false, // usePharmacy
+      true   // useTenant
+    ).pipe(
+      map((response: ApiResponse<TenantLoginResponseData>) => {
+        if (!response.success || !response.data) {
+          throw new Error(response.message || 'Login failed');
+        }
+
+        const data = response.data;
+        
+        // Store tokens
+        if (data.accessToken) {
+          localStorage.setItem('tenant_auth_token', data.accessToken);
+          localStorage.setItem('tenant_refresh_token', data.refreshToken);
+        }
+
+        // If pharmacies list is returned (multiple pharmacies), throw error to handle selection
+        if (data.pharmacies && data.pharmacies.length > 0 && !data.user) {
+          throw new Error('PHARMACY_SELECTION_REQUIRED');
+        }
+
+        // Map backend response to User model
+        const user: User = {
+          id: data.user.id,
+          email: data.user.email,
+          username: data.user.username,
+          fullName: data.user.fullName,
+          role: this.mapRoleNameToUserRole(data.user.roleName || ''),
+          pharmacyId: data.user.pharmacyId,
+          pharmacies: data.pharmacies?.map(p => ({
+            id: p.id,
+            name: p.name,
+            address: p.address
+          })) || (data.user.pharmacyId ? [{
+            id: data.user.pharmacyId,
+            name: data.user.pharmacyName || ''
+          }] : []),
+          password: '' // Don't store password
+        };
+
+        // Store permissions and modules in user object for permission context
+        // Map backend permission format (read/write/delete/manage) to frontend format (view/create/edit/delete/manage)
+        const mappedPermissions: string[] = [];
+        const additionalPermissions: string[] = [];
+        
+        (data.user.permissions || []).forEach((perm: string) => {
+          // Convert backend format to frontend format
+          // read -> view
+          if (perm.endsWith('.read')) {
+            const viewPerm = perm.replace('.read', '.view');
+            mappedPermissions.push(viewPerm);
+            return;
+          }
+          
+          // write -> create (for create actions) and also keep write for some cases
+          if (perm.endsWith('.write')) {
+            const resource = perm.substring(0, perm.lastIndexOf('.'));
+            // Add create permission for resources that support creation
+            const createPerm = `${resource}.create`;
+            mappedPermissions.push(createPerm);
+            // Also add view permission if user can write (they should be able to view)
+            const viewPerm = `${resource}.view`;
+            if (!additionalPermissions.includes(viewPerm)) {
+              additionalPermissions.push(viewPerm);
+            }
+            // Keep the write permission as well for actions that use it
+            mappedPermissions.push(perm);
+            return;
+          }
+          
+          // delete -> delete (same)
+          if (perm.endsWith('.delete')) {
+            mappedPermissions.push(perm);
+            const resource = perm.substring(0, perm.lastIndexOf('.'));
+            // Add view permission if user can delete (they should be able to view)
+            const viewPerm = `${resource}.view`;
+            if (!additionalPermissions.includes(viewPerm)) {
+              additionalPermissions.push(viewPerm);
+            }
+            return;
+          }
+          
+          // manage -> manage (same), but also add view permission
+          if (perm.endsWith('.manage')) {
+            mappedPermissions.push(perm);
+            const resource = perm.substring(0, perm.lastIndexOf('.'));
+            // Add view permission if user can manage (they should be able to view)
+            const viewPerm = `${resource}.view`;
+            if (!additionalPermissions.includes(viewPerm)) {
+              additionalPermissions.push(viewPerm);
+            }
+            return;
+          }
+          
+          // Keep any other permissions as-is
+          mappedPermissions.push(perm);
+        });
+        
+        // Combine all permissions, removing duplicates
+        const allPermissions = [...new Set([...mappedPermissions, ...additionalPermissions])];
+        
+        (user as any).permissions = allPermissions;
+        (user as any).modules = data.user.modules || [];
+        (user as any).accountId = data.user.accountId;
+        (user as any).accountSlug = data.user.accountSlug;
+        (user as any).subdomain = data.user.subdomain;
+
+        this.storeUser(user);
+        
+        // Force reload of permission context by emitting user change
+        // This ensures RbacService picks up the new permissions immediately
+        setTimeout(() => {
+          this.currentUserSubject.next(user);
+        }, 0);
+        
+        return user;
+      }),
+      catchError((error) => {
+        if (error.error?.message) {
+          throw new Error(error.error.message);
+        }
+        throw error;
+      })
     );
+  }
 
-    if (!user) {
-      throw new Error('Invalid credentials');
-    }
-
-    // Verify user is a pharmacy role (not platform admin)
-    const pharmacyRoles = [
-      UserRole.ACCOUNT_OWNER,
-      UserRole.PHARMACY_MANAGER,
-      UserRole.PHARMACY_STAFF,
-      UserRole.PHARMACY_INVENTORY_MANAGER,
-      UserRole.PHARMACY_ACCOUNTING_MANAGER
-    ];
-
-    if (!pharmacyRoles.includes(user.role)) {
-      throw new Error('Access denied. Pharmacy credentials required.');
-    }
-
-    this.storeUser(user);
-    return of(user).pipe(delay(500));
+  /**
+   * Map backend role name to UserRole enum
+   */
+  private mapRoleNameToUserRole(roleName: string): UserRole {
+    const roleMap: Record<string, UserRole> = {
+      'ACCOUNT_OWNER': UserRole.ACCOUNT_OWNER,
+      'PHARMACY_MANAGER': UserRole.PHARMACY_MANAGER,
+      'PHARMACY_STAFF': UserRole.PHARMACY_STAFF,
+      'PHARMACY_INVENTORY_MANAGER': UserRole.PHARMACY_INVENTORY_MANAGER,
+      'PHARMACY_ACCOUNTING_MANAGER': UserRole.PHARMACY_ACCOUNTING_MANAGER
+    };
+    return roleMap[roleName.toUpperCase()] || UserRole.PHARMACY_STAFF;
   }
 
   /**
    * Get permission context for pharmacy users
+   * Uses permissions and modules from the authenticated user (stored in JWT/user object)
    */
   getPermissionContext(): Observable<PermissionContext> {
     const user = this.getCurrentUser();
@@ -158,8 +227,18 @@ export class PharmacyAuthService extends BaseAuthService {
       });
     }
 
-    const context = this.getPharmacyPermissionContext(user.role);
-    return of(context);
+    // Get permissions and modules from user object (set during login)
+    const permissions = (user as any).permissions || [];
+    const modules = (user as any).modules || [];
+
+    // Get limits based on role (fallback to mock if not available)
+    const limits = this.getLimitsForRole(user.role);
+
+    return of({
+      permissions: permissions.length > 0 ? permissions : this.getPharmacyPermissionContext(user.role).permissions,
+      modules: modules.length > 0 ? modules : this.getPharmacyPermissionContext(user.role).modules,
+      limits: limits
+    });
   }
 
   /**
@@ -174,7 +253,35 @@ export class PharmacyAuthService extends BaseAuthService {
         limits: { maxUsers: 0, maxPharmacies: 0 }
       };
     }
-    return this.getPharmacyPermissionContext(user.role);
+
+    // Get permissions and modules from user object (set during login)
+    const permissions = (user as any).permissions || [];
+    const modules = (user as any).modules || [];
+    const limits = this.getLimitsForRole(user.role);
+
+    return {
+      permissions: permissions.length > 0 ? permissions : this.getPharmacyPermissionContext(user.role).permissions,
+      modules: modules.length > 0 ? modules : this.getPharmacyPermissionContext(user.role).modules,
+      limits: limits
+    };
+  }
+
+  /**
+   * Get limits for role
+   */
+  private getLimitsForRole(role: UserRole): { maxUsers: number; maxPharmacies: number } {
+    switch (role) {
+      case UserRole.ACCOUNT_OWNER:
+        return { maxUsers: 100, maxPharmacies: 10 };
+      case UserRole.PHARMACY_MANAGER:
+        return { maxUsers: 50, maxPharmacies: 5 };
+      case UserRole.PHARMACY_STAFF:
+        return { maxUsers: 20, maxPharmacies: 1 };
+      case UserRole.PHARMACY_INVENTORY_MANAGER:
+        return { maxUsers: 30, maxPharmacies: 3 };
+      default:
+        return { maxUsers: 0, maxPharmacies: 0 };
+    }
   }
 
   /**
@@ -298,15 +405,54 @@ export class PharmacyAuthService extends BaseAuthService {
   }
 
   /**
-   * Set mock role for development/testing
+   * Switch pharmacy (for users with access to multiple pharmacies)
    */
-  setMockRole(role: UserRole): void {
-    const user = this.getCurrentUser();
-    if (user) {
-      const updatedUser = { ...user, role };
-      localStorage.setItem('currentUser', JSON.stringify(updatedUser));
-      this.currentUserSubject.next(updatedUser);
-    }
+  switchPharmacy(pharmacyId: string): Observable<User> {
+    return this.coreApi.post<TenantLoginResponseData>(
+      TENANT_ENDPOINTS.auth.switchPharmacy,
+      { pharmacyId: pharmacyId },
+      false, // usePharmacy
+      true   // useTenant
+    ).pipe(
+      map((response: ApiResponse<TenantLoginResponseData>) => {
+        if (!response.success || !response.data) {
+          throw new Error(response.message || 'Failed to switch pharmacy');
+        }
+
+        const data = response.data;
+        
+        // Update tokens
+        if (data.accessToken) {
+          localStorage.setItem('tenant_auth_token', data.accessToken);
+          localStorage.setItem('tenant_refresh_token', data.refreshToken);
+        }
+
+        // Map to User model
+        const user: User = {
+          id: data.user.id,
+          email: data.user.email,
+          username: data.user.username,
+          fullName: data.user.fullName,
+          role: this.mapRoleNameToUserRole(data.user.roleName || ''),
+          pharmacyId: data.user.pharmacyId,
+          pharmacies: data.pharmacies?.map(p => ({
+            id: p.id,
+            name: p.name,
+            address: p.address
+          })) || [],
+          password: ''
+        };
+
+        (user as any).permissions = data.user.permissions || [];
+        (user as any).modules = data.user.modules || [];
+        (user as any).accountId = data.user.accountId;
+        (user as any).accountSlug = data.user.accountSlug;
+        (user as any).subdomain = data.user.subdomain;
+
+        this.storeUser(user);
+        return user;
+      })
+    );
   }
 }
 

@@ -12,6 +12,12 @@ export interface PharmacyStaff {
   avatarUrl?: string;
   createdAt: Date;
   updatedAt: Date;
+  pharmacyRoles?: Array<{
+    pharmacyId: string;
+    pharmacyName: string;
+    roleId: string;
+    roleName: string;
+  }>;
 }
 
 

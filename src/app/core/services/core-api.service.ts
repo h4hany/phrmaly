@@ -33,15 +33,19 @@ export class CoreApiService {
    * @param path - Endpoint path (from PLATFORM_ENDPOINTS)
    * @param params - Query parameters
    * @param usePharmacy - Use pharmacy prefix instead of platform
+   * @param useTenant - Use tenant prefix instead of platform
    */
   get<T>(
     path: string,
     params?: Record<string, any>,
-    usePharmacy: boolean = false
+    usePharmacy: boolean = false,
+    useTenant: boolean = false
   ): Observable<ApiResponse<T>> {
-    const url = usePharmacy 
-      ? this.endpointResolver.resolvePharmacy(path)
-      : this.endpointResolver.resolve(path);
+    const url = useTenant
+      ? this.endpointResolver.resolveTenant(path)
+      : usePharmacy 
+        ? this.endpointResolver.resolvePharmacy(path)
+        : this.endpointResolver.resolve(path);
     
     let httpParams = new HttpParams();
     if (params) {
@@ -68,7 +72,29 @@ export class CoreApiService {
     params?: Record<string, any>,
     usePharmacy: boolean = false
   ): Observable<PaginatedApiResponse<T>> {
-    return this.get<T[]>(path, params, usePharmacy) as Observable<PaginatedApiResponse<T>>;
+    return this.get<PaginatedApiResponse<T>>(path, params, usePharmacy).pipe(
+      map(response => {
+        // If response.data is already paginated, return as-is
+        if (response.data && typeof response.data === 'object' && 'data' in response.data) {
+          return response as PaginatedApiResponse<T>;
+        }
+        // Otherwise wrap in paginated format
+        return {
+          ...response,
+          data: response.data as any,
+          meta: response.meta || {
+            pagination: {
+              page: 1,
+              pageSize: 10,
+              totalItems: Array.isArray(response.data) ? (response.data as any[]).length : 0,
+              totalPages: 1,
+              hasNext: false,
+              hasPrevious: false
+            }
+          }
+        } as PaginatedApiResponse<T>;
+      })
+    );
   }
 
   /**
@@ -77,14 +103,45 @@ export class CoreApiService {
   post<T>(
     path: string,
     body: any,
-    usePharmacy: boolean = false
+    usePharmacy: boolean = false,
+    useTenant: boolean = false
   ): Observable<ApiResponse<T>> {
-    const url = usePharmacy
-      ? this.endpointResolver.resolvePharmacy(path)
-      : this.endpointResolver.resolve(path);
+    const url = useTenant
+      ? this.endpointResolver.resolveTenant(path)
+      : usePharmacy
+        ? this.endpointResolver.resolvePharmacy(path)
+        : this.endpointResolver.resolve(path);
 
     return this.http.post<ApiResponse<T>>(url, body, {
       headers: this.getHeaders()
+    }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * POST request with FormData (for file uploads)
+   */
+  postFormData<T>(
+    path: string,
+    formData: FormData,
+    usePharmacy: boolean = false,
+    useTenant: boolean = false
+  ): Observable<ApiResponse<T>> {
+    const url = useTenant
+      ? this.endpointResolver.resolveTenant(path)
+      : usePharmacy
+        ? this.endpointResolver.resolvePharmacy(path)
+        : this.endpointResolver.resolve(path);
+
+    const token = localStorage.getItem('auth_token');
+    const headers = new HttpHeaders({
+      ...(token && { Authorization: `Bearer ${token}` })
+      // Don't set Content-Type, let browser set it with boundary for FormData
+    });
+
+    return this.http.post<ApiResponse<T>>(url, formData, {
+      headers: headers
     }).pipe(
       catchError(this.handleError)
     );
@@ -96,11 +153,14 @@ export class CoreApiService {
   put<T>(
     path: string,
     body: any,
-    usePharmacy: boolean = false
+    usePharmacy: boolean = false,
+    useTenant: boolean = false
   ): Observable<ApiResponse<T>> {
-    const url = usePharmacy
-      ? this.endpointResolver.resolvePharmacy(path)
-      : this.endpointResolver.resolve(path);
+    const url = useTenant
+      ? this.endpointResolver.resolveTenant(path)
+      : usePharmacy
+        ? this.endpointResolver.resolvePharmacy(path)
+        : this.endpointResolver.resolve(path);
 
     return this.http.put<ApiResponse<T>>(url, body, {
       headers: this.getHeaders()
@@ -114,11 +174,14 @@ export class CoreApiService {
    */
   delete<T>(
     path: string,
-    usePharmacy: boolean = false
+    usePharmacy: boolean = false,
+    useTenant: boolean = false
   ): Observable<ApiResponse<T>> {
-    const url = usePharmacy
-      ? this.endpointResolver.resolvePharmacy(path)
-      : this.endpointResolver.resolve(path);
+    const url = useTenant
+      ? this.endpointResolver.resolveTenant(path)
+      : usePharmacy
+        ? this.endpointResolver.resolvePharmacy(path)
+        : this.endpointResolver.resolve(path);
 
     return this.http.delete<ApiResponse<T>>(url, {
       headers: this.getHeaders()
@@ -131,7 +194,11 @@ export class CoreApiService {
    * Get HTTP headers with authentication
    */
   private getHeaders(): HttpHeaders {
-    const token = localStorage.getItem('auth_token');
+    // Check for tenant token first, then platform token
+    const tenantToken = localStorage.getItem('tenant_auth_token');
+    const platformToken = localStorage.getItem('auth_token');
+    const token = tenantToken || platformToken;
+    
     return new HttpHeaders({
       'Content-Type': 'application/json',
       ...(token && { Authorization: `Bearer ${token}` })

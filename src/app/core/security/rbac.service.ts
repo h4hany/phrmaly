@@ -36,7 +36,7 @@ export class RbacService {
     // This prevents race conditions with route guards
     const currentUser = this.authService.getCurrentUser();
     if (currentUser) {
-      // Load synchronously for already-logged-in users (mock data only)
+      // Load synchronously for already-logged-in users
       const context = this.authService.getPermissionContextSync();
       if (context) {
         this.permissionContextSubject.next(context);
@@ -45,6 +45,12 @@ export class RbacService {
     
     // Reload when user changes (for role switching or new logins)
     this.authService.currentUser$.subscribe(() => {
+      // Load synchronously first for immediate availability
+      const syncContext = this.authService.getPermissionContextSync();
+      if (syncContext) {
+        this.permissionContextSubject.next(syncContext);
+      }
+      // Then load async to ensure we have the latest
       this.loadPermissionContext();
     });
   }
@@ -94,7 +100,7 @@ export class RbacService {
   canAccessRoute(path: string): boolean {
     let context = this.getPermissionContext();
     
-    // If context not loaded yet, try to load it synchronously (for mock data)
+    // If context not loaded yet, try to load it synchronously
     // This prevents race conditions where guard checks before async load completes
     if (!context) {
       const syncContext = this.authService.getPermissionContextSync();
@@ -103,8 +109,25 @@ export class RbacService {
         this.permissionContextSubject.next(syncContext);
         context = syncContext;
       } else {
-        // If still no context, deny access (shouldn't happen with mock data)
-        return false;
+        // If still no context, try to get permissions directly from user object
+        const user = this.authService.getCurrentUser();
+        if (user) {
+          const userPermissions = (user as any).permissions || [];
+          if (userPermissions.length > 0) {
+            // Create a temporary context from user object
+            context = {
+              permissions: userPermissions,
+              modules: (user as any).modules || [],
+              limits: { maxUsers: 0, maxPharmacies: 0 }
+            };
+            this.permissionContextSubject.next(context);
+          } else {
+            // If still no permissions, deny access
+            return false;
+          }
+        } else {
+          return false;
+        }
       }
     }
 
@@ -134,14 +157,26 @@ export class RbacService {
   /**
    * Check if user can access a sidebar group
    * A group is visible if user has at least one of the required permissions
+   * If no permissions are defined for the group, returns true (fallback to module-based check)
    */
   canAccessGroup(groupKey: string): boolean {
     const context = this.getPermissionContext();
     if (!context) {
-      return false;
+      // If context not loaded, try to get it synchronously
+      const syncContext = this.authService.getPermissionContextSync();
+      if (!syncContext) {
+        return false;
+      }
+      this.permissionContextSubject.next(syncContext);
     }
 
     const requiredPermissions = getRequiredPermissions('groups', groupKey);
+    
+    // If no permissions defined for this group, allow it (will be filtered by module check)
+    if (requiredPermissions.length === 0) {
+      return true;
+    }
+    
     return this.hasAnyPermission(requiredPermissions);
   }
 
@@ -149,9 +184,16 @@ export class RbacService {
    * Check if user can access a sidebar item
    */
   canAccessItem(path: string): boolean {
-    const context = this.getPermissionContext();
+    let context = this.getPermissionContext();
     if (!context) {
-      return false;
+      // If context not loaded, try to get it synchronously
+      const syncContext = this.authService.getPermissionContextSync();
+      if (syncContext) {
+        this.permissionContextSubject.next(syncContext);
+        context = syncContext;
+      } else {
+        return false;
+      }
     }
 
     // Normalize path
@@ -159,6 +201,11 @@ export class RbacService {
 
     // Check exact match
     const requiredPermissions = getRequiredPermissions('items', normalizedPath);
+    
+    // If no permissions defined for this item, allow it (will be filtered by module check)
+    if (requiredPermissions.length === 0) {
+      return true;
+    }
     if (requiredPermissions.length > 0) {
       return this.hasAnyPermission(requiredPermissions);
     }
@@ -214,7 +261,7 @@ export class RbacService {
 
   /**
    * Get the home/default route for the current user
-   * Uses role-based logic for now (can be enhanced with permission-based routing)
+   * Uses permission-based routing, falls back to role-based if permissions not available
    */
   getHomeRoute(): string {
     const user = this.authService.getCurrentUser();
@@ -232,21 +279,45 @@ export class RbacService {
       return '/super-admin/dashboard';
     }
 
-    // Permission-based routing: check what user can access
-    if (this.hasPermission('dashboard.view')) {
-      return '/dashboard';
-    }
-    if (this.hasPermission('drugs.view')) {
-      return '/drugs';
-    }
-    if (this.hasPermission('inventory.alerts.view')) {
-      return '/inventory/alerts';
-    }
-    if (this.hasPermission('invoices.view')) {
-      return '/invoices';
+    // Get permission context - try sync first, then async
+    let context = this.getPermissionContext();
+    let permissions = context?.permissions || [];
+    let modules = context?.modules || [];
+
+    // If no context, try to get permissions directly from user object
+    if (permissions.length === 0) {
+      const userPermissions = (user as any).permissions || [];
+      if (userPermissions.length > 0) {
+        permissions = userPermissions;
+        modules = (user as any).modules || [];
+      }
     }
 
-    // Fallback to role-based routing
+    // Permission-based routing: check what user can access
+    // Try to find the first accessible route based on permissions
+    const routePriority = [
+      { route: '/dashboard', permission: 'dashboard.view' },
+      { route: '/drugs', permission: 'drugs.view' },
+      { route: '/invoices', permission: 'invoices.view' },
+      { route: '/patients', permission: 'patients.view' },
+      { route: '/pharmacy-staff', permission: 'staff.view' },
+      { route: '/inventory/alerts', permission: 'inventory.alerts.view' },
+      { route: '/inventory/map', permission: 'inventory.map.view' },
+      { route: '/purchases', permission: 'purchases.view' },
+      { route: '/suppliers', permission: 'suppliers.view' },
+      { route: '/bundles', permission: 'bundles.view' },
+      { route: '/vouchers', permission: 'vouchers.view' },
+      { route: '/settings', permission: 'settings.view' }
+    ];
+
+    // Find first route user has permission for
+    for (const routeCheck of routePriority) {
+      if (permissions.includes(routeCheck.permission) || this.hasPermission(routeCheck.permission)) {
+        return routeCheck.route;
+      }
+    }
+
+    // Fallback to role-based routing if permissions not available
     switch (role) {
       case UserRole.PHARMACY_MANAGER:
       case UserRole.PHARMACY_STAFF:
@@ -257,6 +328,7 @@ export class RbacService {
       
       case UserRole.ACCOUNT_OWNER:
       default:
+        // For account owner, try dashboard first, then fallback
         return '/dashboard';
     }
   }

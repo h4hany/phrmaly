@@ -33,5 +33,13 @@ export class EndpointResolverService {
   resolvePharmacy(path: string): string {
     return `${environment.apiBaseUrl}/api/pharmacy/${environment.apiVersion}/${path}`;
   }
+
+  /**
+   * Resolve tenant endpoint
+   * Builds: {apiBaseUrl}/api/tenant/{apiVersion}/{path}
+   */
+  resolveTenant(path: string): string {
+    return `${environment.apiBaseUrl}/api/tenant/${environment.apiVersion}/${path}`;
+  }
 }
 
