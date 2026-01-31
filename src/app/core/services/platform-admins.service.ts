@@ -4,6 +4,7 @@ import { Observable, throwError } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { AdminUser, PlatformRole } from '../models/platform.model';
 import { PaginatedResponse, PaginationParams } from '../models/common.model';
+import { ApiResponse } from '../models/api-response.model';
 
 @Injectable({
   providedIn: 'root'
@@ -36,14 +37,34 @@ export class PlatformAdminsService {
       httpParams = httpParams.set('status', params.status);
     }
 
-    return this.http.get<PaginatedResponse<AdminUser>>(`${this.baseUrl}/admins`, {
+    return this.http.get<any>(`${this.baseUrl}/admins`, {
       headers: this.getHeaders(),
       params: httpParams
     }).pipe(
-      map(response => ({
-        ...response,
-        data: response.data.map(admin => this.mapAdminResponse(admin))
-      })),
+      map((response: any) => {
+        // Handle both direct ApiResponse and wrapped response
+        const apiResponse: ApiResponse<AdminUser[]> = response.success ? response : { 
+          success: true, 
+          data: response, 
+          message: '', 
+          errors: [],
+          meta: response.meta
+        };
+        
+        if (!apiResponse.success || !apiResponse.data) {
+          throw new Error(apiResponse.message || 'Failed to fetch admins');
+        }
+
+        const admins = (Array.isArray(apiResponse.data) ? apiResponse.data : []).map(admin => this.mapAdminResponse(admin));
+        
+        return {
+          data: admins,
+          total: apiResponse.meta?.pagination?.totalItems ?? admins.length,
+          page: apiResponse.meta?.pagination?.page ?? 1,
+          pageSize: apiResponse.meta?.pagination?.pageSize ?? 10,
+          totalPages: apiResponse.meta?.pagination?.totalPages ?? 1
+        };
+      }),
       catchError(error => {
         const errorMessage = error.error?.message || error.message || 'Failed to fetch admins';
         return throwError(() => new Error(errorMessage));
@@ -52,10 +73,15 @@ export class PlatformAdminsService {
   }
 
   getById(id: string): Observable<AdminUser | null> {
-    return this.http.get<AdminUser>(`${this.baseUrl}/admins/${id}`, {
+    return this.http.get<ApiResponse<AdminUser>>(`${this.baseUrl}/admins/${id}`, {
       headers: this.getHeaders()
     }).pipe(
-      map(admin => this.mapAdminResponse(admin)),
+      map((response: ApiResponse<AdminUser>) => {
+        if (!response.success || !response.data) {
+          return null;
+        }
+        return this.mapAdminResponse(response.data);
+      }),
       catchError(error => {
         if (error.status === 404) {
           return throwError(() => new Error('Admin not found'));
@@ -123,20 +149,46 @@ export class PlatformAdminsService {
    * Map API response to AdminUser model
    */
   private mapAdminResponse(admin: any): AdminUser {
+    // Handle firstName/lastName or fullName
+    const fullName = admin.fullName || 
+                     (admin.firstName && admin.lastName ? `${admin.firstName} ${admin.lastName}` : '') ||
+                     admin.name || 
+                     '';
+    
+    // Handle roles array or single role
+    const role = admin.role || 
+                 (admin.roles && admin.roles.length > 0 ? this.mapRoleFromString(admin.roles[0]) : PlatformRole.SUPER_ADMIN);
+    
+    // Handle status - map isActive boolean to status string
+    const status = admin.status || (admin.isActive ? 'active' : 'inactive');
+
     return {
       id: admin.id,
       email: admin.email,
-      username: admin.username,
-      fullName: admin.fullName || admin.name || '',
-      role: admin.role as PlatformRole,
-      status: admin.status,
+      username: admin.username || admin.email,
+      fullName: fullName,
+      role: role,
+      status: status,
       permissions: admin.permissions || [],
       lastLoginAt: admin.lastLoginAt ? new Date(admin.lastLoginAt) : undefined,
-      createdAt: new Date(admin.createdAt),
-      updatedAt: new Date(admin.updatedAt),
+      createdAt: admin.createdAt ? new Date(admin.createdAt) : new Date(),
+      updatedAt: admin.updatedAt ? new Date(admin.updatedAt) : new Date(),
       createdBy: admin.createdBy || '',
       auditTrail: admin.auditTrail
     };
+  }
+
+  /**
+   * Map role string from API to PlatformRole
+   */
+  private mapRoleFromString(roleString: string): PlatformRole {
+    const roleMap: { [key: string]: PlatformRole } = {
+      'Super Admin': PlatformRole.SUPER_ADMIN,
+      'Support Admin': PlatformRole.SUPPORT_ADMIN,
+      'Sales Admin': PlatformRole.SALES_ADMIN,
+      'Finance Admin': PlatformRole.FINANCE_ADMIN
+    };
+    return roleMap[roleString] || PlatformRole.SUPER_ADMIN;
   }
 }
 

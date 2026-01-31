@@ -136,7 +136,7 @@ import { AlertComponent } from '../../../shared/components/alert/alert.component
             } @else if (permissionsError) {
               <app-alert type="error" [title]="permissionsError" />
             } @else if (staffPermissions) {
-              <form [formGroup]="permissionsForm" (ngSubmit)="savePermissions()">
+              <div [formGroup]="permissionsForm">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                   @for (module of staffPermissions.modules; track module.moduleCode) {
                     <div class="p-6 bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
@@ -155,35 +155,7 @@ import { AlertComponent } from '../../../shared/components/alert/alert.component
                     </div>
                   }
                 </div>
-                <div class="flex items-center justify-end gap-4 pt-8 border-t-2 border-gray-100 mt-6">
-                  <button
-                    type="button"
-                    (click)="cancelPermissionsEdit()"
-                    class="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 hover:border-gray-400 transition-all duration-200"
-                  >
-                    {{ 'common.cancel' | translate }}
-                  </button>
-                  <button
-                    type="submit"
-                    [disabled]="permissionsForm.invalid || savingPermissions"
-                    class="px-6 py-3 rounded-xl font-semibold hover:shadow-xl hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-none transition-all duration-200 flex items-center gap-2"
-                    [style.background]="'var(--primary-bg)'"
-                    [style.color]="'var(--primary-text)'"
-                  >
-                    @if (savingPermissions) {
-                      <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                    } @else {
-                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                      </svg>
-                    }
-                    {{ 'common.save' | translate }}
-                  </button>
-                </div>
-              </form>
+              </div>
             }
           </app-form-section>
         }
@@ -321,11 +293,46 @@ export class PharmacyStaffFormComponent implements OnInit {
 
     operation.subscribe({
       next: () => {
-        this.router.navigate(['/pharmacy-staff']);
+        // If in edit mode and permissions form exists, save permissions too
+        if (this.isEdit && this.staffId && this.permissionsForm && this.staffPermissions) {
+          this.savePermissionsAndNavigate();
+        } else {
+          this.router.navigate(['/pharmacy-staff']);
+        }
       },
       error: () => {
         this.errorMessage = this.isEdit ? 'error.updateStaff' : 'error.createStaff';
         this.loading = false;
+      }
+    });
+  }
+
+  private savePermissionsAndNavigate(): void {
+    if (!this.staffId || !this.staffPermissions) {
+      this.router.navigate(['/pharmacy-staff']);
+      return;
+    }
+
+    const currentPharmacy = this.pharmacyContext.getCurrentPharmacy();
+    if (!currentPharmacy) {
+      this.router.navigate(['/pharmacy-staff']);
+      return;
+    }
+
+    const selectedPermissionIds: string[] = [];
+    Object.keys(this.permissionsForm.controls).forEach(permissionId => {
+      if (this.permissionsForm.get(permissionId)?.value) {
+        selectedPermissionIds.push(permissionId);
+      }
+    });
+
+    this.pharmacyStaffService.updatePermissions(this.staffId, currentPharmacy.id, selectedPermissionIds).subscribe({
+      next: () => {
+        this.router.navigate(['/pharmacy-staff']);
+      },
+      error: () => {
+        // Even if permissions fail, navigate back (staff was already updated)
+        this.router.navigate(['/pharmacy-staff']);
       }
     });
   }
@@ -405,12 +412,6 @@ export class PharmacyStaffFormComponent implements OnInit {
         this.savingPermissions = false;
       }
     });
-  }
-
-  cancelPermissionsEdit(): void {
-    if (this.staffPermissions) {
-      this.initializePermissionsForm(this.staffPermissions);
-    }
   }
 
   getPermissionLabel(permissionKey: string): string {

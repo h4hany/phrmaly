@@ -199,23 +199,25 @@ export class PlatformSubscriptionsService {
       queryParams['status'] = params.status;
     }
 
-    return this.coreApi.getPaginated<Subscription>(
+    return this.coreApi.get<any>(
       PLATFORM_ENDPOINTS.subscriptions.root,
       queryParams
     ).pipe(
-      map(response => {
+      map((response: ApiResponse<any>) => {
         if (!response.success || !response.data) {
           throw new Error(response.message || 'Failed to fetch subscriptions');
         }
 
-        const subscriptions = response.data.map(sub => SubscriptionMapper.fromApi(sub));
+        // Handle nested data structure: response.data.data contains the array
+        const subscriptionsData = response.data.data || response.data;
+        const subscriptions = (Array.isArray(subscriptionsData) ? subscriptionsData : []).map(sub => SubscriptionMapper.fromApi(sub));
         
         return {
           data: subscriptions,
-          total: response.meta?.pagination?.totalItems ?? subscriptions.length,
-          page: response.meta?.pagination?.page ?? 1,
-          pageSize: response.meta?.pagination?.pageSize ?? 10,
-          totalPages: response.meta?.pagination?.totalPages ?? 1
+          total: response.data.totalCount ?? subscriptions.length,
+          page: response.data.pageNumber ?? 1,
+          pageSize: response.data.pageSize ?? 10,
+          totalPages: response.data.totalPages ?? 1
         };
       }),
       catchError(error => {

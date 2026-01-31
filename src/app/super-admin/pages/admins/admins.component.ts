@@ -224,12 +224,21 @@ export class AdminsComponent implements OnInit {
       status: this.filters.status || undefined
     }).subscribe({
       next: (response) => {
+        if (!response || !response.data) {
+          console.error('Invalid response:', response);
+          this.loading = false;
+          return;
+        }
+        
         this.admins = response.data.map((admin: AdminUser) => ({
           ...admin,
-          role: this.translationService.translate(this.getRoleLabel(admin.role)),
-          status: this.translationService.translate(this.getStatusLabel(admin.status)),
-          lastLoginAt: admin.lastLoginAt ? new Date(admin.lastLoginAt).toLocaleDateString() : '-'
+          role: this.translationService.translate(this.getRoleLabel(admin.role)) || admin.role,
+          status: this.translationService.translate(this.getStatusLabel(admin.status)) || admin.status,
+          lastLoginAt: admin.lastLoginAt instanceof Date 
+            ? admin.lastLoginAt.toISOString() 
+            : (admin.lastLoginAt ? new Date(admin.lastLoginAt).toISOString() : null)
         }));
+        
         this.pagination = {
           page: response.page,
           pageSize: response.pageSize,
@@ -237,19 +246,22 @@ export class AdminsComponent implements OnInit {
           totalPages: response.totalPages
         };
         this.calculateStats(response.data);
+        this.totalAdmins = response.total;
         this.loading = false;
       },
-      error: () => {
+      error: (error) => {
+        console.error('Error loading admins:', error);
         this.loading = false;
       }
     });
   }
 
   calculateStats(admins: AdminUser[]): void {
-    this.totalAdmins = admins.length;
+    // Calculate stats from current page data
     this.activeAdmins = admins.filter(a => a.status === 'active').length;
     this.supportAdmins = admins.filter(a => a.role === 'support_admin').length;
     this.salesAdmins = admins.filter(a => a.role === 'sales_admin').length;
+    // Note: totalAdmins is set from pagination.total in loadAdmins()
   }
 
   applyFilters(): void {
