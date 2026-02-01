@@ -92,7 +92,8 @@ export const TENANT_ENDPOINTS = {
   staff: {
     root: 'staff',
     byId: (id: string) => `staff/${id}`,
-    permissions: (id: string) => `staff/${id}/permissions`
+    permissions: (id: string) => `staff/${id}/permissions`,
+    availablePermissions: 'staff/available-permissions'
   },
   // Pharmacies
   pharmacies: {

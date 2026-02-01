@@ -127,15 +127,16 @@ export class HRPerformanceService {
     }
   ];
 
-  getPerformanceMetrics(staffId: string, startDate: Date, endDate: Date): Observable<PerformanceMetrics> {
-    const pharmacyId = this.pharmacyContextService.getCurrentPharmacy()?.id;
-    if (!pharmacyId) {
+  getPerformanceMetrics(staffId: string, startDate: Date, endDate: Date, pharmacyId?: string): Observable<PerformanceMetrics> {
+    // Use provided pharmacyId or fall back to current pharmacy context
+    const resolvedPharmacyId = pharmacyId || this.pharmacyContextService.getCurrentPharmacy()?.id;
+    if (!resolvedPharmacyId) {
       throw new Error('No pharmacy selected');
     }
 
     // Check if we have cached metrics
     const cached = this.performanceMetrics.find(p => 
-      p.pharmacyId === pharmacyId && 
+      p.pharmacyId === resolvedPharmacyId && 
       p.staffId === staffId &&
       p.period.startDate.getTime() === startDate.getTime() &&
       p.period.endDate.getTime() === endDate.getTime()
@@ -187,7 +188,7 @@ export class HRPerformanceService {
         const metrics: PerformanceMetrics = {
           staffId,
           staffName: '',
-          pharmacyId,
+          pharmacyId: resolvedPharmacyId,
           period: { startDate, endDate },
           sales: {
             totalRevenue,
@@ -231,14 +232,15 @@ export class HRPerformanceService {
     );
   }
 
-  getStaffActivities(staffId: string, limit: number = 50): Observable<StaffActivity[]> {
-    const pharmacyId = this.pharmacyContextService.getCurrentPharmacy()?.id;
-    if (!pharmacyId) {
+  getStaffActivities(staffId: string, limit: number = 50, pharmacyId?: string): Observable<StaffActivity[]> {
+    // Use provided pharmacyId or fall back to current pharmacy context
+    const resolvedPharmacyId = pharmacyId || this.pharmacyContextService.getCurrentPharmacy()?.id;
+    if (!resolvedPharmacyId) {
       return of([]).pipe(delay(300));
     }
 
     const filtered = this.activities
-      .filter(a => a.pharmacyId === pharmacyId && a.staffId === staffId)
+      .filter(a => a.pharmacyId === resolvedPharmacyId && a.staffId === staffId)
       .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
       .slice(0, limit);
 

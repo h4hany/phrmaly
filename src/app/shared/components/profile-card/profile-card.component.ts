@@ -39,20 +39,22 @@ export interface ProfileBadge {
       ></div>
 
       <!-- View Button (Positioned outside cutout) -->
-      <button
-        type="button"
-        class="view-button"
-        [class.rtl-position]="isRTL"
-        (click)="onViewClick($event)"
-        [title]="'View Details'"
-      >
-        <!-- LTR: Arrow pointing up-right -->
-        <svg class="w-5 h-5 arrow-icon-ltr" [class.rotate-180]="isRTL"
-             fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"
-             [style.color]="'var(--primary-text, #003032)'">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/>
-        </svg>
-      </button>
+      @if (showView) {
+        <button
+          type="button"
+          class="view-button"
+          [class.rtl-position]="isRTL"
+          (click)="onViewClick($event)"
+          [title]="'View Details'"
+        >
+          <!-- LTR: Arrow pointing up-right -->
+          <svg class="w-5 h-5 arrow-icon-ltr" [class.rotate-180]="isRTL"
+               fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"
+               [style.color]="'var(--primary-text, #003032)'">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/>
+          </svg>
+        </button>
+      }
 
       <!-- Content Container -->
       <div class="relative z-10 flex-1 flex flex-col">
@@ -111,6 +113,23 @@ export interface ProfileBadge {
             >
               {{ phone }}
             </p>
+          }
+          @if (pharmacyNames && pharmacyNames.length > 0) {
+            <div class="mt-2 flex flex-wrap gap-1">
+              @for (pharmacyName of pharmacyNames; track pharmacyName) {
+                <span
+                  class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium opacity-70"
+                  [style.background]="'rgba(255, 255, 255, 0.1)'"
+                  [style.color]="'var(--sidebar-text, #E3F4F5)'"
+                >
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                  </svg>
+                  {{ pharmacyName }}
+                </span>
+              }
+            </div>
           }
           @if (joinedAt) {
             <p
@@ -345,8 +364,10 @@ export class ProfileCardComponent {
   @Input() joinedAt?: Date | string;
   @Input() badges?: ProfileBadge[];
   @Input() status?: 'active' | 'inactive';
+  @Input() showView: boolean = true;
   @Input() showEdit: boolean = true;
   @Input() showDelete: boolean = true;
+  @Input() pharmacyNames?: string[];
 
   view = output<void>();
   edit = output<void>();

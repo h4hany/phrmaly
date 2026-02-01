@@ -266,7 +266,18 @@ export class PlatformAccountsService {
       if (pharmacy.longitude !== undefined && pharmacy.longitude !== null) {
         formData.append(`pharmacies[${index}].longitude`, pharmacy.longitude.toString());
       }
+      // Pharmacy manager
+      if (pharmacy.manager) {
+        formData.append(`pharmacies[${index}].manager.fullName`, pharmacy.manager.fullName);
+        formData.append(`pharmacies[${index}].manager.email`, pharmacy.manager.email);
+        formData.append(`pharmacies[${index}].manager.password`, pharmacy.manager.password);
+      }
     });
+    
+    // Paid amount
+    if (request.paidAmount !== undefined && request.paidAmount !== null && request.paidAmount > 0) {
+      formData.append('paidAmount', request.paidAmount.toString());
+    }
     
     // Account owner
     formData.append('accountOwner.fullName', request.accountOwner.fullName);
@@ -298,7 +309,13 @@ export interface ProvisionAccountRequest {
     areaId?: string;
     latitude?: number;
     longitude?: number;
+    manager?: {
+      fullName: string;
+      email: string;
+      password: string;
+    };
   }>;
+  paidAmount?: number;
   accountOwner: {
     fullName: string;
     email: string;

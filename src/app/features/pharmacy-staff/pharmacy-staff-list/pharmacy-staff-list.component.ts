@@ -1,15 +1,19 @@
-import { Component, inject, OnInit, ViewChild } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { Subscription, combineLatest } from 'rxjs';
+import { distinctUntilChanged, debounceTime, skip } from 'rxjs/operators';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { ModalComponent } from '../../../shared/components/modal/modal.component';
 import { PharmacyStaffService } from '../../../core/services/pharmacy-staff.service';
+import { PharmacyContextService } from '../../../core/services/pharmacy-context.service';
 import { PharmacyStaff } from '../../../core/models/pharmacy-staff.model';
 import { AlertComponent } from '../../../shared/components/alert/alert.component';
 import { TranslatePipe } from '../../../core/pipes/translate.pipe';
 import { TranslationService } from '../../../core/services/translation.service';
 import { UserRole } from '../../../core/models/user.model';
 import { ProfileCardComponent, ProfileBadge } from '../../../shared/components/profile-card/profile-card.component';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-pharmacy-staff-list',
@@ -83,8 +87,9 @@ import { ProfileCardComponent, ProfileBadge } from '../../../shared/components/p
               [joinedAt]="member.createdAt"
               [badges]="getBadges(member)"
               [status]="member.status"
-              (view)="viewStaff(member.id)"
-              (edit)="editStaff(member.id)"
+              [pharmacyNames]="getPharmacyNames(member)"
+              (view)="viewStaff(member.id, member)"
+              (edit)="editStaff(member.id, member)"
               (delete)="confirmDelete(member)"
             ></app-profile-card>
           }
@@ -106,10 +111,13 @@ import { ProfileCardComponent, ProfileBadge } from '../../../shared/components/p
   `,
   styles: []
 })
-export class PharmacyStaffListComponent implements OnInit {
+export class PharmacyStaffListComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private pharmacyStaffService = inject(PharmacyStaffService);
+  private pharmacyContextService = inject(PharmacyContextService);
   private translationService = inject(TranslationService);
+  private authService = inject(AuthService);
+  private subscriptions = new Subscription();
 
   @ViewChild('deleteModal') deleteModal!: ModalComponent;
 
@@ -129,15 +137,43 @@ export class PharmacyStaffListComponent implements OnInit {
   };
 
   ngOnInit(): void {
+    // Subscribe to pharmacy context changes first (before loading)
+    // Use skip(1) to skip the initial emission and distinctUntilChanged to prevent duplicate calls
+    this.subscriptions.add(
+      combineLatest([
+        this.pharmacyContextService.currentPharmacy$,
+        this.pharmacyContextService.isAllPharmacies$
+      ]).pipe(
+        skip(1), // Skip the initial emission to avoid duplicate call on init
+        debounceTime(100), // Debounce to prevent rapid successive calls
+        distinctUntilChanged((prev, curr) => {
+          const prevId = prev[0]?.id || (prev[1] ? 'all' : null);
+          const currId = curr[0]?.id || (curr[1] ? 'all' : null);
+          return prevId === currId;
+        })
+      ).subscribe(() => {
+        this.pagination.page = 1; // Reset to first page
+        this.loadStaff();
+      })
+    );
+
+    // Load staff after subscription is set up
     this.loadStaff();
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
   }
 
   loadStaff(): void {
     this.loading = true;
+    // Get current pharmacy ID from context
+    const pharmacyId = this.pharmacyContextService.getCurrentPharmacyId();
     this.pharmacyStaffService.getAll({
       page: this.pagination.page,
       pageSize: this.pagination.pageSize,
-      searchTerm: this.searchQuery.trim() || undefined
+      searchTerm: this.searchQuery.trim() || undefined,
+      pharmacyId: pharmacyId
     }).subscribe({
       next: (response) => {
         this.staff = response.data;
@@ -165,15 +201,27 @@ export class PharmacyStaffListComponent implements OnInit {
     this.router.navigate(['/pharmacy-staff', 'new']);
   }
 
-  viewStaff(id: string): void {
+  viewStaff(id: string, member: PharmacyStaff): void {
+    if (!this.canAccessStaff(member)) {
+      this.errorMessage = 'You do not have permission to view this staff member due to role hierarchy restrictions.';
+      return;
+    }
     this.router.navigate(['/pharmacy-staff', id]);
   }
 
-  editStaff(id: string): void {
+  editStaff(id: string, member: PharmacyStaff): void {
+    if (!this.canAccessStaff(member)) {
+      this.errorMessage = 'You do not have permission to edit this staff member due to role hierarchy restrictions.';
+      return;
+    }
     this.router.navigate(['/pharmacy-staff', id, 'edit']);
   }
 
   confirmDelete(staff: PharmacyStaff): void {
+    if (!this.canAccessStaff(staff)) {
+      this.errorMessage = 'You do not have permission to delete this staff member due to role hierarchy restrictions.';
+      return;
+    }
     this.selectedStaffId = staff.id;
     this.selectedStaffName = staff.fullName;
     this.deleteModal.open();
@@ -214,15 +262,68 @@ export class PharmacyStaffListComponent implements OnInit {
 
   getBadges(member: PharmacyStaff): ProfileBadge[] {
     const badges: ProfileBadge[] = [];
-    
+
     // Add role badge
     if (member.role === UserRole.PHARMACY_MANAGER) {
       badges.push({ label: 'Manager', variant: 'info' });
     } else if (member.role === UserRole.ACCOUNT_OWNER) {
       badges.push({ label: 'Owner', variant: 'warning' });
     }
-    
+
     return badges;
+  }
+
+  getPharmacyNames(member: PharmacyStaff): string[] {
+    if (member.pharmacyRoles && member.pharmacyRoles.length > 0) {
+      return member.pharmacyRoles.map(pr => pr.pharmacyName);
+    }
+    return [];
+  }
+
+  /**
+   * Check if current user can access (view/edit) a staff member based on role hierarchy
+   * Returns true if current user's role hierarchy level is >= target staff's role hierarchy level
+   */
+  canAccessStaff(member: PharmacyStaff): boolean {
+    const currentUser = this.authService.getCurrentUser();
+    if (!currentUser) {
+      return false;
+    }
+
+    // Get hierarchy levels (matching backend values)
+    const hierarchyLevels: { [key: string]: number } = {
+      'account_owner': 100,
+      'ACCOUNT_OWNER': 100,
+      'pharmacy_manager': 50,
+      'PHARMACY_MANAGER': 50,
+      'pharmacy_inventory_manager': 40,
+      'PHARMACY_INVENTORY_MANAGER': 40,
+      'pharmacy_staff': 10,
+      'PHARMACY_STAFF': 10
+    };
+
+    // Get current user's hierarchy level
+    const currentUserRole = currentUser.role?.toLowerCase() || '';
+    const currentUserHierarchy = hierarchyLevels[currentUserRole] || 0;
+
+    // Get target staff's highest hierarchy level from their pharmacy roles
+    let targetStaffMaxHierarchy = 0;
+    if (member.pharmacyRoles && member.pharmacyRoles.length > 0) {
+      // Get the highest hierarchy level from all pharmacy roles
+      targetStaffMaxHierarchy = Math.max(
+        ...member.pharmacyRoles.map(pr => {
+          const roleName = pr.roleName?.toUpperCase() || '';
+          return hierarchyLevels[roleName] || 0;
+        })
+      );
+    } else {
+      // Fallback to member.role if pharmacyRoles not available
+      const memberRole = member.role?.toLowerCase() || '';
+      targetStaffMaxHierarchy = hierarchyLevels[memberRole] || 0;
+    }
+
+    // Current user can only access staff with equal or lower hierarchy level
+    return currentUserHierarchy >= targetStaffMaxHierarchy;
   }
 }
 

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormControl, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { PharmacyStaffService, StaffPermissions } from '../../../core/services/pharmacy-staff.service';
+import { PharmacyStaff } from '../../../core/models/pharmacy-staff.model';
 import { PharmacyContextService } from '../../../core/services/pharmacy-context.service';
 import { ModernFormWrapperComponent } from '../../../shared/components/modern-form-wrapper/modern-form-wrapper.component';
 import { FormSectionComponent } from '../../../shared/components/form-section/form-section.component';
@@ -88,6 +89,27 @@ import { AlertComponent } from '../../../shared/components/alert/alert.component
           </div>
         </app-form-section>
 
+        <!-- Pharmacy Information (Read-only in Edit Mode) -->
+        @if (isEdit && staff && staff.pharmacyRoles && staff.pharmacyRoles.length > 0) {
+          <app-form-section [title]="'staff.pharmacies'">
+            <div class="space-y-3">
+              @for (pharmacyRole of staff.pharmacyRoles; track pharmacyRole.pharmacyId) {
+                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
+                  <div class="flex items-center gap-3">
+                    <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                    <div>
+                      <p class="text-[var(--text-primary)] font-medium">{{ pharmacyRole.pharmacyName }}</p>
+                      <p class="text-sm text-[var(--card-text)]">{{ 'staff.role' | translate }}: {{ pharmacyRole.roleName }}</p>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          </app-form-section>
+        }
+
         <!-- Role & Status Section -->
         <app-form-section [title]="'staff.roleAndStatus'">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -126,8 +148,8 @@ import { AlertComponent } from '../../../shared/components/alert/alert.component
           </div>
         </app-form-section>
 
-        <!-- Permissions Section (Only in Edit Mode) -->
-        @if (isEdit) {
+        <!-- Permissions Section (Edit and New Mode) -->
+        @if (true) {
           <app-form-section [title]="'staff.permissions'">
             @if (loadingPermissions) {
               <div class="text-center py-12">
@@ -137,21 +159,32 @@ import { AlertComponent } from '../../../shared/components/alert/alert.component
               <app-alert type="error" [title]="permissionsError" />
             } @else if (staffPermissions) {
               <div [formGroup]="permissionsForm">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   @for (module of staffPermissions.modules; track module.moduleCode) {
                     <div class="p-6 bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
                       <h4 class="text-lg font-semibold text-gray-800 mb-4">
                         {{ module.moduleName }}
                       </h4>
-                      <div class="space-y-3">
-                        @for (permission of module.permissions; track permission.permissionId) {
-                          <app-checkbox-input
-                            [formControl]="getPermissionControl(permission.permissionId)"
-                            [checkboxOptions]="[{ value: true, label: getPermissionLabel(permission.permissionKey) }]"
-                            [label]="''"
-                          ></app-checkbox-input>
-                        }
-                      </div>
+                      @for (group of getGroupedPermissions(module); track group.subResource) {
+                        <div class="mb-6 last:mb-0">
+                          @if (group.subResource !== 'General') {
+                            <h5 class="text-sm font-medium text-gray-700 mb-3 capitalize">
+                              {{ group.subResource }}
+                            </h5>
+                          }
+                          <div class="grid grid-cols-2 gap-2">
+                            @for (permission of group.permissions; track permission.permissionId) {
+                              @if (permission.isGranted || isEdit) {
+                                <app-checkbox-input
+                                  [formControl]="getPermissionControl(permission.permissionId)"
+                                  [checkboxOptions]="[{ value: true, label: getPermissionLabel(permission.permissionKey) }]"
+                                  [label]="''"
+                                ></app-checkbox-input>
+                              }
+                            }
+                          </div>
+                        </div>
+                      }
                     </div>
                   }
                 </div>
@@ -207,6 +240,7 @@ export class PharmacyStaffFormComponent implements OnInit {
   errorMessage = '';
   isEdit = false;
   staffId: string | null = null;
+  staff: PharmacyStaff | null = null;
   
   // Permissions
   staffPermissions: StaffPermissions | null = null;
@@ -242,7 +276,10 @@ export class PharmacyStaffFormComponent implements OnInit {
 
     if (this.isEdit && this.staffId) {
       this.loadStaff();
-      this.loadPermissions();
+      // loadPermissions will be called after staff is loaded
+    } else {
+      // For new staff, load available permissions
+      this.loadAvailablePermissions();
     }
   }
 
@@ -251,6 +288,7 @@ export class PharmacyStaffFormComponent implements OnInit {
     this.pharmacyStaffService.getById(this.staffId!).subscribe({
       next: (staff) => {
         if (staff) {
+          this.staff = staff; // Store staff member for later use
           this.staffForm.patchValue({
             fullName: staff.fullName,
             email: staff.email,
@@ -260,6 +298,8 @@ export class PharmacyStaffFormComponent implements OnInit {
             status: staff.status,
             notes: ''
           });
+          // Load permissions after staff is loaded
+          this.loadPermissions();
         }
         this.loading = false;
       },
@@ -292,10 +332,12 @@ export class PharmacyStaffFormComponent implements OnInit {
       : this.pharmacyStaffService.create(formValue);
 
     operation.subscribe({
-      next: () => {
-        // If in edit mode and permissions form exists, save permissions too
-        if (this.isEdit && this.staffId && this.permissionsForm && this.staffPermissions) {
-          this.savePermissionsAndNavigate();
+      next: (createdStaff) => {
+        // If permissions form exists, save permissions too
+        if (this.permissionsForm && this.staffPermissions) {
+          // For new staff, we need the created staff ID
+          const staffIdToUse = this.isEdit ? this.staffId! : createdStaff.id;
+          this.savePermissionsAndNavigate(staffIdToUse);
         } else {
           this.router.navigate(['/pharmacy-staff']);
         }
@@ -307,14 +349,27 @@ export class PharmacyStaffFormComponent implements OnInit {
     });
   }
 
-  private savePermissionsAndNavigate(): void {
-    if (!this.staffId || !this.staffPermissions) {
+  private savePermissionsAndNavigate(staffId: string): void {
+    if (!staffId || !this.staffPermissions) {
       this.router.navigate(['/pharmacy-staff']);
       return;
     }
 
-    const currentPharmacy = this.pharmacyContext.getCurrentPharmacy();
-    if (!currentPharmacy) {
+    // Use current pharmacy context or staff's pharmacy
+    const pharmacy = this.pharmacyContext.getCurrentPharmacy();
+    let pharmacyId: string | null = null;
+    
+    if (this.isEdit && this.staff) {
+      pharmacyId = this.staff.pharmacyId || 
+                   (this.staff.pharmacyRoles && this.staff.pharmacyRoles.length > 0 
+                     ? this.staff.pharmacyRoles[0].pharmacyId 
+                     : null);
+    } else {
+      pharmacyId = pharmacy?.id || null;
+    }
+    
+    if (!pharmacyId) {
+      // Even if pharmacy not found, navigate back (staff was already created/updated)
       this.router.navigate(['/pharmacy-staff']);
       return;
     }
@@ -326,12 +381,12 @@ export class PharmacyStaffFormComponent implements OnInit {
       }
     });
 
-    this.pharmacyStaffService.updatePermissions(this.staffId, currentPharmacy.id, selectedPermissionIds).subscribe({
+    this.pharmacyStaffService.updatePermissions(staffId, pharmacyId, selectedPermissionIds).subscribe({
       next: () => {
         this.router.navigate(['/pharmacy-staff']);
       },
       error: () => {
-        // Even if permissions fail, navigate back (staff was already updated)
+        // Even if permissions fail, navigate back (staff was already created/updated)
         this.router.navigate(['/pharmacy-staff']);
       }
     });
@@ -344,16 +399,28 @@ export class PharmacyStaffFormComponent implements OnInit {
   loadPermissions(): void {
     if (!this.staffId) return;
     
-    const currentPharmacy = this.pharmacyContext.getCurrentPharmacy();
-    if (!currentPharmacy) {
-      this.permissionsError = 'No pharmacy selected';
+    // Wait for staff to be loaded if we're in edit mode
+    if (this.isEdit && !this.staff) {
+      // Staff is still loading, permissions will be loaded after staff loads
+      return;
+    }
+
+    // Use the staff member's pharmacyId instead of current pharmacy context
+    // This ensures we're viewing permissions for the correct pharmacy
+    const pharmacyId = this.staff?.pharmacyId || 
+                      (this.staff?.pharmacyRoles && this.staff.pharmacyRoles.length > 0 
+                        ? this.staff.pharmacyRoles[0].pharmacyId 
+                        : null);
+    
+    if (!pharmacyId) {
+      this.permissionsError = 'Staff member has no pharmacy assigned';
       return;
     }
 
     this.loadingPermissions = true;
     this.permissionsError = '';
     
-    this.pharmacyStaffService.getPermissions(this.staffId, currentPharmacy.id).subscribe({
+    this.pharmacyStaffService.getPermissions(this.staffId, pharmacyId).subscribe({
       next: (permissions) => {
         this.staffPermissions = permissions;
         this.initializePermissionsForm(permissions);
@@ -361,6 +428,33 @@ export class PharmacyStaffFormComponent implements OnInit {
       },
       error: (error) => {
         this.permissionsError = error.message || 'Failed to load permissions';
+        this.loadingPermissions = false;
+      }
+    });
+  }
+
+  loadAvailablePermissions(): void {
+    const pharmacy = this.pharmacyContext.getCurrentPharmacy();
+    const pharmacyId = pharmacy?.id || null;
+
+    this.loadingPermissions = true;
+    this.permissionsError = '';
+    
+    this.pharmacyStaffService.getAvailablePermissions(pharmacyId).subscribe({
+      next: (permissions) => {
+        // Filter permissions to only show those where isGranted = true (for non-account-owners)
+        // The backend already filters, but we ensure UI consistency
+        this.staffPermissions = {
+          modules: permissions.modules.map(module => ({
+            ...module,
+            permissions: module.permissions.filter(p => p.isGranted)
+          })).filter(module => module.permissions.length > 0)
+        };
+        this.initializePermissionsForm(this.staffPermissions);
+        this.loadingPermissions = false;
+      },
+      error: (error) => {
+        this.permissionsError = error.message || 'Failed to load available permissions';
         this.loadingPermissions = false;
       }
     });
@@ -421,5 +515,42 @@ export class PharmacyStaffFormComponent implements OnInit {
       return parts[parts.length - 1]; // Return the last part (action)
     }
     return permissionKey;
+  }
+
+  // Group permissions by sub-resource
+  getGroupedPermissions(module: { moduleCode: string; moduleName: string; permissions: Array<{ permissionId: string; resource: string; action: string; permissionKey: string; isGranted: boolean }> }): Array<{ subResource: string; permissions: Array<{ permissionId: string; resource: string; action: string; permissionKey: string; isGranted: boolean }> }> {
+    const groups: { [key: string]: Array<{ permissionId: string; resource: string; action: string; permissionKey: string; isGranted: boolean }> } = {};
+    
+    module.permissions.forEach(permission => {
+      // Parse permission key: e.g., "inventory.alerts.view" -> module: inventory, subResource: alerts, action: view
+      // Or "inventory.view" -> module: inventory, subResource: "", action: view
+      const parts = permission.permissionKey.split('.');
+      
+      // If there are 3+ parts, the middle part(s) is the sub-resource
+      // e.g., "inventory.alerts.view" -> subResource = "alerts"
+      // e.g., "inventory.view" -> subResource = "" (general permissions)
+      let subResource = '';
+      if (parts.length > 2) {
+        // Join all parts except first (module) and last (action) as sub-resource
+        subResource = parts.slice(1, -1).join('.');
+      }
+      
+      if (!groups[subResource]) {
+        groups[subResource] = [];
+      }
+      groups[subResource].push(permission);
+    });
+    
+    // Convert to array and sort: general permissions (empty string) first, then alphabetically
+    return Object.keys(groups)
+      .sort((a, b) => {
+        if (a === '') return -1;
+        if (b === '') return 1;
+        return a.localeCompare(b);
+      })
+      .map(subResource => ({
+        subResource: subResource || 'General',
+        permissions: groups[subResource]
+      }));
   }
 }

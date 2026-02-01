@@ -1,0 +1,516 @@
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <app-wizard
+    [steps]="wizardSteps"
+    [currentStep]="currentStep"
+    [errorMessage]="errorMessage"
+    (stepChange)="onStepChange($event)"
+  >
+    <!-- Step 1: Select Plan -->
+    @if (currentStep === 1) {
+      <div class="p-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          @for (plan of plans; track plan.id) {
+            <app-selectable-card
+              [selected]="selectedPlan?.id === plan.id"
+              (cardClick)="selectPlan(plan)"
+              class="h-full"
+            >
+              <div class="bg-white shadow-sm h-full flex flex-col">
+                <div class="mb-4">
+                  <h3 class="text-xl font-bold text-gray-900">{{ plan.name }}</h3>
+                </div>
+                <p class="text-gray-600 mb-4 flex-1">{{ plan.description }}</p>
+                <div class="space-y-3 mb-4">
+                  <div class="flex items-center gap-2 text-sm">
+                    <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    </svg>
+                    <span class="text-gray-700">{{ plan.maxPharmacies === -1 ? ('account.create.unlimitedPharmacies' | translate) : (plan.maxPharmacies + ' ' + ('account.create.pharmacies' | translate)) }}</span>
+                  </div>
+                  <div class="flex items-center gap-2 text-sm">
+                    <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    </svg>
+                    <span class="text-gray-700">{{ plan.maxStaff === -1 ? ('account.create.unlimitedStaff' | translate) : (plan.maxStaff + ' ' + ('account.create.staff' | translate)) }}</span>
+                  </div>
+                </div>
+                <div class="pt-4 border-t border-gray-200 mt-auto">
+                  <div class="text-2xl font-bold text-gray-900">
+                    {{ plan.price }}<span class="text-sm font-normal text-gray-600">/{{ plan.billingCycle }}</span>
+                  </div>
+                </div>
+              </div>
+            </app-selectable-card>
+          }
+        </div>
+
+        <div class="flex items-center justify-end gap-4 pt-8 border-t-2 border-gray-100">
+          <app-button variant="outline" (onClick)="onCancel()">
+            {{ 'common.cancel' | translate }}
+          </app-button>
+          <app-button
+            variant="primary"
+            (onClick)="nextStep()"
+            [disabled]="!selectedPlan"
+          >
+            {{ 'common.next' | translate }}
+          </app-button>
+        </div>
+      </div>
+    }
+
+    <!-- Step 2: Select Modules -->
+    @if (currentStep === 2) {
+      <div class="p-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          @for (module of modules; track module.id) {
+            <app-selectable-card
+              [selected]="isModuleSelected(module)"
+              (cardClick)="toggleModule(module)"
+              class="h-full"
+            >
+              <div class="bg-white shadow-sm h-full flex flex-col">
+                <div class="mb-4">
+                  <h3 class="text-xl font-bold text-gray-900">{{ getCurrentLanguage() === 'ar' ? module.nameAr : module.name }}</h3>
+                </div>
+                <p class="text-gray-600 mb-4 flex-1">{{ getCurrentLanguage() === 'ar' ? module.descriptionAr : module.description }}</p>
+                <div class="space-y-3 mb-4">
+                  @if (getCurrentLanguage() === 'ar' ? module.capabilitiesAr.length > 0 : module.capabilities.length > 0) {
+                    @for (capability of (getCurrentLanguage() === 'ar' ? module.capabilitiesAr : module.capabilities); track capability) {
+                      <div class="flex items-center gap-2 text-sm">
+                        <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                        </svg>
+                        <span class="text-gray-700">{{ capability.trim() }}</span>
+                      </div>
+                    }
+                  }
+                </div>
+                <div class="pt-4 border-t border-gray-200 mt-auto">
+                  <div class="text-2xl font-bold text-gray-900">
+                    {{ module.pricePerMonth }}<span class="text-sm font-normal text-gray-600">/{{ 'modules.perMonth' | translate }}</span>
+                  </div>
+                </div>
+              </div>
+            </app-selectable-card>
+          }
+        </div>
+
+        <div class="flex items-center justify-end gap-4 pt-8 border-t-2 border-gray-100">
+          <app-button variant="outline" (onClick)="previousStep()">
+            {{ 'common.back' | translate }}
+          </app-button>
+          <app-button
+            variant="primary"
+            (onClick)="nextStep()"
+          >
+            {{ 'common.next' | translate }}
+          </app-button>
+        </div>
+      </div>
+    }
+
+    <!-- Step 3: Account Information -->
+    @if (currentStep === 3) {
+      <div class="p-8">
+        <form [formGroup]="accountForm" class="space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <app-text-input
+              formControlName="name"
+              [label]="'account.create.accountName'"
+              [required]="true"
+              [placeholder]="'account.create.accountNamePlaceholder'"
+            />
+
+            <app-text-input
+              formControlName="email"
+              type="email"
+              [label]="'account.create.email'"
+              [required]="true"
+              [placeholder]="'account.create.emailPlaceholder'"
+            />
+
+            <app-text-input
+              formControlName="username"
+              [label]="'account.create.username'"
+              [required]="true"
+              [placeholder]="'account.create.usernamePlaceholder'"
+            />
+
+            <app-text-input
+              formControlName="password"
+              type="password"
+              [label]="'account.create.password'"
+              [required]="true"
+              [placeholder]="'account.create.passwordPlaceholder'"
+              [showPasswordToggle]="true"
+            />
+
+            <app-text-input
+              formControlName="phone"
+              type="tel"
+              [label]="'account.create.phone'"
+              [required]="true"
+              [placeholder]="'account.create.phonePlaceholder'"
+            />
+
+            <app-text-input
+              formControlName="website"
+              type="text"
+              [label]="'account.create.website'"
+              [placeholder]="'account.create.websitePlaceholder'"
+            />
+          </div>
+
+          <!-- File Uploads -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <app-file-upload
+              [label]="'account.create.contract'"
+              [accept]="'.pdf,.doc,.docx'"
+              (fileSelected)="onContractFileChange($event)"
+            />
+
+            <app-file-upload
+              [label]="'account.create.logo'"
+              [accept]="'image/*'"
+              (fileSelected)="onLogoFileChange($event)"
+            />
+          </div>
+
+          <div class="flex items-center justify-end gap-4 pt-8 border-t-2 border-gray-100">
+            <app-button variant="outline" (onClick)="previousStep()">
+              {{ 'common.back' | translate }}
+            </app-button>
+            <app-button
+              variant="primary"
+              (onClick)="nextStep()"
+              [disabled]="accountForm.invalid"
+            >
+              {{ 'common.next' | translate }}
+            </app-button>
+          </div>
+        </form>
+      </div>
+    }
+
+    <!-- Step 4: Add Pharmacies -->
+    @if (currentStep === 4) {
+      <div class="p-8">
+        <div class="mb-6 flex items-center justify-between">
+          <h3 class="text-xl font-bold text-gray-900">{{ 'account.create.pharmacies' | translate }}</h3>
+          <app-button variant="primary" size="sm" (onClick)="addPharmacy()">
+            <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            {{ 'account.create.addPharmacy' | translate }}
+          </app-button>
+        </div>
+
+        <form [formGroup]="pharmaciesForm">
+          <div formArrayName="pharmacies" class="space-y-6">
+            @for (pharmacy of pharmaciesArray.controls; track $index; let i = $index) {
+              <div [formGroupName]="i" class="border-2 border-gray-200 rounded-xl p-6">
+                <div class="flex items-center justify-between mb-6">
+                  <h4 class="text-lg font-semibold text-gray-900">
+                    {{ 'account.create.pharmacy' | translate }} {{ i + 1 }}
+                  </h4>
+                  @if (pharmaciesArray.length > 1) {
+                    <button
+                      type="button"
+                      (click)="removePharmacy(i)"
+                      class="text-red-500 hover:text-red-700"
+                    >
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                      </svg>
+                    </button>
+                  }
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                  <app-text-input
+                    [formControl]="getPharmacyControl(i, 'name')"
+                    [label]="'account.create.pharmacyName'"
+                    [required]="true"
+                    [placeholder]="'account.create.pharmacyNamePlaceholder'"
+                  />
+
+                  <app-text-input
+                    [formControl]="getPharmacyControl(i, 'address')"
+                    [label]="'account.create.address'"
+                    [required]="true"
+                    [placeholder]="'account.create.addressPlaceholder'"
+                  />
+
+                  <app-autocomplete-input
+                    [formControl]="getPharmacyControl(i, 'countryId')"
+                    [label]="'account.create.country'"
+                    [required]="true"
+                    [placeholder]="'account.create.countryPlaceholder'"
+                    [options]="getCountryOptions(i)"
+                    (optionSelected)="onCountrySelected(i, $event)"
+                    (inputChanged)="onCountrySearch(i, $event)"
+                  />
+
+                  <app-autocomplete-input
+                    [formControl]="getPharmacyControl(i, 'cityId')"
+                    [label]="'account.create.city'"
+                    [required]="true"
+                    [placeholder]="'account.create.cityPlaceholder'"
+                    [options]="getCityOptions(i)"
+                    [disabled]="!getPharmacyControl(i, 'countryId').value"
+                    (optionSelected)="onCitySelected(i, $event)"
+                    (inputChanged)="onCitySearch(i, $event)"
+                  />
+
+                  <app-autocomplete-input
+                    [formControl]="getPharmacyControl(i, 'areaId')"
+                    [label]="'account.create.area'"
+                    [required]="true"
+                    [placeholder]="'account.create.areaPlaceholder'"
+                    [options]="getAreaOptions(i)"
+                    [disabled]="!getPharmacyControl(i, 'cityId').value"
+                    (optionSelected)="onAreaSelected(i, $event)"
+                    (inputChanged)="onAreaSearch(i, $event)"
+                  />
+
+                  <app-text-input
+                    [formControl]="getPharmacyControl(i, 'lat')"
+                    type="number"
+                    [label]="'account.create.latitude'"
+                    [required]="true"
+                    [placeholder]="'account.create.latitudePlaceholder'"
+                    step="0.000001"
+                  />
+
+                  <app-text-input
+                    [formControl]="getPharmacyControl(i, 'long')"
+                    type="number"
+                    [label]="'account.create.longitude'"
+                    [required]="true"
+                    [placeholder]="'account.create.longitudePlaceholder'"
+                    step="0.000001"
+                  />
+                </div>
+
+                <div class="border-t-2 border-gray-200 pt-6">
+                  <h5 class="text-md font-semibold text-gray-900 mb-4">
+                    {{ 'account.create.pharmacyManager' | translate }}
+                  </h5>
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <app-text-input
+                      [formControl]="getManagerControl(i, 'fullName')"
+                      [label]="'account.create.managerFullName'"
+                      [required]="true"
+                      [placeholder]="'account.create.managerFullNamePlaceholder'"
+                    />
+
+                    <app-text-input
+                      [formControl]="getManagerControl(i, 'email')"
+                      type="email"
+                      [label]="'account.create.managerEmail'"
+                      [required]="true"
+                      [placeholder]="'account.create.managerEmailPlaceholder'"
+                    />
+
+                    <app-text-input
+                      [formControl]="getManagerControl(i, 'password')"
+                      type="password"
+                      [label]="'account.create.managerPassword'"
+                      [required]="true"
+                      [placeholder]="'account.create.managerPasswordPlaceholder'"
+                      [showPasswordToggle]="true"
+                    />
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        </form>
+
+        <div class="flex items-center justify-end gap-4 pt-8 border-t-2 border-gray-100 mt-8">
+          <app-button variant="outline" (onClick)="previousStep()">
+            {{ 'common.back' | translate }}
+          </app-button>
+          <app-button
+            variant="primary"
+            (onClick)="nextStep()"
+            [disabled]="pharmaciesForm.invalid || pharmaciesArray.length === 0"
+          >
+            {{ 'common.next' | translate }}
+          </app-button>
+        </div>
+      </div>
+    }
+
+    <!-- Step 5: Preview -->
+    @if (currentStep === 5) {
+      <div class="p-8">
+        <div class="space-y-6">
+          <!-- Plan Preview -->
+          <div class="border-2 border-gray-200 rounded-xl p-6">
+            <h3
+              class="text-lg font-semibold text-gray-900 mb-4">{{ 'account.create.selectedPlan' | translate }}</h3>
+            @if (selectedPlan) {
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label
+                    class="text-sm font-medium text-gray-600">{{ 'account.create.planName' | translate }}</label>
+                  <p class="text-lg font-bold text-gray-900">{{ selectedPlan.name }}</p>
+                </div>
+                <div>
+                  <label
+                    class="text-sm font-medium text-gray-600">{{ 'account.create.planPrice' | translate }}</label>
+                  <p class="text-lg font-bold text-gray-900">{{ selectedPlan.price }}
+                    /{{ selectedPlan.billingCycle }}</p>
+                </div>
+              </div>
+            }
+          </div>
+
+          <!-- Modules Preview -->
+          <div class="border-2 border-gray-200 rounded-xl p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">{{ 'account.create.selectedModules' | translate }}
+              ({{ selectedModules.length }})</h3>
+            @if (selectedModules.length > 0) {
+              <div class="space-y-3 mb-4">
+                @for (module of selectedModules; track module.id) {
+                  <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div>
+                      <p class="font-semibold text-gray-900">{{ getCurrentLanguage() === 'ar' ? module.nameAr : module.name }}</p>
+                      <p class="text-sm text-gray-600">{{ getCurrentLanguage() === 'ar' ? module.descriptionAr : module.description }}</p>
+                    </div>
+                    <p class="text-lg font-bold text-gray-900">{{ module.pricePerMonth }}
+                      /{{ 'account.create.perMonth' | translate }}</p>
+                  </div>
+                }
+              </div>
+            } @else {
+              <p class="text-gray-600">{{ 'account.create.noModulesSelected' | translate }}</p>
+            }
+          </div>
+
+          <!-- Total Price -->
+          <div class="border-2 border-gray-200 rounded-xl p-6 bg-gray-50">
+            <div class="space-y-4">
+              <div class="flex items-center justify-between">
+                <h3
+                  class="text-lg font-semibold text-gray-900">{{ 'account.create.totalMonthlyPrice' | translate }}</h3>
+                <p class="text-3xl font-bold text-gray-900">{{ getTotalMonthlyPrice() }}<span
+                  class="text-lg font-normal text-gray-600">/{{ 'account.create.perMonth' | translate }}</span></p>
+              </div>
+              
+              <!-- Paid Amount Input -->
+              <div class="pt-4 border-t border-gray-300">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  {{ 'account.create.paidAmount' | translate }}
+                </label>
+                <input
+                  type="number"
+                  [(ngModel)]="paidAmount"
+                  [min]="0"
+                  [max]="getTotalMonthlyPrice()"
+                  step="0.01"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="0.00"
+                />
+              </div>
+              
+              <!-- Remaining Amount -->
+              <div class="pt-2">
+                <div class="flex items-center justify-between">
+                  <span class="text-sm font-medium text-gray-700">
+                    {{ 'account.create.remainingAmount' | translate }}
+                  </span>
+                  <p class="text-2xl font-bold text-gray-900">{{ getRemainingAmount() }}<span
+                    class="text-lg font-normal text-gray-600">/{{ 'account.create.perMonth' | translate }}</span></p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Account Info Preview -->
+          <div class="border-2 border-gray-200 rounded-xl p-6">
+            <h3
+              class="text-lg font-semibold text-gray-900 mb-4">{{ 'account.create.accountInformation' | translate }}</h3>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label
+                  class="text-sm font-medium text-gray-600">{{ 'account.create.accountName' | translate }}</label>
+                <p class="text-gray-900">{{ accountForm.get('name')?.value }}</p>
+              </div>
+              <div>
+                <label class="text-sm font-medium text-gray-600">{{ 'account.create.email' | translate }}</label>
+                <p class="text-gray-900">{{ accountForm.get('email')?.value }}</p>
+              </div>
+              <div>
+                <label class="text-sm font-medium text-gray-600">{{ 'account.create.username' | translate }}</label>
+                <p class="text-gray-900">{{ accountForm.get('username')?.value }}</p>
+              </div>
+              <div>
+                <label class="text-sm font-medium text-gray-600">{{ 'account.create.website' | translate }}</label>
+                <p class="text-gray-900">{{ accountForm.get('website')?.value || '-' }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pharmacies Preview -->
+          <div class="border-2 border-gray-200 rounded-xl p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">
+              {{ 'account.create.pharmacies' | translate }} ({{ pharmaciesArray.length }})
+            </h3>
+            <div class="space-y-4">
+              @for (pharmacy of pharmaciesArray.controls; track $index; let i = $index) {
+                <div class="border border-gray-200 rounded-lg p-4">
+                  <h4 class="font-semibold text-gray-900 mb-2">
+                    {{ 'account.create.pharmacy' | translate }} {{ i + 1 }}: {{ getPharmacyValue(i, 'name') }}
+                  </h4>
+                  <div class="grid grid-cols-2 gap-2 text-sm">
+                    <div>
+                      <span class="text-gray-600">{{ 'account.create.address' | translate }}:</span>
+                      <span class="text-gray-900 ml-2">{{ getPharmacyValue(i, 'address') }}</span>
+                    </div>
+                    <div>
+                      <span class="text-gray-600">{{ 'account.create.city' | translate }}:</span>
+                      <span class="text-gray-900 ml-2">{{ getCityName(i) }}</span>
+                    </div>
+                    <div>
+                      <span class="text-gray-600">{{ 'account.create.country' | translate }}:</span>
+                      <span class="text-gray-900 ml-2">{{ getCountryName(i) }}</span>
+                    </div>
+                    <div>
+                      <span class="text-gray-600">{{ 'account.create.area' | translate }}:</span>
+                      <span class="text-gray-900 ml-2">{{ getAreaName(i) }}</span>
+                    </div>
+                    <div>
+                      <span class="text-gray-600">{{ 'account.create.managerFullName' | translate }}:</span>
+                      <span class="text-gray-900 ml-2">{{ getManagerValue(i, 'fullName') }}</span>
+                    </div>
+                    <div>
+                      <span class="text-gray-600">{{ 'account.create.managerEmail' | translate }}:</span>
+                      <span class="text-gray-900 ml-2">{{ getManagerValue(i, 'email') }}</span>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-4 pt-8 border-t-2 border-gray-100 mt-8">
+          <app-button variant="outline" (onClick)="previousStep()">
+            {{ 'common.back' | translate }}
+          </app-button>
+          <app-button
+            variant="primary"
+            (onClick)="createAccount()"
+            [loading]="loading"
+          >
+            {{ 'account.create.createAccount' | translate }}
+          </app-button>
+        </div>
+      </div>
+    }
+  </app-wizard>
+</div>

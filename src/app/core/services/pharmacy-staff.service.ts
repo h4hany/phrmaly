@@ -4,6 +4,7 @@ import { map, catchError } from 'rxjs/operators';
 import { PharmacyStaff } from '../models/pharmacy-staff.model';
 import { PaginatedResponse, PaginationParams } from '../models/common.model';
 import { CoreApiService } from './core-api.service';
+import { PharmacyContextService } from './pharmacy-context.service';
 import { TENANT_ENDPOINTS } from '../constants/platform-endpoints';
 import { UserRole } from '../models/user.model';
 
@@ -26,12 +27,23 @@ export interface StaffPermissions {
 })
 export class PharmacyStaffService {
   private coreApi = inject(CoreApiService);
+  private pharmacyContextService = inject(PharmacyContextService);
 
-  getAll(params?: PaginationParams & { searchTerm?: string; sortBy?: string; sortDescending?: boolean }): Observable<PaginatedResponse<PharmacyStaff>> {
+  getAll(params?: PaginationParams & { searchTerm?: string; sortBy?: string; sortDescending?: boolean; pharmacyId?: string | null }): Observable<PaginatedResponse<PharmacyStaff>> {
     const queryParams: any = {
       PageNumber: params?.page || 1,
       PageSize: params?.pageSize || 10
     };
+
+    // Add pharmacy filter if a specific pharmacy is selected (not "All")
+    // Use provided pharmacyId or get from context
+    const pharmacyId = params?.pharmacyId !== undefined 
+      ? params.pharmacyId 
+      : this.pharmacyContextService.getCurrentPharmacyId();
+    
+    if (pharmacyId) {
+      queryParams.PharmacyId = pharmacyId;
+    }
 
     if (params?.searchTerm) {
       queryParams.SearchTerm = params.searchTerm;
@@ -91,6 +103,25 @@ export class PharmacyStaffService {
       }),
       catchError(error => {
         const errorMessage = error.message || 'Failed to fetch staff permissions';
+        return throwError(() => new Error(errorMessage));
+      })
+    );
+  }
+
+  getAvailablePermissions(pharmacyId?: string | null): Observable<StaffPermissions> {
+    const queryParams: any = {};
+    if (pharmacyId) {
+      queryParams.pharmacyId = pharmacyId;
+    }
+    return this.coreApi.get<StaffPermissions>(TENANT_ENDPOINTS.staff.availablePermissions, queryParams, false, true).pipe(
+      map(response => {
+        if (!response.success || !response.data) {
+          throw new Error(response.message || 'Failed to fetch available permissions');
+        }
+        return response.data;
+      }),
+      catchError(error => {
+        const errorMessage = error.message || 'Failed to fetch available permissions';
         return throwError(() => new Error(errorMessage));
       })
     );

@@ -12,15 +12,15 @@ export interface Translations {
 })
 export class TranslationService {
   private http = inject(HttpClient);
-  
+
   private translations: { en: Translations; ar: Translations } = {
     en: {},
     ar: {}
   };
-  
+
   private translationsLoaded = new BehaviorSubject<boolean>(false);
   public translationsLoaded$ = this.translationsLoaded.asObservable();
-  
+
   private currentLangSubject = new BehaviorSubject<'en' | 'ar'>('en');
   public currentLang$ = this.currentLangSubject.asObservable();
 
@@ -54,10 +54,10 @@ export class TranslationService {
         // Trigger change detection by emitting language change
         const currentLang = this.currentLangSubject.value;
         this.currentLangSubject.next(currentLang);
-        console.log('Translations loaded successfully:', {
-          en: Object.keys(this.translations.en).length,
-          ar: Object.keys(this.translations.ar).length
-        });
+        // console.log('Translations loaded successfully:', {
+        //   en: Object.keys(this.translations.en).length,
+        //   ar: Object.keys(this.translations.ar).length
+        // });
       },
       error: (error) => {
         console.error('Error loading translations:', error);
@@ -72,7 +72,7 @@ export class TranslationService {
     if (!translation) {
       // Only warn if translations have been loaded (to avoid warnings during initial load)
       if (this.translationsLoaded.value) {
-        console.warn(`Translation missing for key: ${key}`);
+        // console.warn(`Translation missing for key: ${key}`);
       }
       return key;
     }

@@ -22,7 +22,7 @@
         </button>
       </div>
       <!-- Pharmacy Selector (Only for Account Owner) -->
-      @if (isAccountOwner && availablePharmacies.length > 1) {
+      @if (isAccountOwner) {
         <div class="relative">
           <select
             [(ngModel)]="selectedPharmacyId"
@@ -30,11 +30,14 @@
             class="pl-10 pr-8 py-2 border border-gray-300 rounded-[var(--radius-md)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary-bg)]/20 focus:border-[var(--primary-bg)] bg-white appearance-none cursor-pointer"
             [attr.aria-label]="'header.selectPharmacy' | translate"
           >
+            <option [value]="ALL_PHARMACIES_ID">{{ 'header.allPharmacies' | translate }}</option>
             @for (pharmacy of availablePharmacies; track pharmacy.id) {
               <option [value]="pharmacy.id">{{ pharmacy.name }}</option>
             }
           </select>
-          <app-icon name="building" size="20" class="absolute left-3 top-2.5 text-gray-400 pointer-events-none" [color]="'currentColor'" />
+          <svg class="w-5 h-5 absolute left-3 top-2.5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+          </svg>
           <app-icon name="chevron-down" size="16" class="absolute right-3 top-3 text-gray-400 pointer-events-none" [color]="'currentColor'" />
         </div>
       }

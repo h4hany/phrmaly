@@ -28,6 +28,8 @@ export const PERMISSIONS: PermissionsConfig = {
     '/patients/:id': ['patients.view', 'patients.read', 'patients.write', 'patients.delete', 'patients.manage'],
     '/pharmacy-staff': ['staff.view', 'staff.read', 'staff.write', 'staff.delete', 'staff.manage'],
     '/pharmacy-staff/:id': ['staff.view', 'staff.read', 'staff.write', 'staff.delete', 'staff.manage'],
+    '/pharmacy-staff/:id/edit': ['staff.write', 'staff.manage'],
+    '/pharmacy-staff/new': ['staff.create', 'staff.write', 'staff.manage'],
     '/people/payroll': ['payroll.view', 'payroll.read', 'payroll.write', 'payroll.delete', 'payroll.manage'],
     '/people/attendance': ['attendance.view', 'attendance.read', 'attendance.write', 'attendance.delete', 'attendance.manage'],
     '/people/performance': ['performance.view', 'performance.read', 'performance.write', 'performance.delete', 'performance.manage'],
